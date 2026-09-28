@@ -19,8 +19,8 @@ export default function Navbar() {
 
   useEffect(() => {
     if (location.pathname !== '/') return
-    const sections = ['home', 'work'].map((id) =>
-      document.getElementById(id),
+    const sections = NAV_LINKS.filter((l) => !l.route).map((l) =>
+      document.getElementById(l.target),
     )
     const observer = new IntersectionObserver(
       (entries) => {
@@ -53,7 +53,7 @@ export default function Navbar() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 flex justify-center px-4 pt-4 md:pt-6">
       <nav
-        className={`inline-flex items-center rounded-full border border-white/10 bg-surface px-2 py-2 transition-shadow duration-500 ${
+        className={`inline-flex max-w-[calc(100vw-2rem)] items-center overflow-x-auto rounded-full border border-white/10 bg-surface px-2 py-2 [scrollbar-width:none] transition-shadow duration-500 [&::-webkit-scrollbar]:hidden ${
           scrolled ? 'shadow-md shadow-black/10' : ''
         }`}
       >

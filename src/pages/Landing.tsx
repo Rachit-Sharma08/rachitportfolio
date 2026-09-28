@@ -33,7 +33,10 @@ export default function Landing({ ready = true }: LandingProps) {
   return (
     <main>
       <Hero ready={ready} />
+      <About />
+      <Capabilities />
       <SelectedWork />
+      <Vision />
       <Journal
         action={
           <a
@@ -46,9 +49,6 @@ export default function Landing({ ready = true }: LandingProps) {
           </a>
         }
       />
-      <About />
-      <Capabilities />
-      <Vision />
       <Stats />
       <EnquiryForm />
       <Contact />

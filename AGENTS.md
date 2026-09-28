@@ -35,7 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
-- Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (cut-out photo + cursor-reveal outfit swap), SelectedWork, Journal, About, Capabilities, Vision, Stats, EnquiryForm, Contact.
+- Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (cut-out photo + cursor-reveal outfit swap), then sections in sir's-site order (v20): About, Capabilities, SelectedWork, Vision, Journal, Stats, EnquiryForm, Contact.
 - Resume page complete (Education, Skills, Projects).
 - Framer Motion page transitions, RevealHeading, TiltCard, Magnetic, Marquee helpers bane hain.
 - **NEW (`v7`) — About/Capabilities/Vision/EnquiryForm sections** — `src/components/About.tsx`, `Capabilities.tsx`, `Vision.tsx`, `EnquiryForm.tsx` add hue. EnquiryForm me EmailJS placeholder credentials (`YOUR_SERVICE_ID` etc.) daalne baaki hain.
@@ -74,6 +74,33 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v20 — Section order aligned to Sir's site (Ajay Dhull)] — 28 Sep 2026
+**User ka brief:** apni site ka section order sir ki site (`https://lightsalmon-mallard-505670.hostingersite.com/`) jaisa karna hai. Pehle comparison table dikhao + confirm lo, phir code badlo.
+
+**STEP 1 — Sir ki site ka exact order (Playwright DOM se):
+1. Hero ("I am Ajay Dhull"), 2. `#about` "Who is Ajay Dhull?" (+ andar "My Story" + "My Journey" timeline 2023/24/25), 3. `#skills` "My Capabilities", 4. `#projects` "My AI Innovations", 5. `#vision` "My Vision", 6. `#contact` "Let's Build the Future Together", footer. Nav: ABOUT · SKILLS · PROJECTS · VISION · CONTACT.**
+
+**STEP 2 — Meri site ka tab ka order:** Hero → SelectedWork → Journal → About → Capabilities → Vision → Stats → EnquiryForm → Contact (Landing.tsx se).
+
+**STEP 3 — Comparison result (user ko dikha kar confirm liya):** sab sections already exist, **koi missing nahi** — sirf order galat tha (About 4th thi ek 2nd honi chahiye, Capabilities 5th→3rd, Work 2nd→4th, Vision 6th→5th). **User ne recommended order confirm kiya.**
+
+**STEP 4 — New order (implemented, `npm run lint` + `npm run build` pass):**
+1. Hero (`#home`) → 2. **About** (`#about`, Who is Rachit? + My Story + My Journey) → 3. **Capabilities** (`#capabilities`) → 4. **SelectedWork** (`#work`, projects/innovations) → 5. **Vision** (`#vision`) → 6. Journal (`#journal`) → 7. Stats (`#stats`) → 8. EnquiryForm (`#enquiry`) → 9. Contact (`#contact`)
+
+**Files changed (3):**
+1. `src/pages/Landing.tsx` — component order reorder.
+2. `src/data.ts` — `NAV_LINKS` = Home, About, Capabilities, Work, Vision, Contact, Resume (koi section id change nahi hui).
+3. `src/components/Navbar.tsx` — active-section observer ab `NAV_LINKS` ke saare non-route targets observe karta hai (pehle sirf `home`+`work`). Mobile 7 links fit karne ke liye nav pill par `overflow-x-auto` + `[scrollbar-width:none]` + `&::-webkit-scrollbar:hidden` (max-w-[calc(100vw-2rem)]).
+
+**Verification (Playwright, dev server par):**
+- DOM order = home→about→capabilities→work→vision→journal→stats→enquiry→contact ✅
+- Nav tabs render: Home · About · Capabilities · Work · Vision · Contact · Resume · Say hi ✅
+- 375px viewport: page horizontally overflow 0 ✅; nav pill scrollable (scrollWidth 591 > client 332, scrollbar hidden) — chhote screens par swipe se sab links pahunchte hain ✅
+- `npm run lint` (sirf pre-existing R3F warnings) + `npm run build` pass (chunk-size warning pre-existing).
+- **Commit/push nahi kiya** (user rule: sirf tab jab bole).
+
+**Note:** sir ki site par jo "My Story"/"My Journey" hain wo About section ke ANDAR hain (top-level section nahi) — meri site par bhi hum yehi pattern follow karte hain to koi naya section banana nahi pada (STEP 5 = koi missing section nahi tha).
 
 ### [v19 — Hero reveal layers inverted (sunglasses-bleed bug fix)] — 28 Sep 2026
 **User ka report:** hero me ek visual bug — `hero-reveal.webp` ka **sunglasses ka chhota sa hissa (right lens tip)** bina cursor ke bhi dikh raha tha.

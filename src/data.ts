@@ -44,7 +44,11 @@ export const LOADING_WORDS = ['Grow', 'Market', 'Convert']
 
 export const NAV_LINKS = [
   { label: 'Home', target: 'home' },
+  { label: 'About', target: 'about' },
+  { label: 'Capabilities', target: 'capabilities' },
   { label: 'Work', target: 'work' },
+  { label: 'Vision', target: 'vision' },
+  { label: 'Contact', target: 'contact' },
   { label: 'Resume', target: 'resume', route: '/resume' },
 ]
 
