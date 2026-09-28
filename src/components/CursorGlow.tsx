@@ -2,13 +2,15 @@ import { useEffect, useRef } from 'react'
 
 export default function CursorGlow() {
   const glowRef = useRef<HTMLDivElement>(null)
-  const target = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+  const target = useRef({ x: 0, y: 0 })
   const visible = useRef(false)
   const inSection = useRef(false)
 
   useEffect(() => {
     const glow = glowRef.current
     if (!glow) return
+
+    target.current = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
 
     let rafId: number | null = null
 

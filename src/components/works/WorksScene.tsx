@@ -1,13 +1,10 @@
 import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import type { MutableRefObject } from 'react'
-import type { WorkProject } from './projectsData'
+import { PANEL_SPACING, type WorkProject } from './projectsData'
 import type { PanelScreenRect } from './ProjectPanel'
 import GridFloor from './GridFloor'
 import ProjectPanel from './ProjectPanel'
-
-export const PANEL_SPACING = 8
-export const PANEL_COUNT = 4
 
 const CAM_START_Z = 7
 const CAM_FAR_Z = CAM_START_Z - 25
