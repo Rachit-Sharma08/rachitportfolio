@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import RevealHeading from './RevealHeading'
+import { Reveal } from './Reveal'
 
 interface SectionHeaderProps {
   eyebrow: string
@@ -9,8 +9,6 @@ interface SectionHeaderProps {
   action?: ReactNode
 }
 
-const EASE = [0.16, 1, 0.3, 1] as const
-
 export default function SectionHeader({
   eyebrow,
   segments,
@@ -18,13 +16,7 @@ export default function SectionHeader({
   action,
 }: SectionHeaderProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 1, ease: EASE }}
-      className="mb-12 flex flex-col items-start justify-between gap-8 md:mb-16 md:flex-row md:items-end"
-    >
+    <Reveal className="mb-12 flex flex-col items-start justify-between gap-8 md:mb-16 md:flex-row md:items-end">
       <div>
         <div className="eyebrow mb-5">{eyebrow}</div>
         <RevealHeading
@@ -38,6 +30,6 @@ export default function SectionHeader({
         </p>
       </div>
       {action}
-    </motion.div>
+    </Reveal>
   )
 }

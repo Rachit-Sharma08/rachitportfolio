@@ -9,44 +9,64 @@ import Vision from '../components/Vision'
 import Stats from '../components/Stats'
 import EnquiryForm from '../components/EnquiryForm'
 import Contact from '../components/Contact'
+import Magnetic from '../components/Magnetic'
 import { SOCIALS } from '../data'
-import { scrollToSection, scrollToTop } from '../lib/lenis'
+import { scrollToSection, scrollToTop, queueScroll } from '../lib/lenis'
 
-interface LandingProps {
-  ready?: boolean
-}
-
-export default function Landing({ ready = true }: LandingProps) {
+export default function Landing() {
   const location = useLocation()
 
   useEffect(() => {
     const targetId = (location.state as { scrollTo?: string } | null)?.scrollTo
     if (targetId && location.pathname === '/') {
-      const timeout = window.setTimeout(() => {
+      // The cross-route scroll can't fire on the first frame: the page is still
+      // mid route-transition and the web fonts haven't swapped the headings
+      // into their final width yet, so any measurement taken now is stale and
+      // Lenis would lock onto a target that later moves (seen in QA as the
+      // scroll holding ~296px short). Wait for fonts + the 600ms enter
+      // transition to finish, then measure once.
+      let cancelled = false
+      const run = () => {
+        if (cancelled) return
         scrollToSection(targetId)
-      }, 100)
-      return () => window.clearTimeout(timeout)
+      }
+      const timer = window.setTimeout(() => {
+        const fonts = (document as Document & { fonts?: { ready: Promise<unknown> } })
+          .fonts?.ready
+        if (fonts) {
+          fonts.then(() => requestAnimationFrame(run)).catch(run)
+        } else {
+          run()
+        }
+      }, 650)
+      const cancel = () => {
+        cancelled = true
+        window.clearTimeout(timer)
+      }
+      return queueScroll(cancel)
     }
     scrollToTop()
   }, [location])
 
   return (
     <main>
-      <Hero ready={ready} />
+      <Hero />
       <About />
       <Capabilities />
       <SelectedWork />
       <Vision />
       <Journal
         action={
-          <a
-            href={SOCIALS.github}
-            target="_blank"
-            rel="noreferrer"
-            className="pill border-gradient-ring hidden px-6 py-3 text-sm transition-transform duration-500 hover:scale-105 md:inline-flex"
-          >
-            View all ↗
-          </a>
+          <Magnetic className="hidden md:inline-block">
+            <a
+              href={SOCIALS.github}
+              target="_blank"
+              rel="noreferrer"
+              className="pill border-gradient-ring inline-flex px-6 py-3 text-sm"
+            >
+              View all ↗
+            </a>
+          </Magnetic>
         }
       />
       <Stats />

@@ -1,6 +1,4 @@
-import { motion } from 'framer-motion'
-
-const EASE = [0.16, 1, 0.3, 1] as const
+import { Reveal, RevealGroup, RevealItem } from './Reveal'
 
 const LINES = [
   { text: "I don't just run campaigns.", accent: false },
@@ -27,34 +25,25 @@ export default function Vision() {
 
       <div className="shell relative z-10">
         <div className="shell-inner">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.9, ease: EASE }}
-          className="eyebrow mb-10 md:mb-14"
-        >
-          My Vision
-        </motion.p>
+          <Reveal>
+            <p className="eyebrow mb-10 md:mb-14">My Vision</p>
+          </Reveal>
 
-        <div className="flex flex-col gap-5 md:gap-6">
-          {LINES.map((line, i) => (
-            <motion.p
-              key={line.text}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.8, ease: EASE, delay: i * 0.07 }}
-              className={
-                line.accent
-                  ? 'text-3xl font-extrabold leading-[1.05] tracking-[-0.03em] text-text-primary md:text-5xl lg:text-6xl'
-                  : 'text-2xl font-medium leading-[1.15] tracking-[-0.02em] text-muted md:text-4xl lg:text-5xl'
-              }
-            >
-              {line.text}
-            </motion.p>
-          ))}
-        </div>
+          <RevealGroup className="flex flex-col gap-5 md:gap-6" stagger={0.08}>
+            {LINES.map((line) => (
+              <RevealItem key={line.text}>
+                <p
+                  className={
+                    line.accent
+                      ? 'text-3xl font-extrabold leading-[1.05] tracking-[-0.03em] text-text-primary md:text-5xl lg:text-6xl'
+                      : 'text-2xl font-medium leading-[1.15] tracking-[-0.02em] text-muted md:text-4xl lg:text-5xl'
+                  }
+                >
+                  {line.text}
+                </p>
+              </RevealItem>
+            ))}
+          </RevealGroup>
         </div>
       </div>
     </section>

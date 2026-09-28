@@ -1,17 +1,40 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import { NAV_LINKS } from '../data'
 import Magnetic from './Magnetic'
+import { easeExpo, REDUCED_DURATION } from '../lib/motion'
 import { scrollToSection, scrollToTop } from '../lib/lenis'
+
+/** Pixels of travel that must be exceeded before the direction flips. */
+const DIRECTION_THRESHOLD = 6
+
+/** Below this the navbar stays put — it must not flicker at the top of the page. */
+const REVEAL_ALWAYS_BELOW = 140
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
   const location = useLocation()
   const navigate = useNavigate()
+  const reduce = useReducedMotion()
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 100)
+    let last = window.scrollY
+
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 100)
+
+      if (y > REVEAL_ALWAYS_BELOW && y > last + DIRECTION_THRESHOLD) {
+        setHidden(true)
+      } else if (y < last - DIRECTION_THRESHOLD) {
+        setHidden(false)
+      }
+      last = y
+    }
+
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -47,11 +70,29 @@ export default function Navbar() {
       navigate('/', { state: { scrollTo: target } })
       return
     }
+    // During the route enter transition the sections aren't mounted yet, so a
+    // same-page click would find no target. Defer to the Landing queued scroll
+    // by forwarding the target through router state (replace keeps history).
+    if (!document.getElementById(target)) {
+      navigate('/', { replace: true, state: { scrollTo: target } })
+      return
+    }
     scrollToSection(target)
   }
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 flex justify-center px-4 pt-4 md:pt-6">
+    <motion.header
+      className="fixed left-0 right-0 top-0 z-50 flex justify-center px-4 pt-4 md:pt-6"
+      // Hides on the way down to hand the screen back to the content, comes
+      // straight back the instant the user scrolls up — the gesture people
+      // expect from a nav on a long page.
+      initial={false}
+      animate={{ y: hidden && !reduce ? '-130%' : '0%' }}
+      transition={{
+        duration: reduce ? REDUCED_DURATION : 0.5,
+        ease: easeExpo(),
+      }}
+    >
       <nav
         className={`inline-flex max-w-[calc(100vw-2rem)] items-center overflow-x-auto rounded-full border border-stroke bg-bg/60 px-2 py-2 backdrop-blur-xl [scrollbar-width:none] transition-shadow duration-500 [&::-webkit-scrollbar]:hidden ${
           scrolled ? 'shadow-[0_18px_50px_-24px_rgba(214,46,74,0.55)]' : ''
@@ -86,9 +127,10 @@ export default function Navbar() {
                 key={link.label}
                 type="button"
                 onClick={() => goTo(link.target, link.route)}
+                aria-current={isActive ? 'page' : undefined}
                 className={`rounded-full px-3 py-2 text-[13px] transition-colors duration-300 md:px-4 ${
                   isActive
-                    ? 'text-text-primary'
+                    ? 'bg-accent-soft text-text-primary'
                     : 'text-muted hover:text-text-primary'
                 }`}
               >
@@ -105,13 +147,13 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => goTo('contact', undefined)}
-              className="pill pill-primary border-gradient-ring px-4 py-2 text-[13px] transition-transform duration-300 hover:scale-105 md:px-5"
+              className="pill pill-primary border-gradient-ring px-4 py-2 text-[13px] md:px-5"
             >
               Say hi <span className="inline-block">↗</span>
             </button>
           </Magnetic>
         </div>
       </nav>
-    </header>
+    </motion.header>
   )
 }

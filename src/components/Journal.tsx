@@ -1,12 +1,10 @@
-import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import RevealHeading from './RevealHeading'
+import { Reveal, RevealGroup, RevealItem } from './Reveal'
 
 interface JournalProps {
   action?: ReactNode
 }
-
-const EASE = [0.16, 1, 0.3, 1] as const
 
 export default function Journal({ action }: JournalProps) {
   const entries = [
@@ -35,13 +33,7 @@ export default function Journal({ action }: JournalProps) {
     <section id="journal" className="section bg-bg">
       <div className="shell">
         <div className="shell-inner">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 1, ease: EASE }}
-          className="mb-12 flex flex-col items-start justify-between gap-8 md:mb-16 md:flex-row md:items-end"
-        >
+        <Reveal className="mb-12 flex flex-col items-start justify-between gap-8 md:mb-16 md:flex-row md:items-end">
           <div>
             <div className="eyebrow mb-5">Journal</div>
             <RevealHeading
@@ -58,28 +50,23 @@ export default function Journal({ action }: JournalProps) {
             </p>
           </div>
           {action}
-        </motion.div>
+        </Reveal>
 
-        <div className="flex flex-col gap-4">
+        <RevealGroup className="flex flex-col gap-4" stagger={0.08}>
           {entries.map((entry, i) => (
-            <motion.article
-              key={entry.tag + i}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.9, ease: EASE, delay: i * 0.08 }}
-              className="glass lift flex items-center gap-6 rounded-tile p-5 sm:rounded-full sm:py-5 sm:pl-8 sm:pr-7"
-            >
-              <span className="hidden h-2 w-2 flex-shrink-0 rounded-full accent-gradient sm:block" />
-              <p className="flex-1 text-sm text-text-primary md:text-base">
-                {entry.title}
-              </p>
-              <span className="chip flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-[11px] uppercase tracking-[0.2em]">
-                {entry.tag}
-              </span>
-            </motion.article>
+            <RevealItem key={entry.tag + i}>
+              <article className="glass lift flex items-center gap-6 rounded-tile p-5 sm:rounded-full sm:py-5 sm:pl-8 sm:pr-7">
+                <span className="hidden h-2 w-2 flex-shrink-0 rounded-full accent-gradient sm:block" />
+                <p className="flex-1 text-sm text-text-primary md:text-base">
+                  {entry.title}
+                </p>
+                <span className="chip flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-[11px] uppercase tracking-[0.2em]">
+                  {entry.tag}
+                </span>
+              </article>
+            </RevealItem>
           ))}
-        </div>
+        </RevealGroup>
         </div>
       </div>
     </section>

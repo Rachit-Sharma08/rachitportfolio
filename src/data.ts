@@ -29,8 +29,6 @@ export const HERO_IMAGES = {
 export const HERO_INTRO =
   'Blending digital marketing strategy with AI tools to build brands, campaigns, and creative projects that actually connect.'
 
-export const LOADING_WORDS = ['Grow', 'Market', 'Convert']
-
 export const NAV_LINKS = [
   { label: 'Home', target: 'home' },
   { label: 'About', target: 'about' },

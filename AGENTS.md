@@ -83,6 +83,49 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v25 — Consistent subtle animation system + Lenis nav fixes] — 29 Sep 2026
+**User ka brief:** v24 (PROJECTS) gthets hua; ab baaki poore site par EXACT wahi subtle animation language (once-only reveals, gated on reduced-motion). **Hero aur projects stacking (work section) DONO protected** — `Hero.tsx`, `SelectedWork.tsx`, `src/components/work/*` touch NAHI. Content/order/links jobsa ka waisa. Final me file list do.
+
+**BIGGAN: sehriya + masked line reveals (`src/lib/motion.ts` + `src/components/Reveal.tsx` + `RevealHeading.tsx` rewrite):**
+- Shared tokens: `EASE = power3.out`, `CINEMA = expo.out` bezier tuples, `DUR_BASE 0.9s`, `REVEAL_STAGGER 0.12`, `REDUCED_DURATION 0.4`, `STORY_FROM 0.25`, `GSAP_POWER3_OUT 'power3.out'`.
+- House rules documented in code: 0.6–1.2s, `power3.out`/`expo.out`, `once: true`, reduced-motion gate, sirf transform+opacity, no spring/bounce/overshoot.
+- `Reveal` (component): `mask = 'word' | 'line' | 'block'`, per-word `translateY(110%)` ITER → container overflow-hidden, `viewport={{ once: true, margin: '0px 0px -10% 0px' }}`, `whileInView`, `useReducedMotion` (reduce → duration 0 / y 0). **framer input `initial` raw serialized hote hain prerender me → page-in CSS fade `.js #root` fallback** (neeche CSS me).
+- `RevealHeading` ab ek h1/h2 tag (semantic) + per-word masked spans — **aria-label = visible text** (aria-label escape-hatch tabhi jab text breakup bina space ke ho). `Reveal` (`as` title wrapper) + `RevealGroup` + `RevealItem` micro-API.
+- **Refactor pura ho gaya:** About, Capabilities, Vision, Journal, Stats, SectionHeader, EnquiryForm, Footer, Resume, Landing (Journal CTA). Purane standalone reveal/cardAnim code delete.
+
+**LoadingScreen delete:** `src/components/LoadingScreen.tsx` + `LOADING_WORDS` (`data.ts`) gayab. Hero ready-prop contract bhi hata diya (ab hamesha animate). **Page enter ab CSS fade** — `@keyframes page-in` + `.js #root { animation: 0.9s var(--ease-cinematic) both }` (0.4s reduced). CSS isliye: framer ke `initial` muqayyada prerendered HTML me serialized opacity:0 ka muqabla.
+
+**Magnetic rewrite (`Magnetic.tsx`):** elastic.out chali (overshoot chalta tha). Ab gsap.quickTo x/y, `power3.out`, `duration 0.45`, **hard clamp ±8px**, gate `(hover:hover) and (pointer:fine)` + no-preference, glass animation dead par `gsap.killTweensOf`.
+
+**ScrollProgress:** top 2px crimson bar, rAF, `scaleX` = scroll fraction. SSR-safe (no initial size read).
+
+**Navbar hide/show on scroll:** `motion.header` `animate y: -130% / 0%` (0.5s expo, reduce 0.4s), `DIRECTION_THRESHOLD 6px`, `REVEAL_ALWAYS_BELOW 140px`. Active-link highlight via IntersectionObserver (`rootMargin: '-40% 0px -55% 0px'`).
+
+**About story scrub (`useStoryReveal.ts`):** `data-story-line` paragraphs, ScrollTrigger `fromTo(opacity: STORY_FROM 0.25 → 1)`, `start 'top 94%' end 'top 64%'`, `ease: 'none'`, `scrub: true` — reading pace = reveal pace. `gsap.matchMedia` (no-preference only), dynamic `import('gsap/ScrollTrigger')` same 42.75 kB chunk as useWorkStackAnim.
+
+**Contact pulse:** ek non-looping `scale [1,1.015,1]` (1.4s power3.out) on Contact email CTA (navbar "Say hi" protected).
+
+**Lenis issues QA me pakde + fix kiye (real bugs):**
+1. **Cross-route scroll araar ~296px ruk jata tha** (landing auto-scroll fire 100ms par, route-intransition + fonts unswapped WIDTH par target lock hota tha → section move ho jata). Fix: Landing autoscroll ab **650ms + `document.fonts.ready` + 1 rAF** ka wait karta hai (comment decode karta hai), phir ek baar measure karta hai. Same-page work, cross-route ab bhi 96px par settle.
+2. **Queued-scroll race:** user nav click within defer-window par baad ka queued scroll page ko BE SHAKTA tha. Fix: `queueScroll()` (lenis.ts) + har intentional `scrollToSection/scrollToTop` pehle queued scroll ko cancel karta hai.
+3. **Route enter ke dauraan sections mount nahi hote → same-page nav miss:** `Navbar.goTo` ab target missing par `navigate('/', { replace: true, state: { scrollTo } })` se defer kar deta hai.
+4. **Reduced-motion me serf scroll chalti thi:** Lenis animate karta, lekin reduce par instist `scrollIntoView(behavior: 'auto')` + `window.scrollTo` (lenis.ts `reducedMotion()` helper).
+5. **scroll-margin DOUBLE-COUNT bug:** Lenis khud `scroll-margin-top` respect karta hai → JS offset double karta tha (section ~186px upar utar jata). Ab `scroll-margin-top: 96px` (index.css) = SINGLE knob, `lenis.scrollTo(el, { offset: 0 })`. QA ke mut sig sections exactly 96px.
+
+**index.css:** `html { scroll-behavior: smooth }` hata diya (Lenis se conflict); `section[id] { scroll-margin-top: 96px }`; `@keyframes page-in` + `.js #root` fade; focus-visible rings uniform.
+
+**Verification (preview localhost:4174, Playwright):**
+- Cross-route resume→'/' About = `804/96` settle; same-page Home→0, About/Work/Vision/Contact→96; `<a href="#journal">` → 96; full round-trip re-scroll par saari headings `transform: none` (re-reveal NAHI hota, `once:true`).
+- Magnetic: synthetic pointermove → `translate3d(8px,0,0)` — clamp exactly 8px, no overshoot; media gates pass.
+- Reduced-motion: heading spans pop `opacity 1 / none` (no y travel), story paragraphs `opacity 1` (scrub NOT attached), cross-route + same-page all **instant** jump to correct offset.
+- Masked heading entrance captured live: word spans translateY decay `1.4px → 0.37px → none`; italic accent line deeper (`3.57px`).
+- Mobile 360/390: **0 horizontal overflow**; 6 viewport sweep overflowX 0.
+- Console: 0 errors, 0 warnings (landing scroll-full + resume + route round-trip).
+- `npm run lint` 0 error·0 warning; `npm run build` pass (prerender `/` 45,015 B, `/resume` 8,369 B; index chunk 501.30 kB gzip 163.20, ScrollTrigger 42.75 kB async, CSS 47.89 kB — pre-existing chunk-size warning hi).
+- ✅ **Pushed to `main`** (user ne soye hue explicitly permission di — "github or vercel dono par push kar diyo"). Vercel auto-deploy hoga.
+
+**Files changed (v25):** `src/lib/motion.ts` NEW, `src/lib/useStoryReveal.ts` NEW, `src/components/Reveal.tsx` NEW, `src/components/ScrollProgress.tsx` NEW, `src/components/RevealHeading.tsx`, `Magnetic.tsx`, `Navbar.tsx`, `About.tsx`, `Capabilities.tsx`, `Vision.tsx`, `Journal.tsx`, `Stats.tsx`, `SectionHeader.tsx`, `EnquiryForm.tsx`, `Footer.tsx`, `Contact.tsx`, `src/pages/Landing.tsx`, `src/pages/Resume.tsx`, `src/App.tsx`, `src/lib/lenis.ts`, `src/index.css`, `src/data.ts`, `index.html`, `src/components/LoadingScreen.tsx` DELETED.
+
 ### [v24 — PROJECTS section rebuild: sticky stacking cards + GSAP] — 29 Sep 2026
 **User ka brief:** **sirf PROJECTS section** rebuild karo — 4 projects ko sticky stacking cards me dobara layout karo + subtle GSAP animations. **Hero ya koi aur section touch NAHI.** Project titles/descriptions/images/links/tags **bilkul change mat karo.** Animation subtle rakho (heavy fly-through / 3D nahi).
 

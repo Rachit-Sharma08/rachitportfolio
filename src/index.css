@@ -75,7 +75,10 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* No `scroll-behavior: smooth` here on purpose: Lenis drives the scroll
+     position itself, and leaving the native smooth behaviour enabled makes
+     keyboard paging, focus jumps and anchor links stutter against it. */
+  -webkit-text-size-adjust: 100%;
 }
 
 section[id] {
@@ -97,6 +100,32 @@ body {
 ::selection {
   background: rgba(214, 46, 74, 0.35);
   color: #fff;
+}
+
+/* --- Page intro --------------------------------------------------------- */
+
+/* Fades the document up out of the background colour on first paint.
+   Deliberately done in CSS rather than with a framer `initial` prop: an
+   `initial` would be serialised into the pre-rendered HTML as
+   `style="opacity:0"`, leaving the shipped markup invisible without JS.
+   Only opacity animates, so nothing reflows and there is no layout shift. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.js #root {
+  animation: page-in 0.9s var(--ease-cinematic) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js #root {
+    animation-duration: 0.4s;
+  }
 }
 
 * {

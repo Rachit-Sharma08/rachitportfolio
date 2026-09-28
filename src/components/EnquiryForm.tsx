@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import RevealHeading from './RevealHeading'
+import { Reveal } from './Reveal'
+import Magnetic from './Magnetic'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/send-email'
 
@@ -94,12 +96,15 @@ export default function EnquiryForm() {
             className="mb-4 text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:text-6xl"
             delay={0.1}
           />
-          <p className="mb-12 text-sm text-muted md:text-base">
-            Have a project, a collab idea, or just want to say hi? Fill this in and
-            I'll get back to you.
-          </p>
+          <Reveal>
+            <p className="mb-12 text-sm text-muted md:text-base">
+              Have a project, a collab idea, or just want to say hi? Fill this in and
+              I'll get back to you.
+            </p>
+          </Reveal>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <Reveal>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div>
               <input
                 type="text"
@@ -153,13 +158,15 @@ export default function EnquiryForm() {
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={sending || sent}
-              className="pill pill-primary border-gradient-ring cursor-pointer self-start px-8 py-3 text-sm transition-transform duration-300 hover:scale-105 disabled:cursor-default disabled:opacity-70 disabled:hover:scale-100"
-            >
-              {sent ? 'Message sent ✓' : sending ? 'Sending...' : 'Send'}
-            </button>
+            <Magnetic strength={0.4} className="self-start">
+              <button
+                type="submit"
+                disabled={sending || sent}
+                className="pill pill-primary border-gradient-ring cursor-pointer px-8 py-3 text-sm disabled:cursor-default disabled:opacity-70"
+              >
+                {sent ? 'Message sent ✓' : sending ? 'Sending...' : 'Send'}
+              </button>
+            </Magnetic>
 
             {failed && (
               <p className="mt-2 text-xs text-danger">
@@ -167,6 +174,7 @@ export default function EnquiryForm() {
               </p>
             )}
           </form>
+          </Reveal>
         </div>
         </div>
       </div>

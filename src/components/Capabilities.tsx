@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import {
   Bot,
   MessageCircle,
@@ -13,8 +12,7 @@ import {
   GraduationCap,
 } from 'lucide-react'
 import RevealHeading from './RevealHeading'
-
-const EASE = [0.16, 1, 0.3, 1] as const
+import { Reveal, RevealGroup, RevealItem } from './Reveal'
 
 const TOOLS = [
   { icon: Bot, label: 'OpenCode', sub: 'Coding Agent' },
@@ -46,60 +44,54 @@ export default function Capabilities() {
 
         <div className="space-y-12">
           <div>
-            <p className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
-              Tools I use
-            </p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-              {TOOLS.map((item, i) => (
-                <motion.div
-                  key={item.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
-                  className="glass lift group flex flex-col items-center gap-3 p-5 text-center"
-                >
-                  <item.icon
-                    size={24}
-                    strokeWidth={1.4}
-                    className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
-                  />
-                  <div>
-                    <span className="block text-sm text-text-primary">
-                      {item.label}
-                    </span>
-                    <span className="mt-0.5 block text-[11px] text-muted">
-                      {item.sub}
-                    </span>
+            <Reveal>
+              <p className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
+                Tools I use
+              </p>
+            </Reveal>
+            <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5" stagger={0.06}>
+              {TOOLS.map((item) => (
+                <RevealItem key={item.label} className="h-full">
+                  <div className="glass lift group flex h-full flex-col items-center gap-3 p-5 text-center">
+                    <item.icon
+                      size={24}
+                      strokeWidth={1.4}
+                      className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
+                    />
+                    <div>
+                      <span className="block text-sm text-text-primary">
+                        {item.label}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] text-muted">
+                        {item.sub}
+                      </span>
+                    </div>
                   </div>
-                </motion.div>
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           </div>
 
           <div>
-            <p className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
-              What I bring
-            </p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-              {SKILLS.map((item, i) => (
-                <motion.div
-                  key={item.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
-                  className="glass lift group flex flex-col items-center gap-3 p-5 text-center"
-                >
-                  <item.icon
-                    size={24}
-                    strokeWidth={1.4}
-                    className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
-                  />
-                  <span className="text-sm text-text-primary">{item.label}</span>
-                </motion.div>
+            <Reveal>
+              <p className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
+                What I bring
+              </p>
+            </Reveal>
+            <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5" stagger={0.06}>
+              {SKILLS.map((item) => (
+                <RevealItem key={item.label} className="h-full">
+                  <div className="glass lift group flex h-full flex-col items-center gap-3 p-5 text-center">
+                    <item.icon
+                      size={24}
+                      strokeWidth={1.4}
+                      className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
+                    />
+                    <span className="text-sm text-text-primary">{item.label}</span>
+                  </div>
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           </div>
         </div>
         </div>

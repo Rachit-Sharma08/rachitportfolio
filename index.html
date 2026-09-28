@@ -17,6 +17,12 @@
     />
     <link rel="preload" as="image" href="/assets/hero-base.webp" type="image/webp" fetchpriority="high" />
     <link rel="preload" as="image" href="/assets/hero-reveal.webp" type="image/webp" fetchpriority="low" />
+    <!-- Marks the document as script-capable before first paint. The page
+         fade-in is scoped to `.js` so that a crawler or a visitor without JS
+         sees the content immediately instead of a permanently blank root. -->
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
   </head>
   <body>
     <div id="root"></div>

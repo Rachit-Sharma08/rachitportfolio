@@ -1,32 +1,36 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { BrowserRouter, useLocation, Routes, Route } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Lenis from 'lenis'
 import Landing from './pages/Landing'
 import Resume from './pages/Resume'
-import LoadingScreen from './components/LoadingScreen'
 import Grain from './components/Grain'
 import CursorGlow from './components/CursorGlow'
 import Navbar from './components/Navbar'
-import { setLenis } from './lib/lenis'
+import ScrollProgress from './components/ScrollProgress'
+import { initAnchorLinks, setLenis } from './lib/lenis'
 import { startKeepAlive } from './lib/keepalive'
+import { easeExpo } from './lib/motion'
 
-const EASE = [0.16, 1, 0.3, 1] as const
-
-function AnimatedRoutes({ ready }: { ready: boolean }) {
+function AnimatedRoutes() {
   const location = useLocation()
 
   return (
-    <AnimatePresence mode="wait">
+    // `initial={false}` suppresses the enter animation on the very first render
+    // only — the page fade-in is handled in CSS instead. Beyond fixing that, it
+    // matters for pre-rendering: framer would otherwise serialise
+    // `style="opacity:0"` into the static HTML that ships to crawlers.
+    // Subsequent route changes still transition.
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
-        transition={{ duration: 0.6, ease: EASE }}
+        transition={{ duration: 0.6, ease: easeExpo() }}
       >
         <Routes location={location}>
-          <Route path="/" element={<Landing ready={ready} />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/resume" element={<Resume />} />
         </Routes>
       </motion.div>
@@ -34,40 +38,37 @@ function AnimatedRoutes({ ready }: { ready: boolean }) {
   )
 }
 
-interface AppContentProps {
-  skipLoading?: boolean
-}
-
-export function AppContent({ skipLoading = false }: AppContentProps) {
-  const [isLoading, setIsLoading] = useState(() => (skipLoading ? false : true))
-
+export function AppContent() {
   useEffect(() => {
+    // lerp 0.1 keeps the glide long enough to feel smooth without the
+    // rubber-band lag that a lower value produces on a trackpad.
     const lenis = new Lenis({
       autoRaf: true,
-      lerp: 0.09,
+      lerp: 0.1,
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1.6,
     })
     setLenis(lenis)
+
+    const stopAnchors = initAnchorLinks()
     const stopKeepAlive = startKeepAlive()
+
     return () => {
+      stopAnchors()
       stopKeepAlive?.()
       setLenis(null)
       lenis.destroy()
     }
   }, [])
 
-  const onComplete = useCallback(() => setIsLoading(false), [])
-
   return (
     <>
       <Grain />
       <CursorGlow />
+      <ScrollProgress />
       <Navbar />
-
-      <AnimatePresence>
-        {isLoading && <LoadingScreen onComplete={onComplete} />}
-      </AnimatePresence>
-
-      <AnimatedRoutes ready={!isLoading} />
+      <AnimatedRoutes />
     </>
   )
 }
