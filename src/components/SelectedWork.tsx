@@ -26,22 +26,16 @@ function toProject(work: WorkProject): Project | undefined {
 
 function WorksFallback() {
   return (
-    <div
-      className="absolute inset-0 flex flex-col justify-center gap-3 px-6 sm:px-10"
-      style={{ background: '#05060a', fontFamily: 'Space Grotesk, sans-serif' }}
-    >
+    <div className="absolute inset-0 flex flex-col justify-center gap-3 px-6 sm:px-10">
       {WORK_PROJECTS.map((project) => (
         <div
           key={project.id}
-          className="flex items-baseline justify-between gap-4 border-b border-white/10 pb-3 pt-3"
+          className="flex items-baseline justify-between gap-4 border-b border-stroke pb-3 pt-3"
         >
-          <span
-            className="text-2xl font-semibold tracking-tight text-white sm:text-3xl"
-            style={{ fontFamily: 'Archivo, sans-serif' }}
-          >
+          <span className="text-2xl font-extrabold tracking-[-0.03em] text-text-primary sm:text-3xl">
             {project.title}
           </span>
-          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+          <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
             {project.tag}
           </span>
         </div>
@@ -90,15 +84,15 @@ export default function SelectedWork() {
   }
 
   return (
-    <section id="work" className="relative h-[400vh] bg-bg" ref={sectionRef}>
+    <section id="work" className="section-glow relative h-[400vh] bg-bg" ref={sectionRef}>
       <div className="sticky top-0 h-screen overflow-hidden bg-bg">
         <div className="pointer-events-none absolute inset-x-0 top-6 z-30 flex items-start justify-between px-6 sm:px-10">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
               Selected Work
             </span>
-            <span className="hidden h-px w-8 bg-white/20 sm:block" />
-            <span className="hidden text-[10px] uppercase tracking-[0.3em] text-white/30 sm:block">
+            <span className="hidden h-px w-8 bg-stroke sm:block" />
+            <span className="hidden text-[10px] uppercase tracking-[0.3em] text-muted/70 sm:block">
               04 Projects
             </span>
           </div>
@@ -106,7 +100,7 @@ export default function SelectedWork() {
             href={SOCIALS.github}
             target="_blank"
             rel="noreferrer"
-            className="pointer-events-auto rounded-full border border-white/15 px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm transition-colors duration-300 hover:border-white/40 hover:text-white"
+            className="pill pointer-events-auto px-5 py-2 text-[11px] uppercase tracking-[0.2em]"
           >
             View all work ↗
           </a>

@@ -69,7 +69,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
               transition={{ duration: 0.35, ease: EASE }}
-              className="block font-display text-4xl italic text-text-primary/80 md:text-6xl lg:text-7xl"
+              className="block font-display text-4xl italic text-accent-ink md:text-6xl lg:text-7xl"
             >
               {LOADING_WORDS[wordIndex]}
             </motion.span>
@@ -78,7 +78,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       </div>
 
       <motion.p
-        className="absolute bottom-10 right-6 font-display text-6xl text-text-primary tabular-nums md:right-10 md:text-8xl lg:text-9xl"
+        className="absolute bottom-10 right-6 text-5xl font-extrabold tracking-[-0.04em] text-text-primary tabular-nums md:right-10 md:text-8xl lg:text-9xl"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: EASE, delay: 0.15 }}
@@ -92,7 +92,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           style={{
             transform: `scaleX(${count / 100})`,
             transformOrigin: 'left',
-            boxShadow: '0 0 8px rgba(137, 170, 204, 0.35)',
+            boxShadow: '0 0 8px rgba(214, 46, 74, 0.45)',
           }}
         />
       </div>

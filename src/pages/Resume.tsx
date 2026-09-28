@@ -29,18 +29,18 @@ function Block({
 
 export default function Resume(): ReactNode {
   return (
-    <main className="mx-auto min-h-screen max-w-[860px] bg-bg px-6 pb-16 pt-32 md:px-10 md:pt-40">
+    <main className="section section-glow min-h-screen bg-bg">
+      <div className="shell">
+        <div className="shell-inner">
       <Block>
-        <p className="mb-4 text-xs uppercase tracking-[0.3em] text-muted">
-          Resume
-        </p>
+        <p className="eyebrow mb-5">Resume</p>
         <RevealHeading
           as="h1"
           segments={[
             { text: 'Rachit ' },
             { text: 'Sharma', italic: true },
           ]}
-          className="font-display text-6xl leading-[0.95] tracking-tight text-text-primary italic md:text-7xl"
+          className="text-5xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary md:text-7xl"
         />
         <p className="mt-6 text-sm text-muted md:text-base">
           Digital Marketing Specialist (in training) · Digital Marketing with AI
@@ -48,14 +48,14 @@ export default function Resume(): ReactNode {
         </p>
         <a
           href={`mailto:${PERSONAL.email}`}
-          className="mt-4 inline-block text-sm text-text-primary underline decoration-stroke underline-offset-4 transition-colors duration-300 hover:decoration-text-primary"
+          className="mt-4 inline-block text-sm text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
         >
           {PERSONAL.email}
         </a>
         <span className="mx-3 text-muted">·</span>
         <a
           href={PERSONAL.phoneHref}
-          className="inline-block text-sm text-text-primary underline decoration-stroke underline-offset-4 transition-colors duration-300 hover:decoration-text-primary"
+          className="inline-block text-sm text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
         >
           {PERSONAL.phone}
         </a>
@@ -63,7 +63,7 @@ export default function Resume(): ReactNode {
 
       <div className="mt-16 flex flex-col gap-14 md:mt-20">
         <Block delay={0.1}>
-          <h2 className="mb-5 font-display text-3xl italic tracking-tight text-text-primary md:text-4xl">
+          <h2 className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
             Education
           </h2>
           <div className="border-l border-stroke pl-6">
@@ -77,7 +77,7 @@ export default function Resume(): ReactNode {
         </Block>
 
         <Block delay={0.2}>
-          <h2 className="mb-5 font-display text-3xl italic tracking-tight text-text-primary md:text-4xl">
+          <h2 className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
             Skills
           </h2>
           <div className="flex flex-wrap gap-2.5">
@@ -90,10 +90,7 @@ export default function Resume(): ReactNode {
               'Canva',
               'Ad Design Basics',
             ].map((skill) => (
-              <span
-                key={skill}
-                className="rounded-full border border-stroke bg-surface px-4 py-2 text-sm text-text-primary"
-              >
+              <span key={skill} className="chip px-4 py-2 text-sm text-text-primary">
                 {skill}
               </span>
             ))}
@@ -101,7 +98,7 @@ export default function Resume(): ReactNode {
         </Block>
 
         <Block delay={0.3}>
-          <h2 className="mb-5 font-display text-3xl italic tracking-tight text-text-primary md:text-4xl">
+          <h2 className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
             Projects
           </h2>
           <div className="space-y-6 border-l border-stroke pl-6">
@@ -128,6 +125,8 @@ export default function Resume(): ReactNode {
 
       <div className="mt-20">
         <Footer />
+      </div>
+        </div>
       </div>
     </main>
   )

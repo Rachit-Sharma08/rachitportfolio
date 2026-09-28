@@ -47,9 +47,9 @@ export default function RevealHeading({
           style={{ paddingBottom: '0.08em', marginBottom: '-0.08em' }}
         >
           <motion.span
-            className={`inline-block ${italic ? 'font-display italic' : ''} ${
-              wordCls ?? ''
-            }`}
+            className={`inline-block ${
+              italic ? 'font-display text-[0.76em] font-normal italic' : ''
+            } ${wordCls ?? ''}`}
             initial={{ y: '110%' }}
             whileInView={{ y: '0%' }}
             viewport={{ once: true, margin: '-80px' }}

@@ -53,8 +53,8 @@ export default function Navbar() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 flex justify-center px-4 pt-4 md:pt-6">
       <nav
-        className={`inline-flex max-w-[calc(100vw-2rem)] items-center overflow-x-auto rounded-full border border-white/10 bg-surface px-2 py-2 [scrollbar-width:none] transition-shadow duration-500 [&::-webkit-scrollbar]:hidden ${
-          scrolled ? 'shadow-md shadow-black/10' : ''
+        className={`inline-flex max-w-[calc(100vw-2rem)] items-center overflow-x-auto rounded-full border border-stroke bg-bg/60 px-2 py-2 backdrop-blur-xl [scrollbar-width:none] transition-shadow duration-500 [&::-webkit-scrollbar]:hidden ${
+          scrolled ? 'shadow-[0_18px_50px_-24px_rgba(214,46,74,0.55)]' : ''
         }`}
       >
         <button
@@ -105,7 +105,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => goTo('contact', undefined)}
-              className="border-gradient-ring rounded-full bg-surface px-4 py-2 text-[13px] font-medium text-text-primary transition-colors duration-300 hover:text-text-primary md:px-5"
+              className="pill pill-primary border-gradient-ring px-4 py-2 text-[13px] transition-transform duration-300 hover:scale-105 md:px-5"
             >
               Say hi <span className="inline-block">↗</span>
             </button>

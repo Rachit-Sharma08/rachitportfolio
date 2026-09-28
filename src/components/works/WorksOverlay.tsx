@@ -33,25 +33,22 @@ export default function WorksOverlay({ progressRef, projects }: WorksOverlayProp
   }, [progressRef, projects])
 
   return (
-    <div
-      className="pointer-events-none absolute inset-0 z-10 text-white"
-      style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-    >
+    <div className="pointer-events-none absolute inset-0 z-10 text-white">
       <div className="absolute bottom-6 left-6 flex items-center gap-4 sm:left-10">
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50">
             Scroll to fly through
           </span>
           <span
             ref={slugRef}
-            className="text-[11px] uppercase tracking-[0.18em] text-white/70"
+            className="font-display text-base italic text-accent-ink"
           >
             {projects[0]?.slug ?? 'selected work'}
           </span>
           <div className="mt-1 h-px w-40 bg-white/15 sm:w-56">
             <div
               ref={barRef}
-              className="h-px w-full origin-left bg-white"
+              className="h-px w-full origin-left accent-gradient"
               style={{ transform: 'scaleX(0)' }}
             />
           </div>
@@ -61,8 +58,7 @@ export default function WorksOverlay({ progressRef, projects }: WorksOverlayProp
       <div className="absolute bottom-6 right-6 flex items-baseline gap-1 sm:right-10">
         <span
           ref={numRef}
-          className="text-2xl font-light tabular-nums text-white"
-          style={{ fontFamily: 'Archivo, sans-serif' }}
+          className="text-2xl font-extrabold tabular-nums text-white"
         >
           01
         </span>

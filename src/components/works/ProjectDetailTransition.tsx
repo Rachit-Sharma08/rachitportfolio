@@ -40,7 +40,7 @@ export default function ProjectDetailTransition({
   const closingRef = useRef(false)
 
   const neon = isNeon(project.title)
-  const accent = project.accent ?? (project.comingSoon ? '#8A94A6' : '#4E85BF')
+  const accent = project.accent ?? (project.comingSoon ? '#7d6a70' : '#d62e4a')
   const comingSoon = Boolean(project.comingSoon)
 
   const reduceMotion = useMemo(
@@ -231,14 +231,14 @@ export default function ProjectDetailTransition({
               height: tile.size,
               opacity: 0,
               backgroundImage: tile.solid
-                ? `radial-gradient(circle at 40% 35%, ${accent} 0%, rgba(217,70,239,0.3) 45%, transparent 75%)`
+                ? `radial-gradient(circle at 40% 35%, ${accent} 0%, rgba(214, 46, 74, 0.3) 45%, transparent 75%)`
                 : project.image && !comingSoon
                   ? `url(${project.image})`
                   : `linear-gradient(135deg, ${accent}33 0%, ${accent}11 100%)`,
               backgroundSize: 'cover',
               backgroundPosition: tile.bgPos,
               backgroundColor: comingSoon
-                ? '#22242b'
+                ? '#1a0c11'
                 : project.image
                   ? 'transparent'
                   : `${accent}1a`,

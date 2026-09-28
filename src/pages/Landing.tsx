@@ -43,7 +43,7 @@ export default function Landing({ ready = true }: LandingProps) {
             href={SOCIALS.github}
             target="_blank"
             rel="noreferrer"
-            className="hidden rounded-full border border-stroke px-6 py-3 text-sm text-muted transition-all duration-500 hover:scale-105 hover:border-transparent hover:text-text-primary md:inline-flex border-gradient-ring"
+            className="pill border-gradient-ring hidden px-6 py-3 text-sm transition-transform duration-500 hover:scale-105 md:inline-flex"
           >
             View all ↗
           </a>

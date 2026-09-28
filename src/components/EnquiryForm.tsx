@@ -84,13 +84,14 @@ export default function EnquiryForm() {
   }
 
   return (
-    <section id="enquiry" className="bg-bg py-16 md:py-24">
-      <div className="mx-auto max-w-[1200px] px-6 md:px-10 lg:px-16">
-        <div className="mx-auto max-w-lg">
+    <section id="enquiry" className="section section-glow-right bg-bg">
+      <div className="shell">
+        <div className="shell-inner">
+        <div className="max-w-lg">
           <RevealHeading
             as="h2"
             segments={[{ text: 'Get in ' }, { text: 'touch', italic: true }]}
-            className="mb-4 font-display text-5xl leading-[1.05] tracking-tight text-text-primary italic md:text-6xl"
+            className="mb-4 text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:text-6xl"
             delay={0.1}
           />
           <p className="mb-12 text-sm text-muted md:text-base">
@@ -105,10 +106,10 @@ export default function EnquiryForm() {
                 placeholder="Name"
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
-                className="w-full rounded-full border border-stroke bg-surface/30 px-5 py-3 text-sm text-text-primary placeholder-muted outline-none transition-colors duration-300 focus:border-text-primary/40"
+                className="field w-full px-5 py-3 text-sm"
               />
               {errors.name && (
-                <p className="mt-1.5 px-4 text-xs text-rose-400">{errors.name}</p>
+                <p className="mt-1.5 px-4 text-xs text-danger">{errors.name}</p>
               )}
             </div>
 
@@ -118,17 +119,17 @@ export default function EnquiryForm() {
                 placeholder="Email"
                 value={form.email}
                 onChange={(e) => set('email', e.target.value)}
-                className="w-full rounded-full border border-stroke bg-surface/30 px-5 py-3 text-sm text-text-primary placeholder-muted outline-none transition-colors duration-300 focus:border-text-primary/40"
+                className="field w-full px-5 py-3 text-sm"
               />
               {errors.email && (
-                <p className="mt-1.5 px-4 text-xs text-rose-400">{errors.email}</p>
+                <p className="mt-1.5 px-4 text-xs text-danger">{errors.email}</p>
               )}
             </div>
 
             <select
               value={form.reason}
               onChange={(e) => set('reason', e.target.value as Reason)}
-              className="w-full appearance-none rounded-full border border-stroke bg-surface/30 px-5 py-3 text-sm text-text-primary outline-none transition-colors duration-300 focus:border-text-primary/40"
+              className="field w-full appearance-none px-5 py-3 text-sm"
             >
               {REASONS.map((r) => (
                 <option key={r} value={r}>
@@ -143,10 +144,10 @@ export default function EnquiryForm() {
                 rows={4}
                 value={form.message}
                 onChange={(e) => set('message', e.target.value)}
-                className="w-full resize-none rounded-3xl border border-stroke bg-surface/30 px-5 py-3 text-sm text-text-primary placeholder-muted outline-none transition-colors duration-300 focus:border-text-primary/40"
+                className="field w-full resize-none px-5 py-3 text-sm"
               />
               {errors.message && (
-                <p className="mt-1.5 px-4 text-xs text-rose-400">
+                <p className="mt-1.5 px-4 text-xs text-danger">
                   {errors.message}
                 </p>
               )}
@@ -155,17 +156,18 @@ export default function EnquiryForm() {
             <button
               type="submit"
               disabled={sending || sent}
-              className="self-start cursor-pointer rounded-full bg-text-primary px-8 py-3 text-sm font-medium text-bg transition-all duration-300 hover:scale-105 disabled:cursor-default disabled:opacity-70 disabled:hover:scale-100"
+              className="pill pill-primary border-gradient-ring cursor-pointer self-start px-8 py-3 text-sm transition-transform duration-300 hover:scale-105 disabled:cursor-default disabled:opacity-70 disabled:hover:scale-100"
             >
               {sent ? 'Message sent ✓' : sending ? 'Sending...' : 'Send'}
             </button>
 
             {failed && (
-              <p className="mt-2 text-xs text-rose-400">
+              <p className="mt-2 text-xs text-danger">
                 Something went wrong. Try again or email me directly.
               </p>
             )}
           </form>
+        </div>
         </div>
       </div>
     </section>
