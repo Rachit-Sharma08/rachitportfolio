@@ -13,6 +13,7 @@ export default function Vision() {
   return (
     <section
       id="vision"
+      aria-labelledby="vision-heading"
       className="section section-glow-center overflow-hidden bg-bg"
     >
       <div
@@ -26,7 +27,9 @@ export default function Vision() {
       <div className="shell relative z-10">
         <div className="shell-inner">
           <Reveal>
-            <p className="eyebrow mb-10 md:mb-14">My Vision</p>
+            <h2 id="vision-heading" className="eyebrow mb-10 md:mb-14">
+              My Vision
+            </h2>
           </Reveal>
 
           <RevealGroup className="flex flex-col gap-5 md:gap-6" stagger={0.08}>

@@ -94,18 +94,21 @@ export default function Navbar() {
       }}
     >
       <nav
+        aria-label="Main"
         className={`inline-flex max-w-[calc(100vw-2rem)] items-center overflow-x-auto rounded-full border border-stroke bg-bg/60 px-2 py-2 backdrop-blur-xl [scrollbar-width:none] transition-shadow duration-500 [&::-webkit-scrollbar]:hidden ${
           scrolled ? 'shadow-[0_18px_50px_-24px_rgba(214,46,74,0.55)]' : ''
         }`}
       >
-        <button
-          type="button"
-          onClick={() => {
+        <a
+          href="/"
+          data-no-intercept
+          onClick={(e) => {
+            e.preventDefault()
             if (location.pathname !== '/') navigate('/')
             else scrollToTop()
           }}
-          className="group relative ml-1 mr-1 h-9 w-9 rounded-full transition-transform duration-300 hover:scale-110"
-          aria-label="Rachit Sharma — home"
+          className="group nav-hit relative ml-1 mr-1 h-9 w-9 rounded-full transition-transform duration-300 hover:scale-110"
+          aria-label="Rachit Sharma RS — home"
         >
           <span className="logo-ring absolute inset-0 rounded-full" />
           <span className="absolute inset-[1.5px] grid place-items-center rounded-full bg-bg">
@@ -113,7 +116,7 @@ export default function Navbar() {
               RS
             </span>
           </span>
-        </button>
+        </a>
 
         <span className="mx-1 hidden h-5 w-px bg-stroke md:block" />
 
@@ -122,20 +125,25 @@ export default function Navbar() {
             const isActive = link.route
               ? location.pathname === link.route
               : active === link.target
+            const href = link.route ?? `#${link.target}`
             return (
-              <button
+              <a
                 key={link.label}
-                type="button"
-                onClick={() => goTo(link.target, link.route)}
+                href={href}
+                data-no-intercept
+                onClick={(e) => {
+                  e.preventDefault()
+                  goTo(link.target, link.route)
+                }}
                 aria-current={isActive ? 'page' : undefined}
-                className={`rounded-full px-3 py-2 text-[13px] transition-colors duration-300 md:px-4 ${
+                className={`nav-hit relative rounded-full px-3 py-2 text-[13px] transition-colors duration-300 md:px-4 ${
                   isActive
                     ? 'bg-accent-soft text-text-primary'
                     : 'text-muted hover:text-text-primary'
                 }`}
               >
                 {link.label}
-              </button>
+              </a>
             )
           })}
         </div>
@@ -144,13 +152,17 @@ export default function Navbar() {
 
         <div className="ml-1 mr-1 md:ml-2">
           <Magnetic strength={0.3}>
-            <button
-              type="button"
-              onClick={() => goTo('contact', undefined)}
-              className="pill pill-primary border-gradient-ring px-4 py-2 text-[13px] md:px-5"
+            <a
+              href="#contact"
+              data-no-intercept
+              onClick={(e) => {
+                e.preventDefault()
+                goTo('contact', undefined)
+              }}
+              className="pill pill-primary nav-hit relative border-gradient-ring px-4 py-2 text-[13px] md:px-5"
             >
               Say hi <span className="inline-block">↗</span>
-            </button>
+            </a>
           </Magnetic>
         </div>
       </nav>

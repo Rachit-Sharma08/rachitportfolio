@@ -32,11 +32,12 @@ const SKILLS = [
 
 export default function Capabilities() {
   return (
-    <section id="capabilities" className="section section-glow-right bg-bg">
+    <section id="capabilities" className="section section-glow-right bg-bg" aria-labelledby="capabilities-heading">
       <div className="shell">
         <div className="shell-inner">
         <RevealHeading
           as="h2"
+          id="capabilities-heading"
           segments={[{ text: 'My ' }, { text: 'Capabilities', italic: true }]}
           className="mb-14 text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:mb-20 md:text-6xl lg:text-7xl"
           delay={0.1}
@@ -62,7 +63,7 @@ export default function Capabilities() {
                       <span className="block text-sm text-text-primary">
                         {item.label}
                       </span>
-                      <span className="mt-0.5 block text-[11px] text-muted">
+                      <span className="mt-0.5 block text-xs text-muted">
                         {item.sub}
                       </span>
                     </div>

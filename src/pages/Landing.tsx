@@ -49,7 +49,7 @@ export default function Landing() {
   }, [location])
 
   return (
-    <main>
+    <main id="main" tabIndex={-1}>
       <Hero />
       <About />
       <Capabilities />
@@ -61,7 +61,7 @@ export default function Landing() {
             <a
               href={SOCIALS.github}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="pill border-gradient-ring inline-flex px-6 py-3 text-sm"
             >
               View all ↗

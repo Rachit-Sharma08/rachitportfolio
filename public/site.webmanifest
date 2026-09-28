@@ -1,0 +1,13 @@
+{
+  "name": "Rachit Sharma — Digital Marketer",
+  "short_name": "Rachit",
+  "description": "Rachit Sharma is a self-taught marketer pairing campaign strategy with 25+ AI tools to build brands and AI products.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0407",
+  "theme_color": "#0a0407",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

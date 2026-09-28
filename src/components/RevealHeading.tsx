@@ -18,6 +18,7 @@ interface RevealHeadingProps {
   as?: 'h1' | 'h2' | 'h3' | 'p' | 'span'
   className?: string
   delay?: number
+  id?: string
 }
 
 const LINE_DURATION = 0.9
@@ -43,6 +44,7 @@ export default function RevealHeading({
   as = 'h2',
   className = '',
   delay = 0,
+  id,
 }: RevealHeadingProps) {
   const Tag = as
   const reduce = useReducedMotion()
@@ -100,6 +102,7 @@ export default function RevealHeading({
 
   return (
     <Tag
+      id={id}
       className={`relative ${className}`}
       aria-label={segments.map((s) => s.text).join(' ')}
     >

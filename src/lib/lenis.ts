@@ -89,6 +89,10 @@ export function initAnchorLinks() {
     const anchor = (event.target as HTMLElement | null)?.closest?.('a')
     const href = anchor?.getAttribute('href')
     if (!href || href === '#' || !href.startsWith('#')) return
+    // Elements marked `data-no-intercept` drive their own scroll (the navbar's
+    // cross-route fallback) or their own behaviour (the skip link) — let them
+    // through so the browser default or the component handler can take over.
+    if (anchor?.hasAttribute('data-no-intercept')) return
 
     const id = href.slice(1)
     if (!document.getElementById(id)) return

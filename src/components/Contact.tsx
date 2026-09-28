@@ -12,6 +12,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
+      aria-labelledby="contact-heading"
       className="glow-section relative flex flex-col overflow-hidden pt-16 pb-8 md:pt-20 md:pb-12"
       style={{ minHeight: '100vh' }}
     >
@@ -43,6 +44,7 @@ export default function Contact() {
 
           <RevealHeading
             as="h2"
+            id="contact-heading"
             segments={[
               { text: "Let's " },
               { text: 'grow', italic: true },

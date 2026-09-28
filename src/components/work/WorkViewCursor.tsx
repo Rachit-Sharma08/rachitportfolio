@@ -74,7 +74,7 @@ export default function WorkViewCursor() {
     <div
       ref={ref}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-text text-[11px] font-medium uppercase tracking-[0.18em] text-bg opacity-0 shadow-[0_10px_40px_-12px_rgba(214,46,74,0.6)] will-change-transform,opacity"
+      className="pointer-events-none fixed left-0 top-0 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-text text-xs font-medium uppercase tracking-[0.18em] text-bg opacity-0 shadow-[0_10px_40px_-12px_rgba(214,46,74,0.6)] will-change-transform,opacity"
     >
       View
     </div>

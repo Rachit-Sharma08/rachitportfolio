@@ -86,18 +86,19 @@ export default function EnquiryForm() {
   }
 
   return (
-    <section id="enquiry" className="section section-glow-right bg-bg">
+    <section id="enquiry" className="section section-glow-right bg-bg" aria-labelledby="enquiry-heading">
       <div className="shell">
         <div className="shell-inner">
         <div className="max-w-lg">
           <RevealHeading
             as="h2"
+            id="enquiry-heading"
             segments={[{ text: 'Get in ' }, { text: 'touch', italic: true }]}
             className="mb-4 text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:text-6xl"
             delay={0.1}
           />
           <Reveal>
-            <p className="mb-12 text-sm text-muted md:text-base">
+            <p className="mb-12 text-base text-muted">
               Have a project, a collab idea, or just want to say hi? Fill this in and
               I'll get back to you.
             </p>
@@ -106,45 +107,65 @@ export default function EnquiryForm() {
           <Reveal>
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div>
+              <label htmlFor="enquiry-name" className="sr-only">
+                Name
+              </label>
               <input
+                id="enquiry-name"
                 type="text"
                 placeholder="Name"
+                autoComplete="name"
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
                 className="field w-full px-5 py-3 text-sm"
               />
               {errors.name && (
-                <p className="mt-1.5 px-4 text-xs text-danger">{errors.name}</p>
+                <p className="mt-1.5 px-4 text-xs text-danger" role="alert">{errors.name}</p>
               )}
             </div>
 
             <div>
+              <label htmlFor="enquiry-email" className="sr-only">
+                Email
+              </label>
               <input
+                id="enquiry-email"
                 type="email"
                 placeholder="Email"
+                autoComplete="email"
                 value={form.email}
                 onChange={(e) => set('email', e.target.value)}
                 className="field w-full px-5 py-3 text-sm"
               />
               {errors.email && (
-                <p className="mt-1.5 px-4 text-xs text-danger">{errors.email}</p>
+                <p className="mt-1.5 px-4 text-xs text-danger" role="alert">{errors.email}</p>
               )}
             </div>
 
-            <select
-              value={form.reason}
-              onChange={(e) => set('reason', e.target.value as Reason)}
-              className="field w-full appearance-none px-5 py-3 text-sm"
-            >
-              {REASONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label htmlFor="enquiry-reason" className="sr-only">
+                Reason for reaching out
+              </label>
+              <select
+                id="enquiry-reason"
+                value={form.reason}
+                onChange={(e) => set('reason', e.target.value as Reason)}
+                className="field w-full appearance-none px-5 py-3 text-sm"
+              >
+                {REASONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div>
+              <label htmlFor="enquiry-message" className="sr-only">
+                Your message
+              </label>
               <textarea
+                id="enquiry-message"
                 placeholder="Your message"
                 rows={4}
                 value={form.message}
@@ -152,7 +173,7 @@ export default function EnquiryForm() {
                 className="field w-full resize-none px-5 py-3 text-sm"
               />
               {errors.message && (
-                <p className="mt-1.5 px-4 text-xs text-danger">
+                <p className="mt-1.5 px-4 text-xs text-danger" role="alert">
                   {errors.message}
                 </p>
               )}

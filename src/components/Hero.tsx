@@ -165,6 +165,7 @@ export default function Hero({ ready = true }: HeroProps) {
     <section
       id="home"
       ref={sectionRef}
+      aria-labelledby="home-heading"
       className="relative isolate flex min-h-screen w-full flex-col overflow-hidden"
     >
       <div className="hero-bg pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
@@ -182,6 +183,8 @@ export default function Hero({ ready = true }: HeroProps) {
           <img
             src={HERO_IMAGES.base}
             alt="Rachit Sharma, Digital Marketer"
+            width={1086}
+            height={1448}
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
           />
@@ -189,6 +192,8 @@ export default function Hero({ ready = true }: HeroProps) {
             src={HERO_IMAGES.reveal}
             alt=""
             aria-hidden="true"
+            width={1086}
+            height={1448}
             draggable={false}
             className="hero-mask pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
           />
@@ -197,17 +202,21 @@ export default function Hero({ ready = true }: HeroProps) {
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col justify-start px-6 pt-[14vh] sm:px-8 lg:justify-center lg:pt-0 xl:px-16">
         <div className="max-w-[34rem] lg:max-w-[36%]">
-          <p className="hero-rise font-display text-lg italic text-muted sm:text-xl">
-            I&apos;m
-          </p>
-
-          <h1 className="hero-rise mt-1 font-body text-[clamp(3rem,min(9vw,15vh),8.5rem)] font-extrabold uppercase leading-[0.85] tracking-[-0.03em] text-text-primary">
-            Rachit
+          {/* One h1 for the whole hero statement. The three lines stay separate
+              mask/rise targets so the GSAP stagger and typography are unchanged.
+              Keeping a single h1 gives crawlers and screen readers the full
+              "I'm Rachit — Digital Marketer" headline instead of just the name. */}
+          <h1 id="home-heading">
+            <span className="hero-rise block font-display text-lg italic text-muted sm:text-xl">
+              I&apos;m
+            </span>
+            <span className="hero-rise mt-1 block font-body text-[clamp(3rem,min(9vw,15vh),8.5rem)] font-extrabold uppercase leading-[0.85] tracking-[-0.03em] text-text-primary">
+              Rachit
+            </span>
+            <span className="hero-rise mt-3 block font-display text-2xl italic text-text-primary/90 sm:text-3xl xl:text-4xl">
+              Digital Marketer
+            </span>
           </h1>
-
-          <p className="hero-rise mt-3 font-display text-2xl italic text-text-primary/90 sm:text-3xl xl:text-4xl">
-            Digital Marketer
-          </p>
 
           <div className="hero-rise mt-8 flex flex-wrap items-center gap-3">
             <Magnetic strength={0.35}>
@@ -236,7 +245,7 @@ export default function Hero({ ready = true }: HeroProps) {
       </div>
 
       <div className="pointer-events-none absolute bottom-8 left-6 z-10 hidden flex-col items-center gap-3 lg:flex xl:left-16">
-        <span className="text-[10px] uppercase tracking-[0.35em] text-muted">Scroll</span>
+        <span className="text-xs uppercase tracking-[0.35em] text-muted">Scroll</span>
         <div className="overflow-hidden pt-0">
           <div className="animate-scroll-down h-10 w-px bg-stroke" />
         </div>

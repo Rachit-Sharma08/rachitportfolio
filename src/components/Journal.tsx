@@ -30,7 +30,7 @@ export default function Journal({ action }: JournalProps) {
   ]
 
   return (
-    <section id="journal" className="section bg-bg">
+    <section id="journal" className="section bg-bg" aria-labelledby="journal-heading">
       <div className="shell">
         <div className="shell-inner">
         <Reveal className="mb-12 flex flex-col items-start justify-between gap-8 md:mb-16 md:flex-row md:items-end">
@@ -38,6 +38,7 @@ export default function Journal({ action }: JournalProps) {
             <div className="eyebrow mb-5">Journal</div>
             <RevealHeading
               as="h2"
+              id="journal-heading"
               segments={[
                 { text: 'Recent ' },
                 { text: 'thoughts', italic: true },
@@ -45,7 +46,7 @@ export default function Journal({ action }: JournalProps) {
               className="text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:text-6xl lg:text-7xl"
               delay={0.1}
             />
-            <p className="mt-5 max-w-md text-sm text-muted md:text-base">
+            <p className="mt-5 max-w-md text-base text-muted">
               Notes from my digital marketing + AI course work.
             </p>
           </div>
@@ -57,10 +58,10 @@ export default function Journal({ action }: JournalProps) {
             <RevealItem key={entry.tag + i}>
               <article className="glass lift flex items-center gap-6 rounded-tile p-5 sm:rounded-full sm:py-5 sm:pl-8 sm:pr-7">
                 <span className="hidden h-2 w-2 flex-shrink-0 rounded-full accent-gradient sm:block" />
-                <p className="flex-1 text-sm text-text-primary md:text-base">
+                <h3 className="flex-1 text-base text-text-primary">
                   {entry.title}
-                </p>
-                <span className="chip flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-[11px] uppercase tracking-[0.2em]">
+                </h3>
+                <span className="chip flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-xs uppercase tracking-[0.2em]">
                   {entry.tag}
                 </span>
               </article>

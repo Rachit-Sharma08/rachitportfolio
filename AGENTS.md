@@ -35,6 +35,9 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v26`) — FULL SEO + a11y pass:** prerendered head har route par (canonical/OG/Twitter/main theme-color/manifest/icons/robots/JSON-LD Person+WebSite) + `robots.txt` + `sitemap.xml`, `SITE_URL` single source of truth (`scripts/seo-config.mjs`), real anchor nav (`data-no-intercept`), skip link + `main` landmark + 404 page + client-side `<title>` sync, sr-only/focus-visible/nav-hit CSS. **Lighthouse: Access 100 · BP 100 · SEO 100.** Detail: Changelog `v26`.
+- **NEW (`v25`) — Consistent animation system + Lenis fixes:** once-only masked reveals (`Reveal`/`RevealHeading`/`RevealGroup`, shared tokens `src/lib/motion.ts`), LoadingScreen delete, Magnetic clamp, ScrollProgress, Navbar hide/show + active observer, story scrub, Lenis cross-route/queued/scroll-margin fixes. Important: `<section[id]> { scroll-margin-top: 96px }` = SINGLE scroll offset knob. Detail: Changelog `v25`.
+
 - **NEW (`v24`) — PROJECTS section rebuild:** 4 projects ab **sticky stacking glass cards** hain (CSS-only sticky + `.work-stack` direct children) with **subtle GSAP** — covered-card scrub (scale/opacity/blur) + per-card clip-path/text-stagger entrance. **Purana R3F 3D fly-through + tile-transition implementation poora delete** (`src/components/works/` 9 files, 4 deps, 61 packages, 907 kB `WorksScene` chunk). Hero/baaki sections + `src/data.ts` **unchanged**. Detail: Changelog `v24`.
 - **NEW (`v23`) — Dead code purge:** `BackgroundVideo.tsx` + `TiltCard.tsx` deleted (0 refs), `VIDEO_SRC` + `HERO_ROLES` removed, `Archivo`/`Space Grotesk` fonts + tokens hataye (ab sirf Inter + Instrument Serif), `hls.js` + frontend `resend` + `@vercel/node` deps removed (**116 packages** gone).
 - **NEW (`v22`) — Poora page hero ke crimson-black system me:** hero ke neeche ke saare sections (About, Capabilities, 3D Work, Vision, Journal, Stats, Enquiry, Contact/Footer, Navbar, LoadingScreen, `/resume`) ek hi design system me — crimson accent `#d62e4a` + `accent-ink #e85a70`, `--bg #0a0407`, glass cards (24px radius, 16px blur), pill/chip/field helpers, Inter extrabold headings + Instrument Serif italic accent words. Text/story/links/order/hero **unchanged**. Shared helpers `.glass/.lift/.pill/.pill-primary/.chip/.field/.section/.shell/.shell-inner/.eyebrow` `src/index.css` me hain. Detail: Changelog `v22`.
@@ -82,6 +85,37 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v26 — FULL SEO + a11y pass: prerendered head, 100/100/100 Lighthouse] — 29 Sep 2026
+**User ka brief:** poore project par SEO + responsiveness + web-accessibility + Lighthouse 100/100 target. Koi design change NAHI; sirf visible copy change = About heading `Who is Rachit?` → `Who is Rachit Sharma?` (pehle user ko report diya + confirm liya).
+
+**STEP 0 — Audit (pehle koi change nahi):** framework Vite + React 19 client SPA + build-time prerender (v21 `scripts/prerender.mjs`). `index.html` me title/description toh the par canonical/OG/Twitter/theme-color/manifest/robots/sitemap/JSON-LD sab missing. Navbar plus side links `<button>` the (real anchors nahi). Heading audit: sirf hero h1 + Resume h2s + SelectedWork h3 raw the; Vision "My Vision" aur About "My Story"/"My Journey" `<p>` the. 🐛 Extra find: `public/favicon.svg` **purane blue theme ka tha** — naya user bhool gaya tha (`#89AACC`→`#4E85BF`).
+
+**Assets (Pillow venv `...\Temp\opencode\webpenv`, script `gen-assets.py`):** `public/og-image.png` (1200×630, hero-reveal cutout right + "Rachit Sharma" arialbd 112 + "Digital Marketer" georgiab crimson + tagline; 342,765 B), `favicon.ico` (16/32/48), `apple-touch-icon.png` (180), `icons/icon-192.png` + `icon-512.png`, favicon.svg → crimson rewrite, `site.webmanifest` (name/theme `#0a0407`).
+
+**`index.html`:** favicon set + apple-touch-icon + manifest + theme-color `#0a0407` + robots `index, follow` + naya default description/title + Inter trimmed `wght@400..800` (300/900 unused the — siphon audit).
+
+**Pre-renderer (`scripts/seo-config.mjs` NEW + `prerender.mjs` rewrite):** `SITE_URL` (env override, default prod URL) = single source of truth. Har route apna title/description; prerender me regex se `<title>` + description swap, phir `</head>` se pehle canonical + OG (type/site_name/locale/title/description/url/image+width/height/alt) + Twitter (summary_large_image) + JSON-LD Person + WebSite append. Build par `dist/robots.txt` + `dist/sitemap.xml` (`lastmod`=build UTC date; **sitemap me `/resume` nahi, `/` hai** — check kiya: `loc` dono). No `keywords` meta (by design).
+
+**Headings/semantics (React):** `RevealHeading` optional `id` prop → SectionHeader/Contact/Journal/Capabilities/EnquiryForm headings par ids + sections `aria-labelledby`. Hero: single `<h1 id="home-heading">` wrapping 3 alag `.hero-rise` spans (vanity visual same, GSAP stagger same). About: "Who is Rachit Sharma?" + "My Story"→`h3` + "My Journey"→`h2` + body `text-sm`→`text-base` (+ story paragraphs bhi, deliberate). Journal titles `p`→`h3 text-base`, subtext `text-base`. EnquiryForm: sr-only labels (name/email/reason/message) + errors `role="alert"`. Resume: h1 `id="resume-heading"`, h2 ids, project titles `p`→`h3 text-base`. Sections me imgs: width/height, `loading="lazy"` (SelectedWork), alt improved, external links `rel="noopener noreferrer"`, socials `rel="me noopener noreferrer"`.
+
+**Navbar (`v26-a`) — buttons → real anchors:** nav `<nav aria-label="Main">`, logo + har NAV_LINK + "Say hi" ab `<a href="#id">` (route wala `href="/resume"`). `data-no-intercept` attribute → `initAnchorLinks` (lenis.ts) usse skip karta hai kyunki Navbar ka onClick preventDefault + `goTo()` (cross-route fallback + queued-scroll cancel pehle se) handle karta hai. Logo aria-label "Rachit Sharma RS — home" — **contains "RS" zaroori** (wcag 2.5.3 `label-content-name-mismatch`: name me visible text hona chahiye; `aria-hidden` se nahi bachte kyunki audit visible-text DOM se leti hai).
+
+**Skip link + landmarks:** `<a class="skip-link" href="#main" data-no-intercept>` App me sabse pehle; `main id="main" tabIndex={-1}` Landing/Resume/NotFound par; `.skip-link` CSS (off-canvas until `:focus-visible`). **404 page (NEW `src/pages/NotFound.tsx`)** + route `path="*"`. **Client-side `<title>` sync (NEW `src/lib/seo.ts`):** `titleForPath()` + App useEffect — prerender sirf initial route ka title deta hai, SPA nav me bina effect ke title stale rehta.
+
+**CSS (`src/index.css`):** `.skip-link`, `.sr-only`, global `:focus-visible { outline: 2px solid var(--accent-ink) }`, `.nav-hit::before` (tap targets 33px → ~44px hit area, visual change nahi). Sub-12px labels sab bump kiya (`text-[10px]`/`[11px]` → `text-xs`) — Lighthouse legible-font + a11y.
+
+**Verify (numbers, Playwright + Lighthouse):**
+- **Lighthouse (system Chrome, preview): Accessibility 100 · Best Practices 100 · SEO 100.** Performance 54 = shared-VM/server-más artifact (FCP/Main-thread low on rAF-throttled headless; production 2-layer is better). Ek retry me `label-content-name-mismatch` 0 → logo aria-label fix ke baad PASS.
+- Headings tree live: 1×h1 (`#home-heading`) + ordered h2s (about-heading, My Journey, capabilities-heading, work-heading, vision-heading, journal-heading, enquiry-heading, contact-heading) + h3s. `sectionsWithMissingLabel: []`. lang `en`.
+- Nav anchors: `/`, `#home`, `#about`, `#capabilities`, `#work`, `#vision`, `#contact`, `/resume`, `#contact` — sab real `<a href>`. Anchor click → section top **96px** (Lenis scroll-margin convention). Skip link: real keyboard Tab → visible pill (top 16px), Enter → `#main` top 0. 404 route renders (h1, nav, Back to home). Client-side nav title flips both ways (`/` ⇄ `/resume`).
+- Console: **0 errors / 0 warnings** (landing + resume fresh loads). Overflow: 360px viewport `scrollWidth == clientWidth` (0 overflow; flagged elements sab `overflow-hidden` parents ke andar — marquee track).
+- Prerender export (node verify): `/` aur `/resume/index.html` dono me per-route title + description + canonical + OG + Twitter + JSON-LD (`Person` sameAs 3 profiles, `WebSite`); `dist/robots.txt` + `dist/sitemap.xml` ok. Em-dash `—` file me sahi hain (PowerShell Get-Content ka `�?"` sirf console mojibake hain, file safe).
+- `npm run lint` 0 + `npm run build` pass (`dist/index.html` 49,171 B, `dist/resume/index.html` 11,102 B; chunk-size warning pre-existing hi).
+
+**⚠️ Manual notes (user ko batana):** (1) custom domain par `SITE_URL` env set karna (Vercel), (2) Search Console → submit sitemap + rich-results check, (3) LinkedIn/GitHub/Instagram bio me site link + verify `rel="me"` wali socials, (4) og-image.me photo in OG image — user khud dekh ke confirm kare. `.playwright-mcp/` artifacts commit nahi kiye.
+
+**Files changed (v26):** NEW `scripts/seo-config.mjs`, `src/lib/seo.ts`, `src/pages/NotFound.tsx`, `public/og-image.png`, `public/favicon.ico`, `public/apple-touch-icon.png`, `public/icons/icon-192.png`, `public/icons/icon-512.png`, `public/site.webmanifest`; MOD `scripts/prerender.mjs`, `index.html`, `public/favicon.svg`, `src/App.tsx`, `src/index.css`, `src/lib/lenis.ts`, `src/components/{Navbar,About,Capabilities,Contact,EnquiryForm,Footer,Hero,Journal,RevealHeading,SectionHeader,SelectedWork,Vision}.tsx`, `src/components/work/WorkViewCursor.tsx`, `src/pages/{Landing,Resume}.tsx`. AGENTS.md bhi. **Push `main` aakhri — Vercel auto-deploy LIVE.**
 
 ### [v25 — Consistent subtle animation system + Lenis nav fixes] — 29 Sep 2026
 **User ka brief:** v24 (PROJECTS) gthets hua; ab baaki poore site par EXACT wahi subtle animation language (once-only reveals, gated on reduced-motion). **Hero aur projects stacking (work section) DONO protected** — `Hero.tsx`, `SelectedWork.tsx`, `src/components/work/*` touch NAHI. Content/order/links jobsa ka waisa. Final me file list do.
@@ -614,10 +648,12 @@
 - [x] **`v22` restyle → `main` merge + deploy — LIVE** (`e50f260`, 28 Sep 2026). User ne v21 pehle hi PR #1 se merge kar diya tha, isliye rebase karna pada (force-push nahi).
 - [x] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete** — `v23` me ho gaya (0 refs verified, live bhi confirm).
 - [x] **`index.html` se `Archivo` + `Space Grotesk` hata diya** (`v23`) — ab font link me sirf Inter + Instrument Serif; `--font-archivo`/`--font-grotesk` tokens bhi dead the, delete.
+- [x] **`v25` commit + push `main`** — `dc87312` "Consistent subtle animation system + Lenis scroll fixes" (Vercel auto-deploy). [v25 entry me ye section poora revert-type volume thi; chahe short entry bhi]
+- [x] **SEO + a11y phase (`v26`)** — seo-config/prerender head/robots/sitemap/JSON-LD, nav anchors, skip link, 404, client title sync, Lighthouse 100/100/100; push `main`.
 - [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
 - [ ] **`v24` projects rebuild ka visual QA user dekhe** — screenshots `.playwright-mcp/v24-*.png` (top / stack-mid / stack-end / mobile). Numbers sab verify hue hain par **model image support nahi karta**, isliye aankhon se final confirm user ka hai. Mobile card 80.1% vh hai (content preserve karne ki wajah se) — chhota lagta hai to batao.
-- [ ] **`prerender-seo` ko `main` merge karna** (SEO phase ke liye pre-rendering ready hai)
-- [ ] **SEO phase (user khud karega):** har page unique title/meta description/canonical/OG/Twitter, sitemap.xml, robots.txt, JSON-LD (Person), h1/alt refactor. Pre-rendering structure ready hai — `src/prerender.tsx`/`scripts/prerender.mjs` me head swap add ho sakta hai.
+- [x] **`prerender-seo` ka kaam `main` me merge ho chuka** — pre-rendering + SEO head ab `v26` me LIVE (`main`, auto-deploy).
+- [x] **SEO phase (`v26` me khud kiya)** — per-route canonical/OG/Twitter/JSON-LD, `robots.txt`, `sitemap.xml`, h1/alt/heading refactor, Lighthouse 100/100/100. Baaki: Search Console submission + `SITE_URL` env on custom domain (user ka manual step).
 - [ ] LinkedIn real profile link lagana (`src/data.ts`)
 - [ ] Instagram real profile link lagana (`src/data.ts`)
 - [ ] `VIDEO_SRC` ko real video (HLS/MP4) se replace karna

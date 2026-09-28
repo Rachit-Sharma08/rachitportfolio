@@ -46,7 +46,7 @@ export default function SelectedWork() {
   }, [])
 
   return (
-    <section id="work" className="section-glow relative bg-bg pb-24 md:pb-32">
+    <section id="work" className="section-glow relative bg-bg pb-24 md:pb-32" aria-labelledby="work-heading">
       <WorkViewCursor />
       <div className="shell work-stack" ref={rootRef}>
         <div className="flex flex-col items-start justify-between gap-8 pb-14 pt-24 md:flex-row md:items-end md:pb-16 md:pt-32">
@@ -54,6 +54,7 @@ export default function SelectedWork() {
             <div className="eyebrow mb-5">Selected Work</div>
             <RevealHeading
               as="h2"
+              id="work-heading"
               segments={[
                 { text: 'Four builds, zero' },
                 { text: 'templates', italic: true },
@@ -73,8 +74,8 @@ export default function SelectedWork() {
             <a
               href={SOCIALS.github}
               target="_blank"
-              rel="noreferrer"
-              className="pill border-gradient-ring px-5 py-2.5 text-[11px] uppercase tracking-[0.2em]"
+              rel="noopener noreferrer"
+              className="pill border-gradient-ring px-5 py-2.5 text-xs uppercase tracking-[0.2em]"
             >
               View all work ↗
             </a>
@@ -103,8 +104,10 @@ export default function SelectedWork() {
                 {project.image ? (
                   <img
                     src={project.image}
-                    alt={project.title}
+                    alt={`${project.title} project preview`}
                     loading="lazy"
+                    width={1280}
+                    height={640}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -127,7 +130,7 @@ export default function SelectedWork() {
                   className="flex items-start justify-between gap-6"
                   data-reveal="line"
                 >
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
+                  <span className="text-xs uppercase tracking-[0.3em] text-muted">
                     {project.tag}
                   </span>
                   <span className="font-display text-4xl italic leading-none text-accent-ink">
@@ -152,7 +155,7 @@ export default function SelectedWork() {
                     {(project.tech ?? []).map((item) => (
                       <span
                         key={item}
-                        className="chip px-3.5 py-1.5 text-[11px] tracking-wide"
+                        className="chip px-3.5 py-1.5 text-xs tracking-wide"
                       >
                         {item}
                       </span>
@@ -163,7 +166,8 @@ export default function SelectedWork() {
                     <a
                       href={project.href}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
+                      aria-label={`View ${project.title} project on GitHub`}
                       className="pill pill-primary self-start px-6 py-3 text-sm"
                     >
                       View project

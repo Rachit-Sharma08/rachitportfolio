@@ -4,16 +4,24 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Lenis from 'lenis'
 import Landing from './pages/Landing'
 import Resume from './pages/Resume'
+import NotFound from './pages/NotFound'
 import Grain from './components/Grain'
 import CursorGlow from './components/CursorGlow'
 import Navbar from './components/Navbar'
 import ScrollProgress from './components/ScrollProgress'
 import { initAnchorLinks, setLenis } from './lib/lenis'
 import { startKeepAlive } from './lib/keepalive'
+import { titleForPath } from './lib/seo'
 import { easeExpo } from './lib/motion'
 
 function AnimatedRoutes() {
   const location = useLocation()
+
+  // Keep <title> in sync with client-side navigation — the pre-rendered HTML
+  // only carries the title of the initially loaded route.
+  useEffect(() => {
+    document.title = titleForPath(location.pathname)
+  }, [location.pathname])
 
   return (
     // `initial={false}` suppresses the enter animation on the very first render
@@ -32,6 +40,7 @@ function AnimatedRoutes() {
         <Routes location={location}>
           <Route path="/" element={<Landing />} />
           <Route path="/resume" element={<Resume />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -64,6 +73,13 @@ export function AppContent() {
 
   return (
     <>
+      <a
+        href="#main"
+        data-no-intercept
+        className="skip-link"
+      >
+        Skip to content
+      </a>
       <Grain />
       <CursorGlow />
       <ScrollProgress />

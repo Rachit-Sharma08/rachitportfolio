@@ -6,13 +6,14 @@ import { PERSONAL } from '../data'
 
 export default function Resume(): ReactNode {
   return (
-    <main className="section section-glow min-h-screen bg-bg">
+    <main id="main" tabIndex={-1} className="section section-glow min-h-screen bg-bg">
       <div className="shell">
         <div className="shell-inner">
           <Reveal>
             <p className="eyebrow mb-5">Resume</p>
             <RevealHeading
               as="h1"
+              id="resume-heading"
               segments={[
                 { text: 'Rachit ' },
                 { text: 'Sharma', italic: true },
@@ -40,12 +41,12 @@ export default function Resume(): ReactNode {
 
           <div className="mt-16 flex flex-col gap-14 md:mt-20">
             <Reveal delay={0.08}>
-              <h2 className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
+              <h2 id="education-heading" className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
                 Education
               </h2>
               <div className="border-l border-stroke pl-6">
                 <div className="flex flex-col gap-1 pb-8">
-                  <p className="text-sm font-medium text-text-primary md:text-base">
+                  <p className="text-base font-medium text-text-primary">
                     Digital Marketing with AI
                   </p>
                   <p className="text-sm text-muted">Currently completing · 2026</p>
@@ -54,7 +55,7 @@ export default function Resume(): ReactNode {
             </Reveal>
 
             <Reveal delay={0.14}>
-              <h2 className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
+              <h2 id="skills-heading" className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
                 Skills
               </h2>
               <RevealGroup className="flex flex-wrap gap-2.5" stagger={0.05}>
@@ -77,7 +78,7 @@ export default function Resume(): ReactNode {
             </Reveal>
 
             <Reveal delay={0.2}>
-              <h2 className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
+              <h2 id="projects-heading" className="mb-5 text-2xl font-extrabold tracking-[-0.03em] text-text-primary md:text-3xl">
                 Projects
               </h2>
               <RevealGroup className="space-y-6 border-l border-stroke pl-6" stagger={0.08}>
@@ -93,10 +94,10 @@ export default function Resume(): ReactNode {
                 ].map((p) => (
                   <RevealItem key={p.title}>
                     <div>
-                      <p className="text-sm font-medium text-text-primary md:text-base">
+                      <h3 className="text-base font-medium text-text-primary">
                         {p.title}
-                      </p>
-                      <p className="mt-1 max-w-xl text-sm text-muted">{p.desc}</p>
+                      </h3>
+                      <p className="mt-1 max-w-xl text-base text-muted">{p.desc}</p>
                     </div>
                   </RevealItem>
                 ))}

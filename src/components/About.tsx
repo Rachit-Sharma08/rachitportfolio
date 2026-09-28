@@ -36,12 +36,13 @@ export default function About() {
   useStoryReveal(storyRef)
 
   return (
-    <section id="about" className="section section-glow bg-bg">
+    <section id="about" className="section section-glow bg-bg" aria-labelledby="about-heading">
       <div className="shell">
         <div className="shell-inner">
         <SectionHeader
           eyebrow="About"
-          segments={[{ text: 'Who is ' }, { text: 'Rachit', italic: true }, { text: '?' }]}
+          id="about-heading"
+          segments={[{ text: 'Who is ' }, { text: 'Rachit Sharma', italic: true }, { text: '?' }]}
           subtext="A bit about me, what I do, and why I do it."
         />
 
@@ -59,7 +60,7 @@ export default function About() {
               >
                 <img
                   src="/rachit.jpg"
-                  alt="Rachit Sharma"
+                  alt="Rachit Sharma — digital marketer building with AI"
                   className="h-full w-full rounded-full object-cover"
                   width={240}
                   height={240}
@@ -69,14 +70,14 @@ export default function About() {
 
             <Reveal delay={0.1} className="w-full">
               <div className="glass lift p-6">
-                <p className="mb-3 text-xs uppercase tracking-[0.3em] text-muted">
+                <h3 className="mb-3 text-xs uppercase tracking-[0.3em] text-muted">
                   My Story
-                </p>
+                </h3>
                 {/* Opacity is owned by the scroll-linked story scrub, not by a
                     framer fade — the two would fight over the same property. */}
                 <p
                   data-story-line
-                  className="text-sm leading-relaxed text-muted md:text-base"
+                  className="text-base leading-relaxed text-muted"
                 >
                   I'm not from a big city or a coding background — I'm a self-taught
                   builder who chose to follow what actually interests me, even when
@@ -94,14 +95,14 @@ export default function About() {
               <div className="glass lift p-6 md:p-7">
                 <p
                   data-story-line
-                  className="text-sm leading-relaxed text-muted md:text-base"
+                  className="text-base leading-relaxed text-muted"
                 >
                   I got interested in AI in 2025, and that's when I started exploring
                   it seriously.
                 </p>
                 <p
                   data-story-line
-                  className="mt-4 text-sm leading-relaxed text-muted md:text-base"
+                  className="mt-4 text-base leading-relaxed text-muted"
                 >
                   I wanted to do a "Digital Marketing with AI" course early on, but I
                   couldn't start right away — I had my 12th CBSE boards going on, and
@@ -117,13 +118,13 @@ export default function About() {
               <div className="glass lift p-6 md:p-7">
                 <p
                   data-story-line
-                  className="text-sm leading-relaxed text-muted md:text-base"
+                  className="text-base leading-relaxed text-muted"
                 >
                   Now I'm working on real projects — you can check them out on my{' '}
                   <a
                     href={SOCIALS.github}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="me noopener noreferrer"
                     className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
                   >
                     GitHub
@@ -132,7 +133,7 @@ export default function About() {
                   <a
                     href={SOCIALS.linkedin}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="me noopener noreferrer"
                     className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
                   >
                     LinkedIn
@@ -141,7 +142,7 @@ export default function About() {
                 </p>
                 <p
                   data-story-line
-                  className="mt-4 text-sm leading-relaxed text-muted md:text-base"
+                  className="mt-4 text-base leading-relaxed text-muted"
                 >
                   I currently know how to use 25+ AI tools. The ones I use the most
                   are OpenCode (a coding agent), OpenAI's GPT, ElevenLabs, Cartesia
@@ -154,7 +155,7 @@ export default function About() {
               <div className="glass lift p-6 md:p-7">
                 <p
                   data-story-line
-                  className="text-sm leading-relaxed text-muted md:text-base"
+                  className="text-base leading-relaxed text-muted"
                 >
                   I'm also starting to build my own AI products. One of them is called{' '}
                   <strong className="text-text-primary">VoiceMemories AI</strong> —
@@ -184,7 +185,7 @@ export default function About() {
                 <a
                   href={SOCIALS.github}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="me noopener noreferrer"
                   className="chip px-5 py-2.5 text-xs"
                 >
                   GitHub ↗
@@ -194,7 +195,7 @@ export default function About() {
                 <a
                   href={SOCIALS.linkedin}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="me noopener noreferrer"
                   className="chip px-5 py-2.5 text-xs"
                 >
                   LinkedIn ↗
@@ -205,9 +206,9 @@ export default function About() {
         </div>
 
         <Reveal className="mt-16 md:mt-24">
-          <p className="mb-8 text-xs uppercase tracking-[0.3em] text-muted">
+          <h2 className="mb-8 text-xs uppercase tracking-[0.3em] text-muted">
             My Journey
-          </p>
+          </h2>
           <RevealGroup className="relative flex flex-col gap-9 pl-8" stagger={0.1}>
             <div className="absolute bottom-2 left-[5px] top-2 w-px bg-stroke" />
             {JOURNEY.map((item) => (
@@ -226,7 +227,7 @@ export default function About() {
                   <span className="font-display text-xl italic text-accent-ink">
                     {item.year}
                   </span>
-                  <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted md:text-base">
+                  <p className="mt-1 max-w-2xl text-base leading-relaxed text-muted">
                     {item.text}
                   </p>
                 </div>

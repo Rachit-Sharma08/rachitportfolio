@@ -8,8 +8,8 @@ export default function Footer() {
       key={link.label}
       href={link.href}
       target="_blank"
-      rel="noreferrer"
-      className="chip px-4 py-2 text-sm"
+      rel="me noopener noreferrer"
+      className="chip nav-hit px-4 py-2 text-sm"
     >
       {link.label}
     </a>
