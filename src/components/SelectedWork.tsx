@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef } from 'react'
 import type { Project } from '../data'
 import { PROJECTS, SOCIALS } from '../data'
-import WorksScene from './works/WorksScene'
 import WorksOverlay from './works/WorksOverlay'
 import PanelClickLayer from './works/PanelClickLayer'
 import ProjectDetailTransition from './works/ProjectDetailTransition'
@@ -10,10 +9,45 @@ import type { PanelOpenEvent, PanelScreenRect } from './works/ProjectPanel'
 import type { WorkProject } from './works/projectsData'
 import { WORK_PROJECTS } from './works/projectsData'
 
+type WorksSceneModule = typeof import('./works/WorksScene')
+type WorksSceneComponent = WorksSceneModule['default']
+
+const WorksScene = lazy<WorksSceneComponent>(() =>
+  typeof window === 'undefined'
+    ? Promise.resolve({ default: WorksFallback })
+    : import('./works/WorksScene'),
+)
+
 function toProject(work: WorkProject): Project | undefined {
   const base = PROJECTS.find((p) => p.title === work.title)
   if (base) return base
   return { title: work.title, tag: work.tag, href: work.repoUrl, comingSoon: true, accent: work.accentTo, tagline: '', description: '', tech: [], aspect: '', span: '' }
+}
+
+function WorksFallback() {
+  return (
+    <div
+      className="absolute inset-0 flex flex-col justify-center gap-3 px-6 sm:px-10"
+      style={{ background: '#05060a', fontFamily: 'Space Grotesk, sans-serif' }}
+    >
+      {WORK_PROJECTS.map((project) => (
+        <div
+          key={project.id}
+          className="flex items-baseline justify-between gap-4 border-b border-white/10 pb-3 pt-3"
+        >
+          <span
+            className="text-2xl font-semibold tracking-tight text-white sm:text-3xl"
+            style={{ fontFamily: 'Archivo, sans-serif' }}
+          >
+            {project.title}
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+            {project.tag}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function SelectedWork() {
@@ -79,12 +113,14 @@ export default function SelectedWork() {
         </div>
 
         <div ref={blurRef} className="absolute inset-0">
-          <WorksScene
-            progressRef={progressRef}
-            blurEl={blurRef}
-            projects={WORK_PROJECTS}
-            screenRects={screenRects}
-          />
+          <Suspense fallback={<WorksFallback />}>
+            <WorksScene
+              progressRef={progressRef}
+              blurEl={blurRef}
+              projects={WORK_PROJECTS}
+              screenRects={screenRects}
+            />
+          </Suspense>
         </div>
 
         <WorksOverlay progressRef={progressRef} projects={WORK_PROJECTS} />

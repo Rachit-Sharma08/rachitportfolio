@@ -35,6 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v21`) — Pre-rendering LIVE in build:** `npm run build` ab SSR bundle (`vite build --ssr src/prerender.tsx`) + `node scripts/prerender.mjs` se `dist/index.html` (44,403 B) **aur** `dist/resume/index.html` (8,443 B) daita hai — dono me saara text raw HTML me likha hai (nav, Who is Rachit, My Story, Capabilities, Vision, projects). Browser par design/3D/animations bilkul same (client createRoot se re-render hota hai). Branch `prerender-seo` par kaam hua, `main` untouched.
 - Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (cut-out photo + cursor-reveal outfit swap), then sections in sir's-site order (v20): About, Capabilities, SelectedWork, Vision, Journal, Stats, EnquiryForm, Contact.
 - Resume page complete (Education, Skills, Projects).
 - Framer Motion page transitions, RevealHeading, TiltCard, Magnetic, Marquee helpers bane hain.
@@ -74,6 +75,40 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v21 — Pre-rendering (SSR) + SSR-safe components + Vercel esbuild fix] — 28 Sep 2026
+**User ka brief:** (A) build ke baad har page ki HTML me saara text likha ho (nav, Who is Rachit, My Story, Capabilities, Vision, etc.), (B) browser-only code SSR-safe (3D/GSAP/Lenis/CursorGlow/HLS) taaki build crash na ho + browser me design/3D/animations pehle jaise, (D) Vercel esbuild `allowScripts` warning fix + auto-deploy ki asli wajah. **SEO work (title/meta/canonical/OG/Twitter/sitemap/robots/JSON-LD/h1/alt) user khud karega — NAI KARA.**
+
+**Jo kiya (sab branch `prerender-seo`, `main` untouched):**
+1. `src/prerender.tsx` (NEW) — SSR entry: `renderToStaticMarkup`(<MemoryRouter initialEntries={[path]}><AppContent skipLoading /></MemoryRouter>). Component `renderRoute(path)` export karta hai.
+2. `scripts/prerender.mjs` (NEW) — programmatic `vite build({ build: { ssr: src/prerender.tsx, outDir: dist-ssr } })` phir '/' aur '/resume' render karke `dist/index.html` + `dist/resume/index.html` me `<div id="root">` ke andar inject karta hai. Template = client build ka `dist/index.html` (hashed assets/head same).
+3. `package.json` — `build` = `tsc -b && vite build && vite build --ssr src/prerender.tsx --outDir dist-ssr && node scripts/prerender.mjs`. **`"allowScripts": { "esbuild": true }`** add — npm 11+ install-scripts opt-in rule polish (esbuild ka postinstall Vercel par ab allowed).
+4. `src/App.tsx` — `AppContent` export + `skipLoading` prop (SSR ke liye initial loading off; browser me same).
+5. `src/components/SelectedWork.tsx` — `WorksScene` ab `lazy()` + Suspense fallback `WorksFallback` (static project list). **SSR me three/fiber/drei kabhi load nahi hota**; browser me 3D fly-through waise ka waisa. Node me lazy loader `{ default: WorksFallback }` return karta hai (THREE_CJS deprecation warning se bhi bachat).
+6. `PANEL_SPACING`/`PANEL_COUNT` `projectsData.ts` me move — pehle `WorksOverlay` `./WorksScene` se import karta tha (SSR graph me R3F kheench leta tha).
+7. `src/components/CursorGlow.tsx` — render-time `window.innerWidth` uso `useRef` init me → effect me (SSR crash fix).
+8. `vercel.json` — `/resume` → `/resume/index.html` explicit rewrite SPA catch-all se pehle (Vercel par prerendered resume serve hoga).
+
+**Verify (sab numbers, Playwright + Node):**
+- `npm run build` → 0 errors. `dist/index.html` = 44,403 B, `dist/resume/index.html` = 8,443 B. Raw HTML text dump: nav (Home/About/Capabilities/Work/Vision/Contact/Resume/Say hi), "Who is Rachit", My Story, My Journey (2025/2026), Capabilities (OpenCode/GPT/ElevenLabs/Cartesia/Claude + 5 skills), 4 projects, Vision 6 lines, Journal, Stats, "Get in touch", Contact sab plain text me mila.
+- `npm run preview` + Playwright: `/` aur `/resume` dono browser me perfect — 0 console errors, LoadingScreen, 3D Canvas rendered (panels + titles + HUD), form, footer sab sahi.
+- `npm run lint` → 0 errors, sirf 5 pre-existing R3F warnings.
+- ⚠️ Vite **preview** `/resume` ko nested index nahi serve karta (directory-index support nahi, sirf SPA fallback) — ye sirf local dev-server quirk hai; **Vercel par filesystem + explicit rewrite se `dist/resume/index.html` serve hoga** (deploy ke baad verify).
+- THREE_Clock browser warning = three r186 runtime deprecation (live site par bhi, drei Grid se) — mera change nahi.
+
+**Vercel auto-deploy ka asli jawab (`vercel ls --json` se, guess nahi):**
+- **`git remote origin` = `https://github.com/rachithunyawrr/rachitportfolio.git`** — yahi sahi repo hai.
+- **Vercel connected repo = `rachithunyawrr/rachitportfolio`** (githubRepoId 1372669364) — latest 3 production deploys (224590aa, 7192f291, 24f33360) sab isi repo ke commits se BANE hain → **auto-deploy working, koi mismatch nahi**. Dono repos me se galat wala koi nahi.
+- **Production sirf `main` branch par deploy hota hai** — `prerender-seo` push production nahi badlega; main me merge ke baad auto-deploy hoga.
+- esbuild warning ki asli wajah: npm 11+ dependency install-scripts ab **opt-in** (`allowScripts`) — paid nahi, sirf 1-line config.
+- **Commit/push nahi kiya** (user rule: changed files ki list pehle dikha, phir commit).
+
+**Warnings jaari (list user ko):**
+- Vite build: "chunk > 500 kB" (pre-existing) — three ab alag chunk (WorksScene-*.js 907KB) + hls chunk (575KB) = code-split kar diya.
+- Browser console: `THREE.Clock deprecated` (pre-existing, drei).
+- src/App.tsx me abhi bhi build-type check allowed hai (user ke SEO phase me prerender.tsx se page head handle ho sakta hai — TODO).
+
+**Files changed (7 modified + 3 untracked):** `package.json`, `src/App.tsx`, `src/components/CursorGlow.tsx`, `src/components/SelectedWork.tsx`, `src/components/works/WorksOverlay.tsx`, `src/components/works/WorksScene.tsx`, `src/components/works/projectsData.ts`, `vercel.json` + NEW `src/prerender.tsx`, `scripts/prerender.mjs`. AGENTS.md bhi. (`.playwright-mcp/` = test artifacts, commit nahi karna.)
 
 ### [v20 — Section order aligned to Sir's site (Ajay Dhull)] — 28 Sep 2026
 **User ka brief:** apni site ka section order sir ki site (`https://lightsalmon-mallard-505670.hostingersite.com/`) jaisa karna hai. Pehle comparison table dikhao + confirm lo, phir code badlo.
@@ -401,10 +436,12 @@
 
 ## 📌 Todo / Pending
 
-- [x] Vercel deploy — **LIVE: `https://rachitportfolio-fawn.vercel.app`**
+- [x] **Vercel deploy — **LIVE: `https://rachitportfolio-fawn.vercel.app`**
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
 - [x] **GitHub deploy connect (user kiya, v18)** — Vercel me Git repo connected → `main` push = auto-deploy. CLI deploy ab zaroorat nahi.
+- [ ] **Pre-render (`v21`, branch `prerender-seo`) ko `main` merge karna** jab user bole — phir Vercel auto-deploy + `/resume` prerendered HTML live verify.
+- [ ] **SEO phase (user khud karega):** har page unique title/meta description/canonical/OG/Twitter, sitemap.xml, robots.txt, JSON-LD (Person), h1/alt refactor. Pre-rendering structure ready hai — `src/prerender.tsx`/`scripts/prerender.mjs` me head swap add ho sakta hai.
 - [ ] LinkedIn real profile link lagana (`src/data.ts`)
 - [ ] Instagram real profile link lagana (`src/data.ts`)
 - [ ] `VIDEO_SRC` ko real video (HLS/MP4) se replace karna

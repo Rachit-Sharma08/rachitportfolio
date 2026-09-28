@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { MutableRefObject } from 'react'
-import type { WorkProject } from './projectsData'
-import { PANEL_COUNT } from './WorksScene'
+import { PANEL_COUNT, type WorkProject } from './projectsData'
 
 interface WorksOverlayProps {
   progressRef: MutableRefObject<number>

@@ -34,8 +34,12 @@ function AnimatedRoutes({ ready }: { ready: boolean }) {
   )
 }
 
-function AppContent() {
-  const [isLoading, setIsLoading] = useState(true)
+interface AppContentProps {
+  skipLoading?: boolean
+}
+
+export function AppContent({ skipLoading = false }: AppContentProps) {
+  const [isLoading, setIsLoading] = useState(() => (skipLoading ? false : true))
 
   useEffect(() => {
     const lenis = new Lenis({

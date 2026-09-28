@@ -1,3 +1,6 @@
+export const PANEL_SPACING = 8
+export const PANEL_COUNT = 4
+
 export interface WorkProject {
   id: string
   title: string
