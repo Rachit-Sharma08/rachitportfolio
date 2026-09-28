@@ -126,7 +126,14 @@
 - Old-theme leftovers: `src` me `#4E85BF`, `#89AACC`, `#2F6FA3`, `#D946EF`, `#8B2FC9`, `#8A94A6`, `#3A3F4B`, `#5C6370`, `#05060a`, `#22242b`, `rgb(137,170,204)`, `emerald`, aur inline `Archivo`/`Space Grotesk` — **0 hits**.
 - Reference screenshots (user ke liye, model ne nahi dekhe): `.playwright-mcp/restyle-{1-hero,2-about,3-capabilities,4-work,5-vision,6-journal,7-stats,8-enquiry,9-contact}.png`.
 
-**Commit/push nahi kiya** (user rule). `.playwright-mcp/` test artifacts commit nahi karne.
+**Commit/push:** commit `57e6756` "Restyle below-hero sections to match the hero crimson theme" (26 files, `.playwright-mcp/` artifacts **exclude** kiye). ⚠️ **`main` push pehli baar REJECT hua (non-fast-forward)** — user ne v21 ko **PR #1** se merge kar diya tha (`401f301`), local `main` diverge tha. **Force-push nahi kiya**; `git pull --rebase origin main` → rebased to `e50f260`, phir clean push `401f301..e50f260`. Vercel auto-deploy se **LIVE** hua.
+
+**Deploy verification (live, `https://rachitportfolio-fawn.vercel.app`):**
+- Live CSS `assets/index-BYgp8lKr.css` = local build ka **exact same hash** (CSS me env vars nahi hote, isliye match hota hai; JS hash differ karta hai kyunki Vercel par `VITE_API_URL` = Render URL inline hai, local me localhost).
+- `--accent:#d62e4a`, `--bg:#0a0407`, `.glass` + `.field` helpers live CSS me present; purana blue/magenta 0.
+- Live `/` = 40,375 B **prerendered** — "Who is", "My Story", "My Journey", "My Vision", "Journal", "Fitness Website", "Neon Car Racing", "Selected Work" sab raw HTML me. `<video>` **absent** (Contact video removal live).
+- Live `/resume/` = 7,949 B prerendered, "Education" text present → **`vercel.json` `/resume` rewrite + pre-rendering dono kaam kar rahe hain**.
+- 💡 **Lesson:** user PR merge kar sakta hai beech me — push se pehle `git fetch` + `git log origin/main..main` check karo; reject aaye to rebase (force-push kabhi nahi).
 
 ### [v21 — Pre-rendering (SSR) + SSR-safe components + Vercel esbuild fix] — 28 Sep 2026
 **User ka brief:** (A) build ke baad har page ki HTML me saara text likha ho (nav, Who is Rachit, My Story, Capabilities, Vision, etc.), (B) browser-only code SSR-safe (3D/GSAP/Lenis/CursorGlow/HLS) taaki build crash na ho + browser me design/3D/animations pehle jaise, (D) Vercel esbuild `allowScripts` warning fix + auto-deploy ki asli wajah. **SEO work (title/meta/canonical/OG/Twitter/sitemap/robots/JSON-LD/h1/alt) user khud karega — NAI KARA.**
@@ -492,8 +499,8 @@
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
 - [x] **GitHub deploy connect (user kiya, v18)** — Vercel me Git repo connected → `main` push = auto-deploy. CLI deploy ab zaroorat nahi.
-- [ ] **`v22` restyle ko `main` merge + deploy** — branch `prerender-seo` par hai, commit/push abhi nahi kiya. User ke confirm karne ke baad.
-- [ ] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete karna** (`v22` ke baad Contact se unused ho gaye) — user se puchhna.
+- [x] **`v22` restyle → `main` merge + deploy — LIVE** (`e50f260`, 28 Sep 2026). User ne v21 pehle hi PR #1 se merge kar diya tha, isliye rebase karna pada (force-push nahi).
+- [ ] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete karna** (`v22` ke baad Contact se unused ho gaye, live bhi confirm) — user se puchhna.
 - [ ] **`index.html` se `Archivo` + `Space Grotesk` font link hata sakte hain** (`v22` ke baad koi component use nahi karta — sirf 2 dead CSS vars bache `--font-archivo`/`--font-grotesk` `index.css:7-8`). 2 font families critical path se hat jayenge.
 - [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
 - [ ] **`prerender-seo` ko `main` merge karna** (SEO phase ke liye pre-rendering ready hai)
