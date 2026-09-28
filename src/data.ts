@@ -17,17 +17,6 @@ export const SOCIAL_LINKS = [
   { label: 'Instagram', href: SOCIALS.instagram },
 ]
 
-export const VIDEO_SRC =
-  'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
-// TODO: replace with a real HLS/mp4 link you own, or a static gradient background.
-
-export const HERO_ROLES = [
-  'Digital Marketer',
-  'AI-Powered Creator',
-  'Fast Learner',
-  'Problem Solver',
-]
-
 // Both cut-outs are 1086x1448 (exactly 3:4) and pixel-aligned with each
 // other. `reveal` sits on the bottom layer, `base` on top with a radial
 // mask hole that follows the cursor. Lossless-quality WebP (q92, alpha

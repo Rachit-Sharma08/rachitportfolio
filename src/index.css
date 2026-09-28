@@ -4,8 +4,6 @@
 @theme {
   --font-body: "Inter", "Inter Fallback", sans-serif;
   --font-display: "Instrument Serif", serif;
-  --font-archivo: "Archivo", "Inter", sans-serif;
-  --font-grotesk: "Space Grotesk", "Inter", sans-serif;
 
   --color-bg: var(--bg);
   --color-bg-elevated: var(--bg-elevated);
@@ -21,8 +19,6 @@
   --radius-tile: 20px;
 
   --animate-scroll-down: scroll-down 1.5s ease-in-out infinite;
-  --animate-role-fade-in: role-fade-in 0.4s ease-out both;
-  --animate-gradient-shift: gradient-shift 6s ease infinite;
   --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
 
   @keyframes scroll-down {
@@ -36,27 +32,6 @@
     100% {
       transform: translateY(200%);
       opacity: 0;
-    }
-  }
-
-  @keyframes role-fade-in {
-    0% {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes gradient-shift {
-    0%,
-    100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
     }
   }
 

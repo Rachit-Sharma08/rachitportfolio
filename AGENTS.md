@@ -35,10 +35,11 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v23`) — Dead code purge:** `BackgroundVideo.tsx` + `TiltCard.tsx` deleted (0 refs), `VIDEO_SRC` + `HERO_ROLES` removed, `Archivo`/`Space Grotesk` fonts + tokens hataye (ab sirf Inter + Instrument Serif), `hls.js` + frontend `resend` + `@vercel/node` deps removed (**116 packages** gone).
 - **NEW (`v22`) — Poora page hero ke crimson-black system me:** hero ke neeche ke saare sections (About, Capabilities, 3D Work, Vision, Journal, Stats, Enquiry, Contact/Footer, Navbar, LoadingScreen, `/resume`) ek hi design system me — crimson accent `#d62e4a` + `accent-ink #e85a70`, `--bg #0a0407`, glass cards (24px radius, 16px blur), pill/chip/field helpers, Inter extrabold headings + Instrument Serif italic accent words. Text/story/links/order/hero **unchanged**. Shared helpers `.glass/.lift/.pill/.pill-primary/.chip/.field/.section/.shell/.shell-inner/.eyebrow` `src/index.css` me hain. Detail: Changelog `v22`.
 - ⚠️ **CSS convention (important):** is file me vendor prefix **PEHLE**, standard property **BAAD me** likho (`-webkit-backdrop-filter` → `backdrop-filter`). Ulta order karne se Lightning CSS standard property ko drop kar deta hai. Verified `v22`.
 - ⚠️ **`.pill` me `border:` shorthand mat likho** — longhands use karo, warna `border-image`/gradient ring reset ho jaata hai.
-- **Contact se Mux test-stream `BackgroundVideo` hata diya** (`v22`). File + `VIDEO_SRC` abhi bhi repo me (unused) — delete karna ho to user se puchhna.
+- **Contact se Mux test-stream `BackgroundVideo` hata diya** (`v22`). File + `VIDEO_SRC` ab `v23` me **delete** ho chuke hain.
 
 - **NEW (`v21`) — Pre-rendering LIVE in build:** `npm run build` ab SSR bundle (`vite build --ssr src/prerender.tsx`) + `node scripts/prerender.mjs` se `dist/index.html` (44,403 B) **aur** `dist/resume/index.html` (8,443 B) daita hai — dono me saara text raw HTML me likha hai (nav, Who is Rachit, My Story, Capabilities, Vision, projects). Browser par design/3D/animations bilkul same (client createRoot se re-render hota hai). Branch `prerender-seo` par kaam hua, `main` untouched.
 - Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (cut-out photo + cursor-reveal outfit swap), then sections in sir's-site order (v20): About, Capabilities, SelectedWork, Vision, Journal, Stats, EnquiryForm, Contact.
@@ -80,6 +81,23 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v23 — Dead code purge (Mux video, unused fonts, orphan deps)] — 28 Sep 2026
+**User ka brief:** "jiski jarurat he nhi h usko delete kardo" — jo use nahi ho raha, hata do. Sirf dead code; koi visible change nahi.
+
+**Audit method:** har component ka "refs outside its own file" count nikala + har `data.ts` export ka + har npm dep ka `src` refs. Jo 0 aaye wo dead maana gaya. **Koi bhi cheez bina reference-count verify kiye delete nahi ki.**
+
+**Deleted:**
+- `src/components/BackgroundVideo.tsx` — 0 refs (v22 ke baad Contact ne import band kiya tha)
+- `src/components/TiltCard.tsx` — 0 refs (v7 se orphan; kabhi use nahi hua)
+- `src/data.ts`: `VIDEO_SRC` (Mux test stream) + uska TODO comment, aur `HERO_ROLES` (v16 me rotating-role band hone ke baad orphan)
+- `src/index.css`: `--font-archivo` + `--font-grotesk` @theme tokens, `--animate-role-fade-in` + `--animate-gradient-shift` tokens aur unke 2 `@keyframes` (`role-fade-in`, `gradient-shift`) — teeno ka 0 tsx usage tha
+- `index.html`: Google Fonts link se `Archivo` + `Space Grotesk` families hata diye → ab sirf **Inter + Instrument Serif**
+- `package.json`: `hls.js` (sirf `BackgroundVideo` use karta tha), `resend` (ye **frontend** package.json me tha; `server/package.json` me apna alag `resend@^4.8.0` hai — Render ko wahi chahiye, safe hai), `@vercel/node` (v12 me Vercel serverless function delete hone ke baad orphan)
+
+**Result:** `npm install` → **116 packages removed** (234 → 118 audited). Bundle size me extra drop nahi hua kyunki `hls.js` chunk v22 deploy se pehle hi tree-shake ho chuka tha (Contact ne import band kar diya tha) — fayda primarily Vercel par **install time / deps hygiene** ka hai. Fonts critical path se 2 families hatin (3 font requests → 2).
+
+**Verification:** `npm run lint` → 0 error (same 5 pre-existing R3F warnings). `npm run build` → pass, `dist/index.html` 40,335 B + `dist/resume/index.html` 7,909 B prerendered. Playwright: font requests sirf `Inter:wght@300..900` + Instrument Serif (Archivo/Space Grotesf **0**), Inter headings, `--accent #d62e4a`, `.glass` blur 16px, canvas present, hero webps intact, `#contact video` absent, section order unchanged, overflowX 0, **0 console errors** (landing + `/resume`).
 
 ### [v22 — Below-hero restyle: hero ke crimson-black system me poora page] — 28 Sep 2026
 **User ka brief:** Hero ko bilkul untouched rakh kar **hero ke neeche ke saare sections** uske crimson-black look me restyle karo. Text/story/links/images/section order **bilkul change mat karo**. Naye animations mat add karo. **Final me har changed file list karo + koi bhi section jispar confident nahi ho use flag karo.**
@@ -500,8 +518,8 @@
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
 - [x] **GitHub deploy connect (user kiya, v18)** — Vercel me Git repo connected → `main` push = auto-deploy. CLI deploy ab zaroorat nahi.
 - [x] **`v22` restyle → `main` merge + deploy — LIVE** (`e50f260`, 28 Sep 2026). User ne v21 pehle hi PR #1 se merge kar diya tha, isliye rebase karna pada (force-push nahi).
-- [ ] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete karna** (`v22` ke baad Contact se unused ho gaye, live bhi confirm) — user se puchhna.
-- [ ] **`index.html` se `Archivo` + `Space Grotesk` font link hata sakte hain** (`v22` ke baad koi component use nahi karta — sirf 2 dead CSS vars bache `--font-archivo`/`--font-grotesk` `index.css:7-8`). 2 font families critical path se hat jayenge.
+- [x] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete** — `v23` me ho gaya (0 refs verified, live bhi confirm).
+- [x] **`index.html` se `Archivo` + `Space Grotesk` hata diya** (`v23`) — ab font link me sirf Inter + Instrument Serif; `--font-archivo`/`--font-grotesk` tokens bhi dead the, delete.
 - [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
 - [ ] **`prerender-seo` ko `main` merge karna** (SEO phase ke liye pre-rendering ready hai)
 - [ ] **SEO phase (user khud karega):** har page unique title/meta description/canonical/OG/Twitter, sitemap.xml, robots.txt, JSON-LD (Person), h1/alt refactor. Pre-rendering structure ready hai — `src/prerender.tsx`/`scripts/prerender.mjs` me head swap add ho sakta hai.
