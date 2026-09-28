@@ -60,7 +60,7 @@ export default function Hero({ ready = true }: HeroProps) {
     const paint = () => {
       figure.style.setProperty('--x', `${cur.x.toFixed(2)}px`)
       figure.style.setProperty('--y', `${cur.y.toFixed(2)}px`)
-      figure.style.setProperty('--reveal-r', `${cur.r.toFixed(2)}px`)
+      figure.style.setProperty('--r', `${cur.r.toFixed(2)}px`)
     }
 
     const seed = (x: number, y: number) => {
@@ -180,15 +180,15 @@ export default function Hero({ ready = true }: HeroProps) {
       >
         <div className="hero-photo absolute inset-0">
           <img
-            src={HERO_IMAGES.reveal}
-            alt=""
-            aria-hidden="true"
+            src={HERO_IMAGES.base}
+            alt="Rachit Sharma, Digital Marketer"
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
           />
           <img
-            src={HERO_IMAGES.base}
-            alt="Rachit Sharma, Digital Marketer"
+            src={HERO_IMAGES.reveal}
+            alt=""
+            aria-hidden="true"
             draggable={false}
             className="hero-mask pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
           />

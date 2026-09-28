@@ -294,7 +294,7 @@ p {
 .hero-figure {
   --x: 50%;
   --y: 50%;
-  --reveal-r: 0px;
+  --r: 0px;
   -webkit-mask-image: linear-gradient(
       to bottom,
       black 0%,
@@ -317,17 +317,19 @@ p {
 
 .hero-mask {
   -webkit-mask-image: radial-gradient(
-    circle var(--reveal-r) at var(--x) var(--y),
-    transparent 0%,
-    transparent 60%,
-    black 100%
+    circle var(--r) at var(--x) var(--y),
+    black 0%,
+    black 60%,
+    transparent 100%
   );
   mask-image: radial-gradient(
-    circle var(--reveal-r) at var(--x) var(--y),
-    transparent 0%,
-    transparent 60%,
-    black 100%
+    circle var(--r) at var(--x) var(--y),
+    black 0%,
+    black 60%,
+    transparent 100%
   );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   will-change: mask-image;
 }
 

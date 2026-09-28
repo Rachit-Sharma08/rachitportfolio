@@ -75,6 +75,30 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v19 — Hero reveal layers inverted (sunglasses-bleed bug fix)] — 28 Sep 2026
+**User ka report:** hero me ek visual bug — `hero-reveal.webp` ka **sunglasses ka chhota sa hissa (right lens tip)** bina cursor ke bhi dikh raha tha.
+
+**Root cause:** reveal (silver) images ki **bottom layer** thi, aur uss par koi mask nahi tha (mask top layer = base par "hole" wala tha — `transparent 0%..black 100%`). Isliye jahan bhi reveal ke pixels base ke silhouette se bahar nikle (jese sunglasses tip), wo hamesha show hote the — cursor ki circle ka koi control nahi tha.
+
+**Fix — layer logic invert kiya:**
+- `hero-base.webp` (black blazer) = **BOTTOM layer**, hamesha fully visible, **koi mask nahi**.
+- `hero-reveal.webp` (silver + sunglasses) = **TOP layer**, default fully hidden, sirf cursor ke soft circle ke andar visible. Mask ab **isi top layer par**:
+  `radial-gradient(circle var(--r) at var(--x) var(--y), black 0%, black 60%, transparent 100%)` (+ `-webkit-mask-image`), `mask-repeat: no-repeat` (+ `-webkit-`).
+- `--r: 0px` by default → reveal completely invisible (load par / cursor bahar). Lerp logic, feather, touch auto-sweep, preload, sizes — sab unchanged.
+
+**Files changed (2):**
+1. `src/components/Hero.tsx` — image order swap (base first/reveal second, same `absolute inset-0` classes, same position) + `.hero-mask` class ab reveal par + JS variable `--reveal-r` → `--r`.
+2. `src/index.css` — `.hero-figure` me `--reveal-r: 0px` → `--r: 0px`; `.hero-mask` ka gradient invert kiya + `mask-repeat` (dono prefix) add.
+
+**Verification (deterministic — headless rAF 0.9fps se bachne ke liye standalone test page `public/__masktest.html` use kiya, phir delete):**
+- `--r=0` wala screenshot **pixel-identical** (mean 0, max 0, 0 px changed) to reveal layer `display:none` wale screenshot ke → **sunglasses bleed GONE**, reveal rest par fully hidden.
+- Circle `--r=140` upper face (sunglasses area) par → 19,928 px changed (reveal dikh raha hai ✅).
+- Circle `--r=140` mid-figure → 75,162 px changed (silver blazer swap pehle jaisa ✅).
+- Dono imgs identical rect me (531,180 540x720 @1440) ✅. `npm run lint` pass (0 error), `npm run build` pass (sirf chunk-size warning).
+- **Commit/push nahi kiya** (user rule: sirf tab jab bole).
+
+**Note:** `--reveal-r` renamed → `--r` (user ke CSS spec ke literal), sirf `Hero.tsx:63` + `.hero-mask` css me tha.
+
 ### [v18 — Vercel ➜ GitHub connect LIVE (push = deploy) + manual deploy] — 28 Sep 2026
 **User ka symptom:** v17 push ke baad bhi live site par **purana** version dikh raha tha.
 
