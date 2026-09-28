@@ -35,7 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
-- Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (rotating roles), SelectedWork, Journal, About, Capabilities, Vision, Stats, EnquiryForm, Contact.
+- Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (cut-out photo + cursor-reveal outfit swap), SelectedWork, Journal, About, Capabilities, Vision, Stats, EnquiryForm, Contact.
 - Resume page complete (Education, Skills, Projects).
 - Framer Motion page transitions, RevealHeading, TiltCard, Magnetic, Marquee helpers bane hain.
 - **NEW (`v7`) — About/Capabilities/Vision/EnquiryForm sections** — `src/components/About.tsx`, `Capabilities.tsx`, `Vision.tsx`, `EnquiryForm.tsx` add hue. EnquiryForm me EmailJS placeholder credentials (`YOUR_SERVICE_ID` etc.) daalne baaki hain.
@@ -43,6 +43,7 @@
 - **NEW — 3D Scroll-to-Fly-Through Works:** `SelectedWork.tsx` ab React Three Fiber 3D section hai — scroll par camera panels ke beech fly karta hai (sticky `h-[400vh]` + window scroll + Lenis). Components `src/components/works/` me (WorksScene, ProjectPanel, GridFloor, WorksOverlay, PanelClickLayer, projectsData).
 - **Lenis nav scroll (`v8`):** nav/hero/landing `src/lib/lenis.ts` ke `scrollToSection()`/`scrollToTop()` use karte hain — Lenis conflict se dead-scroll fix hua.
 - **Panel click par `ProjectDetailTransition` kholta hai** (`v5`, refactor) — tiles scatter → circle converge → dissolve → card; View Details = GitHub link (v6); coming-soon desaturated + shake.
+- **NEW (`v17`) — Hero photos WebP:** `hero-base.webp` / `hero-reveal.webp` (q92, 1086x1448, alpha bit-identical) — **3.85MB PNG → 462KB (-88%)**. Repo me koi hero PNG nahi, originals `D:\Pictures` me.
 - **Hero black-background fix:** `BackgroundVideo` ab fallback gradient dikhata hai jab video load/play nahi hoti (VS Code embedded browser case). Video sirf tab dikhti hai jab actually play ho rahi ho.
 - **Lenis smooth scroll** App-level wired (`src/App.tsx`, autoRaf lerp 0.09).
 - **Backend LIVE on Render (`v14`):** API **`https://rachit-api.onrender.com`** (Express + Resend), frontend Vercel static only. `VITE_API_URL` (Vercel env + `.env` local) = Render URL. `RENDER_API_KEY` saved in `.env` (gitignored). Keep-alive triple-layer:
@@ -67,11 +68,101 @@
 | `src/pages/Landing.tsx` | Home page |
 | `src/pages/Resume.tsx` | Resume page |
 | `src/components/` | Saare UI sections (Hero, Navbar, Contact, ...) |
-| `index.html` | SEO meta + fonts (Inter, Instrument Serif) |
+| `public/assets/` | Hero cut-out photos, **WebP** (`hero-base.webp` = black blazer, `hero-reveal.webp` = silver). Source PNGs `D:\Pictures\photo 1.png` + `photo 2.png` me safe hain |
+| `index.html` | SEO meta + fonts (Inter, Instrument Serif) + hero image preloads |
 
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v17 — Hero photos PNG ➜ WebP (q92) + GitHub push] — 28 Sep 2026
+**User ka brief:** "hero ke photos ko webp mai convert karke changes github par push kardo." Sirf format conversion + push — koi naya design/feature nahi.
+
+**Encoder (koi installed nahi tha):** `cwebp` ❌, `magick` ❌, system Python me Pillow ❌. **Fix:** throwaway venv banaya (`C:\Users\fvcvv\AppData\Local\Temp\opencode\webpenv`, Pillow 12.3.0, `features.check('webp')` = True) → **project ke dependencies bilkul touch nahi hue.** Venv temp me hai, repo me nahi.
+
+**Lossless vs lossy — properly measured (pehla measurement galat tha!):**
+- Mera pehla error function `histogram()` ka **global bin index (0-767)** weight kar raha tha, channel value (0-255) nahi → har quality par same fake `meanErr≈85`. Fix kiya: `i % 256`.
+- Sahi numbers (1086x1448, RGB + alpha alag):
+  | file | PNG | lossless | **q92** | q88 | q84 |
+  |---|---|---|---|---|---|
+  | hero-base | 1,768,829 B | 1,122,042 B | **167,812 B** | 119,952 B | 93,228 B |
+  | hero-reveal | 2,084,531 B | 1,338,264 B | **293,992 B** | 223,264 B | 182,578 B |
+  | **total** | **3,853,360 B** | 2,460,306 B | **461,804 B (-88%)** | | |
+- **q92 chuna:** PSNR **42.95 dB** (base) / **41.59 dB** (reveal) — >40 dB = visually lossless. **Alpha bit-identical** (`alpha_quality=100` + `exact=True` → alpha mean err 0, max 0) → cut-out silhouette edge bilkul utni hi sharp hai. Lossless se 1.84x chhota.
+- Dimensions har candidate par assert kiye: **1086x1448 exact**, alpha range 0-255 intact.
+
+**Files changed (3):**
+1. `src/data.ts` — `HERO_IMAGES.base/.reveal` → `.webp` (+ comment me q92/alpha note)
+2. `index.html` — 2 preload links → `.webp` + `type="image/webp"`
+3. `public/assets/hero-base.webp` / `hero-reveal.webp` — **NEW**; repo ke PNG copies **delete** kiye (originals `D:\Pictures` me safe)
+
+**Verification:**
+- Dev server par `Content-Type: image/webp` ✅, dono imgs `naturalWidth/Height = 1086x1448` ✅, identical `540x720` box ✅.
+- Cursor-reveal pixel-diff (chest 60x60): **20 → 56** luma. PNG build ka reference **20 → 63** tha — 36 vs 43 ka gap sirf lossy compression (silver area high-detail) ki wajah se, PSNR 41.6 dB ke andar. Mask CSS verify: `radial-gradient(140px at 271.21px 504px, ...)` → 531+271=802, 180+504=684 = pointer ka exact position. ✅
+- `npm run lint` ✅ (5 warning lines, **sirf pre-existing R3F** — `WorksScene.tsx:22,40`, `ProjectPanel.tsx:101`; Hero me 0) + `npm run build` ✅ (`dist/assets/` me dono `.webp`, koi hero PNG nahi).
+- **Pushed to `main`.** Commit: `Rebuild hero with cursor-reveal outfit swap + WebP assets`.
+
+**⚠️ 2 cheezein jo pata karni hain:**
+1. **BUG (fix nahi kiya, sirf report):** Fixed **Navbar** hero ke upar overlay hai (`top:24, h:53`), to pointer nav par jaane se hero ka `pointerleave` fire hota hai → reveal circle **140px → 0.04px collapse** ho jata hai, wapas aane par 140px. Spec ke hisaab se technically sahi ("hero se bahar jaane par 0"), par visually glitch lagta hai. **Fix idea (chhota):** `pointermove` section ki jagah `window` par suno aur shrink tab karo jab pointer hero ke **rect** se bahar nikle — nav overlay rect ke andar rehta hai → reveal bana rahega. Bolo to kar deta hoon.
+2. **Screenshots dekh kar confirm nahi kiya** (model image support nahi). Sunglasses/alignment ka numeric proof hai, par aankhon se final check tum karna — bilkul koi change nahi karna hoga, sirf confirm karna ki silver→black swap theek dikh raha hai.
+
+### [v16 — HERO REBUILD: cut-out photo + cursor-reveal outfit swap] — 28 Sep 2026
+**User ka brief (phase 1):** Sirf HERO SECTION redesign. Hero ke neeche ka koi section (My Story/About etc.) touch NAHI karna. Navbar untouched. Naya project nahi — existing Vercel wala project hi.
+
+**STEP 1 — Images found & copied (byte-for-byte, no resize):**
+- Source: `D:\Pictures\photo 1.png` + `D:\Pictures\photo 2.png` (user ke folders `D:` drive par hain, `C:\Users\fvcvv\Pictures` exist hi nahi karta — dhyan rakhna).
+- Dono **exactly 1086x1448 = 3:4 ratio**, 32bpp ARGB (transparent cut-out). ✅ confirmed
+- `photo 1.png` → `public/assets/hero-base.png` (1,768,829 bytes)
+- `photo 2.png` → `public/assets/hero-reveal.png` (2,084,531 bytes)
+- **Blazer verify kiya (agent image-view nahi kar sakta, to numeric pixel sampling se):**
+  - `photo 1` torso mean luma **47**, 81% pixels very dark → **BLACK blazer** ✅
+  - `photo 2` torso mean luma **123**, 38% very dark → **SILVER blazer** ✅
+  - Alignment proof: same scanline par transparent px count **697 vs 694** → same pose, same framing.
+  - ⚠️ **Sunglasses visually confirm nahi kiye** (model image input support nahi karta) — numbers silver blazer ke favour me hain. User se ek baar dekhna hai.
+- **Silhouette ka important discovery:** photo ka bottom **~38% (image y≈898 se neeche) edge-to-edge OPAQUE** hai — base me near-black (luma 27), reveal me bright silver (luma 144). Yani cut-out ka neeche ek wide dark mass hai, clean silhouette nahi. Isi wajah se bottom dissolve mask lagaya (neeche dekho).
+
+**STEP 2 — New hero layout (`src/components/Hero.tsx` poori tarah rewrite):**
+- Full-screen, **deep crimson → near-black** radial bg: `#6b1220 → #480d19 → #2a0711 → #120309 → #060104`, + separate `hero-bloom` layer (slow 12s breathing glow, crimson ke peeche) + `hero-vignette` (edges near-black).
+- Photo: cut-out, **bottom-aligned**, `aspect-[3/4]` (exactly 1086:1448) → `h-[46vh]` mobile → `lg:h-[74vh]` → `xl:h-[80vh]`, `xl:left-[56%]` (slightly right of center).
+- Left: Instrument Serif italic **"I'm"** → Inter 800 uppercase **"RACHIT"** (`clamp(3rem,min(9vw,15vh),8.5rem)`) → Instrument Serif italic **"Digital Marketer"**. CTAs (*See Work* / *Reach out...*) rakhe gaye — scroll functions bache rahe.
+- Bottom-right: intro paragraph, `HERO_INTRO` (data.ts se) — `max-w-[280px]`, text-right, **exactly 3 lines** @1440. Mobile par ye flow me copy-block ke niche aa jata hai.
+- **`BackgroundVideo` (HLS Mux test stream) hero se hata diya** — crimson gradient ke saath replace. `BackgroundVideo.tsx` file + `VIDEO_SRC` abhi bhi `Contact.tsx:15` me use ho raha hai (us section ko chhua nahi gaya) — wahan Mux stream error aata hai jab internet na ho.
+- `HERO_ROLES` rotating-role animation **band** (naye spec me subtitle static "Digital Marketer" hai). `HERO_ROLES` abhi bhi `data.ts` me exported hai, koi use nahi karta.
+- GSAP entrance `.hero-rise` / `.hero-photo` + `ready` prop contract (LoadingScreen ke baad animate) — pehle jaisa hi pattern.
+
+**STEP 3 — Cursor reveal (`Hero.tsx` rAF loop + `.hero-mask` CSS):**
+- Dono imgs bilkul same box me stacked (verified: **identical 540x720 rects**), `hero-reveal` bottom, `hero-base` top.
+- Mask exactly as brief: `radial-gradient(circle var(--reveal-r) at var(--x) var(--y), transparent 0%, transparent 60%, black 100%)` (140px radius, soft feather) + `-webkit-mask-image`.
+- `--x/--y/--reveal-r` **ref-style, zero React re-render** — rAF loop, lerp `0.14`. `pointermove` (image container ke relative coords) + `touchmove`.
+- Pointer hero se bahar jaaye → `r` smoothly **0** (verified 140px → 0.03px).
+- rAF loop khud-ba-khud **settle hone par ruk jata hai** (`cur.r > 0.05` check) — idle battery waste nahi.
+- **Mobile/touch:** `matchMedia('(hover: none) and (pointer: coarse)')` detect → circle automatically photo par **slow orbit loop** (cos/sin, lerp soft feel); user touch kare to `touchmove` position follow karta hai, **2.6s baad** auto-sweep wapas. `prefers-reduced-motion` par auto-sweep off.
+- **Preload:** React 19 ke `<img preload>` prop installed `@types/react` me nahi tha (TS2322) → isliye `index.html` me explicit `<link rel="preload" as="image">` (base=high, reveal=low).
+
+**Bottom dissolve mask ( mera addition, screenshot QA se nikla):**
+- Hero ke box-borders par **hard vertical edges** mile (scanline diff: `x=530 13->30`, `x=1070 30->11`) — photo ke wide dark lower body ki wajah se. Fix: `.hero-figure` par 2 mask layers, `mask-composite: intersect` (WebKit: `source-in`):
+  - vertical: `black 0% → black 58% → rgba(0,0,0,.72) 78% → transparent 99%`
+  - horizontal: `transparent 0% → black 14% → black 86% → transparent 100%`
+- Result: **sab hard edges gaayab** (y=620/700/760/800 scanlines par zero edges >14 luma). Ye **CSS display effect** hai — PNG files bilkul unchanged hain.
+- ⚠️ **Agar user ko ye dissolve nahi pasand:** `.hero-figure` ka `mask-image` block `src/index.css` se hatao — baaki sab safe hai.
+
+**Verification (sirf numbers, screenshots dekhe nahi gaye — model image support nahi karta):**
+- Pixel-diff proof: chest region par circle band → **luma 20 → 63** (black → silver). Source PNG ke same rect par bhi **20 vs 63** → **alignment pixel-perfect**.
+- Head region circle on/off: 17 → 18 (badal nahi) → **sirf blazer badal raha hai, head nahi** = sahi outfit-swap.
+- 7 viewports test (360/390/768/1024/1280/1440/1920): `overflowX = 0` har jagah, figure har jagah bottom-flush, images identical boxes.
+- Box-vs-box overlap flags `h1OverlapsFig`/`introOverlapsFig` **false positives** hain — figure ka box person se bada hai aur 14% edge fade hai. Real silhouette ke against h1→person gap: **54/73/77/48px** (1024/1280/1440/1920) — clear.
+- `npm run lint` ✅ (sirf 3 pre-existing R3F warnings) + `npm run build` ✅ (sirf chunk-size warning).
+- `index.html` me **Inter `wght@300..700` → `300..900`** (taaki `font-extrabold` 800 sach me heavy lage).
+
+**Files changed (5):**
+1. `src/components/Hero.tsx` — full rewrite
+2. `src/index.css` — +85 lines (`.hero-bg`, `.hero-bloom`, `.hero-vignette`, `.hero-figure`, `.hero-mask`)
+3. `src/data.ts` — +`HERO_IMAGES`, +`HERO_INTRO`
+4. `index.html` — 2 preload links + Inter weight range
+5. `public/assets/hero-base.png`, `public/assets/hero-reveal.png` — **NEW** (untracked)
+
+**Local run:** `npm install` (pehle se nahi tha) → `npm run dev`
+⚠️ **TODO:** commit/push **nahi** kiya (user rule: sirf tab jab bole). Images ~3.9MB total — agar hero LCP slow lage to `pngquant`/WebP consider karna (dimensions/alignment preserve kar ke).
 
 ### [v15 — GitHub Actions keep-alive cron LIVE (100% free)] — 16 Sep 2026
 - **User rule declared:** **"sab kam bilkul free ma hona chiye"** — koi paid option nahi (Render cron $1/mo, Vercel Pro) kabhi propose nahi karna. Ye rule AGENTS me record kiya gaya.

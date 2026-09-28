@@ -28,6 +28,18 @@ export const HERO_ROLES = [
   'Problem Solver',
 ]
 
+// Both cut-outs are 1086x1448 (exactly 3:4) and pixel-aligned with each
+// other. `reveal` sits on the bottom layer, `base` on top with a radial
+// mask hole that follows the cursor. Lossless-quality WebP (q92, alpha
+// bit-identical to the source PNGs) — originals kept at D:\Pictures.
+export const HERO_IMAGES = {
+  base: '/assets/hero-base.webp',
+  reveal: '/assets/hero-reveal.webp',
+}
+
+export const HERO_INTRO =
+  'Blending digital marketing strategy with AI tools to build brands, campaigns, and creative projects that actually connect.'
+
 export const LOADING_WORDS = ['Grow', 'Market', 'Convert']
 
 export const NAV_LINKS = [
