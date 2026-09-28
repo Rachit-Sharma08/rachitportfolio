@@ -346,6 +346,91 @@ textarea.field {
   border-radius: var(--radius-tile);
 }
 
+/* --- Projects: sticky stacking cards ----------------------------------- */
+
+.work-stack {
+  /* Sticky offset keeps the navbar clear. JS reads these back off the DOM so
+     the counter and the scrub range can never drift from the CSS.
+     Every card is a direct sticky child of this one tall container, which is
+     what lets card N stay pinned *behind* card N+1 instead of being pushed
+     out of view. Gap = scroll runway between pins, hold = the pinned time the
+     last card gets before the next section arrives. */
+  --work-sticky: 76px;
+  --work-card-radius: 28px;
+  --work-gap: 16vh;
+  --work-hold: 70vh;
+}
+
+@media (min-width: 1024px) {
+  .work-stack {
+    --work-sticky: 100px;
+    --work-gap: 22vh;
+  }
+}
+
+.work-card {
+  position: sticky;
+  top: var(--work-sticky);
+  border-radius: var(--work-card-radius);
+}
+
+.work-card + .work-card {
+  margin-top: var(--work-gap);
+}
+
+.work-stack > .work-hold {
+  height: var(--work-hold);
+}
+
+/* Declared after `.glass:hover` so the crimson border wins on source order at
+   equal specificity. */
+.work-card:hover,
+.work-card:focus-within {
+  border-color: var(--accent);
+}
+
+.work-media img {
+  transition: transform 0.9s var(--ease-cinematic);
+}
+
+.work-card:hover .work-media img,
+.work-card:focus-within .work-media img {
+  transform: scale(1.05);
+}
+
+.work-arrow {
+  display: inline-block;
+  transition: transform 0.4s var(--ease-cinematic);
+}
+
+.work-card:hover .work-arrow,
+.work-card:focus-within .work-arrow {
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .work-card {
+    will-change: transform;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-stack {
+    --work-gap: 6vh;
+    --work-hold: 8vh;
+  }
+
+  .work-card {
+    position: relative;
+    top: auto;
+  }
+
+  .work-media img,
+  .work-arrow {
+    transition: none;
+  }
+}
+
 /* --- Section rhythm + background continuity ---------------------------- */
 
 .section {

@@ -35,6 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v24`) — PROJECTS section rebuild:** 4 projects ab **sticky stacking glass cards** hain (CSS-only sticky + `.work-stack` direct children) with **subtle GSAP** — covered-card scrub (scale/opacity/blur) + per-card clip-path/text-stagger entrance. **Purana R3F 3D fly-through + tile-transition implementation poora delete** (`src/components/works/` 9 files, 4 deps, 61 packages, 907 kB `WorksScene` chunk). Hero/baaki sections + `src/data.ts` **unchanged**. Detail: Changelog `v24`.
 - **NEW (`v23`) — Dead code purge:** `BackgroundVideo.tsx` + `TiltCard.tsx` deleted (0 refs), `VIDEO_SRC` + `HERO_ROLES` removed, `Archivo`/`Space Grotesk` fonts + tokens hataye (ab sirf Inter + Instrument Serif), `hls.js` + frontend `resend` + `@vercel/node` deps removed (**116 packages** gone).
 - **NEW (`v22`) — Poora page hero ke crimson-black system me:** hero ke neeche ke saare sections (About, Capabilities, 3D Work, Vision, Journal, Stats, Enquiry, Contact/Footer, Navbar, LoadingScreen, `/resume`) ek hi design system me — crimson accent `#d62e4a` + `accent-ink #e85a70`, `--bg #0a0407`, glass cards (24px radius, 16px blur), pill/chip/field helpers, Inter extrabold headings + Instrument Serif italic accent words. Text/story/links/order/hero **unchanged**. Shared helpers `.glass/.lift/.pill/.pill-primary/.chip/.field/.section/.shell/.shell-inner/.eyebrow` `src/index.css` me hain. Detail: Changelog `v22`.
 - ⚠️ **CSS convention (important):** is file me vendor prefix **PEHLE**, standard property **BAAD me** likho (`-webkit-backdrop-filter` → `backdrop-filter`). Ulta order karne se Lightning CSS standard property ko drop kar deta hai. Verified `v22`.
@@ -81,6 +82,56 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v24 — PROJECTS section rebuild: sticky stacking cards + GSAP] — 29 Sep 2026
+**User ka brief:** **sirf PROJECTS section** rebuild karo — 4 projects ko sticky stacking cards me dobara layout karo + subtle GSAP animations. **Hero ya koi aur section touch NAHI.** Project titles/descriptions/images/links/tags **bilkul change mat karo.** Animation subtle rakho (heavy fly-through / 3D nahi).
+
+**STEP 0 (report diya, phir code):** GSAP `^3.15.0`, Framer Motion `^13.3.0`, Lenis pehle se installed the. ScrollTrigger GSAP ke andar bundled hai par kahin use nahi ho raha tha. Projects section ek hi component `src/components/SelectedWork.tsx` tha + purana R3F implementation `src/components/works/` me.
+
+**Purana 3D implementation poora delete:**
+- `src/components/works/` — poora directory (9 files): `WorksScene`, `ProjectPanel`, `GridFloor`, `WorksOverlay`, `PanelClickLayer`, `ProjectDetailTransition`, `ProjectDetailCard`, `useProjectTransition`, `projectsData`.
+- Orphan deps removed: `@react-three/drei`, `@react-three/fiber`, `three`, `@types/three` → `npm install` ne **61 packages** hataaye. **907.51 kB `WorksScene` async bundle chunk completely gaya** (build output se gaya).
+- ⚠️ `server/package.json` ka apna `resend` alag hai — wo Render backend ka hai, touch nahi kiya.
+
+**Naya layout (`src/components/SelectedWork.tsx`):**
+- Heading: `RevealHeading` — bold Inter + `templates` word Instrument Serif italic. Live `01 / 04` counter (sticky offset se auto-sync) + existing GitHub "View all work ↗" link retained.
+- 4 glass cards, direct sticky children, media/text sides **LEFT/RIGHT/LEFT/RIGHT** alternate.
+- Cards me original `title`, `tagline`, `description`, `tech` chips, `tag`, `href` — **sab unchanged**. Sirf interaction badli: purana tile/detail overlay hata, ab direct `href` "View project ↗" (no href wale pe "Coming soon").
+- `project.image` sirf first 2 projects me hai → baaki 2 ke liye existing `project.accent` se radial gradient fallback (invented image nahi banayi).
+
+**⚠️ Do real bugs QA me pakde aur fix kiye:**
+1. **Sticky architecture galat thi.** Cards ko alag wrapper (`flex flex-col gap-[22vh]` + har card ka wrapper) rakhne se card N **next card pin hone se PEHLE** scroll away ho jata tha — pure CSS stacking possible nahi. **Fix: sab cards ek tall `.work-stack` ke DIRECT sticky children** (`.work-card + .work-card { margin-top: var(--work-gap) }`), aakhri `.work-hold` bada spacer. Browser trace se confirm kiya.
+2. **Mobile par card 93.9% viewport** (792/844) tha — stack effect bilkul invisible. Media `min-h-[38vh]` → `h-[28vh]`, text padding `p-7`→`p-6`, gaps `gap-7`→`gap-5`, paragraph margins trim. Result **80.1%** + niche **92px** next card dikhta hai. ⚠️ Type size **chhota nahi kiya** (title mobile par 30px hi hai) kyunki content delete nahi karna tha.
+3. Tablet par side-by-side layout 768px se shuru ho raha tha, but brief ke mutabiq tablet par **image upar, text neeche** chahiye → breakpoint `md:` → **`lg:`** (1024px) shift kiya. CSS media query bhi 768 → 1024.
+
+**Animations (subtle, `src/components/work/useWorkStackAnim.ts`):**
+- `gsap/ScrollTrigger` **dynamic `import()`** → async chunk (42.75 kB), initial bundle me nahi.
+- `gsap.matchMedia('(prefers-reduced-motion: no-preference)')` → reduced motion par **kuch bhi attach nahi**; `mm.revert()` cleanup.
+- **Covered card scrub:** next card ki taraf jaate hi current card `scale 0.94` + `opacity 0.6` + `blur 2px`, `ease:'none'`, `scrub:true` (scroll se exactly linked).
+- **Entrance (per card, `once:true`):** media `clip-path: inset(0 0 100% 0)` → `0%` + `scale 1.15`→`1`; text lines `y:26` + fade **stagger 0.08**. End par `clearProps` (residual inline style nahi).
+- Image `load`/`error` par `ScrollTrigger.refresh()`.
+
+**Custom cursor (`src/components/work/WorkViewCursor.tsx`):** desktop fine-pointer **+ reduced-motion: no-preference** dono ke liye. `[data-work-card]` par delegated `pointermove` hit-test, lerp `0.16`, smooth opacity fade, idle rAF shutdown. ⚠️ Reduced-motion gate pehle miss tha (sirf fine-pointer check) → QA me pakda, add kiya.
+
+**Hover:** crimson border `rgb(214,46,74)`, image `scale 1.05`, arrow `translateX(4px)` — sab CSS, reduced-motion par off.
+
+**CSS (`src/index.css`):** `--work-sticky` (76px mobile → 100px desktop), `--work-gap` (16vh → 22vh), `--work-hold` (70vh), `--work-card-radius: 28px`, `.work-hold` spacer, hover rules, reduced-motion block (cards `position: relative`, gap 6vh, hold 8vh).
+
+**Verification (Playwright + numbers — model image support nahi karta, screenshots user dekhenge):**
+- **Sticky stacking:** desktop card exactly **75vh** (675px), 28px radius, `rgba(255,255,255,.1)` border, glass blur 16px, media **54.9%**, sides LEFT/RIGHT/LEFT/RIGHT, counter `01→02→03→04`, overflowX `0`.
+- **Scrub:** mid = `scale .961 / opacity .74 / blur 1.2867px`; fully covered = `.94 / .6 / 2px`; next card phir apna independent scrub start karta hai.
+- **Entrance (fresh URL bataya zaroori — browser scroll restoration page ko pehle se bottom par load kar raha tha):** parked `inset(0 0 36.5%)` → `15.9%` → `6.4%` → `1.7%` → `0%` → `none` (cleared); scale `1.024→1`; lines stagger clearly visible `6/0.79  10/0.66  16/0.47` → `2/0.94  4/0.88  6/0.78` → all `0/1.00`.
+- **Hover + cursor:** idle border white → on-card `rgb(214,46,74)`, img `matrix(1.05,…)`, arrow `translate(4px)`, cursor opacity `0→1` at pointer → `0.009` off-card.
+- **Reduced motion:** saare cards `position: relative`, normal flow, card0 `opacity 1 / filter none / clip none`, gap 54px, section **3422px** (vs 4412) — koi dead scroll nahi, cursor bhi mount nahi.
+- **Responsive settled-state:** mobile 390 → column, sticky 76, card 676 (80.1%), media 236 upar, 92px niche; tablet 768 → column, sticky 76, 70.0%, 231px niche; desktop 1440 → row, sticky 100, 75vh, 125px niche. **Teeno par overflowX 0.**
+- **Route cleanup:** Resume par `workNodes: 0` (clean unmount), wapas aane par 4 cards + **koi leftover inline transform nahi** (`mm.revert()` kaam kar raha hai).
+- **Images:** 2 real socialify images `1280x640` load, `loading="lazy"`; 2 gradient fallback.
+- **Console: 0 errors, 0 warnings, 0 failed requests** (landing + full scroll + route round-trip). ⚠️ Pehle QA run me jo "1 console error" dikha tha wo apne **test script ke `import()`** ka tha, app ka nahi.
+- **Performance:** scrub ke dauraan median frame **20.8ms** (~48fps), p95 31ms, worst 44.1ms — koi jank spike nahi.
+- `npm run lint` → **0 error, 0 warning**. `npm run build` → pass. `dist/assets/index-NEk9qgyv.js` **500.06 kB** (pehle 497.02), `ScrollTrigger-CIzi40EK.js` 42.75 kB async, `index-Dl4x3ktv.css` 48.40 kB. Prerender `/` **45,957 B** + `/resume` 7,909 B.
+- Reference screenshots (user ke liye, model ne nahi dekhe): `.playwright-mcp/v24-1-section-top.png`, `v24-2-stack-mid.png`, `v24-3-stack-end.png`, `v24-4-mobile.png`.
+
+**Files:** `src/components/SelectedWork.tsx` (rewrite), `src/index.css` (+85), `src/components/work/useWorkStackAnim.ts` (NEW), `src/components/work/WorkViewCursor.tsx` (NEW), `package.json` + `package-lock.json` (4 deps hataye), `src/components/works/` (**9 files deleted**). `src/data.ts` — **unchanged**. `Landing.tsx` — **unchanged**.
 
 ### [v23 — Dead code purge (Mux video, unused fonts, orphan deps)] — 28 Sep 2026
 **User ka brief:** "jiski jarurat he nhi h usko delete kardo" — jo use nahi ho raha, hata do. Sirf dead code; koi visible change nahi.
@@ -521,6 +572,7 @@
 - [x] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete** — `v23` me ho gaya (0 refs verified, live bhi confirm).
 - [x] **`index.html` se `Archivo` + `Space Grotesk` hata diya** (`v23`) — ab font link me sirf Inter + Instrument Serif; `--font-archivo`/`--font-grotesk` tokens bhi dead the, delete.
 - [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
+- [ ] **`v24` projects rebuild ka visual QA user dekhe** — screenshots `.playwright-mcp/v24-*.png` (top / stack-mid / stack-end / mobile). Numbers sab verify hue hain par **model image support nahi karta**, isliye aankhon se final confirm user ka hai. Mobile card 80.1% vh hai (content preserve karne ki wajah se) — chhota lagta hai to batao.
 - [ ] **`prerender-seo` ko `main` merge karna** (SEO phase ke liye pre-rendering ready hai)
 - [ ] **SEO phase (user khud karega):** har page unique title/meta description/canonical/OG/Twitter, sitemap.xml, robots.txt, JSON-LD (Person), h1/alt refactor. Pre-rendering structure ready hai — `src/prerender.tsx`/`scripts/prerender.mjs` me head swap add ho sakta hai.
 - [ ] LinkedIn real profile link lagana (`src/data.ts`)
