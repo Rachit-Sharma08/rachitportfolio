@@ -15,23 +15,24 @@ export default function Vision() {
   return (
     <section
       id="vision"
-      className="relative overflow-hidden py-24 md:py-36"
+      className="section section-glow-center overflow-hidden bg-bg"
     >
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 55%, hsl(217 70% 40% / 0.10), transparent)',
+            'radial-gradient(ellipse 55% 48% at 50% 50%, rgba(214, 46, 74, 0.14), transparent)',
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[900px] px-6 text-center md:px-10">
+      <div className="shell relative z-10">
+        <div className="shell-inner">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="mb-10 text-xs uppercase tracking-[0.3em] text-muted md:mb-14"
+          className="eyebrow mb-10 md:mb-14"
         >
           My Vision
         </motion.p>
@@ -46,13 +47,14 @@ export default function Vision() {
               transition={{ duration: 0.8, ease: EASE, delay: i * 0.07 }}
               className={
                 line.accent
-                  ? 'font-display text-3xl font-medium tracking-tight text-text-primary italic md:text-5xl lg:text-6xl'
-                  : 'text-2xl font-medium tracking-tight text-muted md:text-4xl lg:text-5xl'
+                  ? 'text-3xl font-extrabold leading-[1.05] tracking-[-0.03em] text-text-primary md:text-5xl lg:text-6xl'
+                  : 'text-2xl font-medium leading-[1.15] tracking-[-0.02em] text-muted md:text-4xl lg:text-5xl'
               }
             >
               {line.text}
             </motion.p>
           ))}
+        </div>
         </div>
       </div>
     </section>

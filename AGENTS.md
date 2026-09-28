@@ -35,6 +35,11 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v22`) — Poora page hero ke crimson-black system me:** hero ke neeche ke saare sections (About, Capabilities, 3D Work, Vision, Journal, Stats, Enquiry, Contact/Footer, Navbar, LoadingScreen, `/resume`) ek hi design system me — crimson accent `#d62e4a` + `accent-ink #e85a70`, `--bg #0a0407`, glass cards (24px radius, 16px blur), pill/chip/field helpers, Inter extrabold headings + Instrument Serif italic accent words. Text/story/links/order/hero **unchanged**. Shared helpers `.glass/.lift/.pill/.pill-primary/.chip/.field/.section/.shell/.shell-inner/.eyebrow` `src/index.css` me hain. Detail: Changelog `v22`.
+- ⚠️ **CSS convention (important):** is file me vendor prefix **PEHLE**, standard property **BAAD me** likho (`-webkit-backdrop-filter` → `backdrop-filter`). Ulta order karne se Lightning CSS standard property ko drop kar deta hai. Verified `v22`.
+- ⚠️ **`.pill` me `border:` shorthand mat likho** — longhands use karo, warna `border-image`/gradient ring reset ho jaata hai.
+- **Contact se Mux test-stream `BackgroundVideo` hata diya** (`v22`). File + `VIDEO_SRC` abhi bhi repo me (unused) — delete karna ho to user se puchhna.
+
 - **NEW (`v21`) — Pre-rendering LIVE in build:** `npm run build` ab SSR bundle (`vite build --ssr src/prerender.tsx`) + `node scripts/prerender.mjs` se `dist/index.html` (44,403 B) **aur** `dist/resume/index.html` (8,443 B) daita hai — dono me saara text raw HTML me likha hai (nav, Who is Rachit, My Story, Capabilities, Vision, projects). Browser par design/3D/animations bilkul same (client createRoot se re-render hota hai). Branch `prerender-seo` par kaam hua, `main` untouched.
 - Landing page complete with: LoadingScreen, Grain overlay, CursorGlow, Navbar, Hero (cut-out photo + cursor-reveal outfit swap), then sections in sir's-site order (v20): About, Capabilities, SelectedWork, Vision, Journal, Stats, EnquiryForm, Contact.
 - Resume page complete (Education, Skills, Projects).
@@ -75,6 +80,53 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v22 — Below-hero restyle: hero ke crimson-black system me poora page] — 28 Sep 2026
+**User ka brief:** Hero ko bilkul untouched rakh kar **hero ke neeche ke saare sections** uske crimson-black look me restyle karo. Text/story/links/images/section order **bilkul change mat karo**. Naye animations mat add karo. **Final me har changed file list karo + koi bhi section jispar confident nahi ho use flag karo.**
+
+**STEP 0 — Audit (pehle koi code change nahi):** STEP 1 shuru karne se pehle saare below-hero components (`About`, `Capabilities`, `SelectedWork` + 6 `works/*` files, `Vision`, `Journal`, `Stats`, `EnquiryForm`, `Contact`, `Footer`, `Marquee`, `Navbar`, `LoadingScreen`, `Landing`, `Resume`, `BackgroundVideo`) ka current styling + saare blue/magenta leftovers user ko present kiye.
+
+**Design system (hero se nikala, hero code chhua nahi):**
+- `--accent: #d62e4a` (`.hero-bloom` ka exact red), `--accent-ink: #e85a70` (chhote link text ke liye contrast), `--bg: #0a0407`, `--bg-elevated: #140609`, `--text: #f5f5f5`, `--glass: rgba(255,255,255,.05)`.
+- Radii: card `24px` (`--radius-card`), tile/textarea `20px` (`--radius-tile`), pill/chip `999px`.
+- New shared helpers `src/index.css` me: `.glass`, `.lift`, `.pill`, `.pill-primary`, `.chip`, `.field`, `.section`, `.shell` (max-w 1400px), `.shell-inner` (max-w 1200px), `.eyebrow`, `.section-glow`/`.glow-section`.
+- **Typography rule:** headings = Inter extrabold, tight tracking; sirf accent words = Instrument Serif italic (`font-display`). 3D panels me bhi Archivo/Space Grotesk hata kar Inter/Instrument Serif laaye.
+
+**Jo badla (17 files):**
+1. `src/index.css` — Tailwind `@theme` color/radius tokens, `:root` tokens, body/selection/scrollbar, blue `.accent-gradient`/`.border-gradient-ring`/`.logo-ring`/`.cursor-glow` → crimson, saare shared helpers add.
+2. `src/components/RevealHeading.tsx` — italic segments ab `font-display text-[0.76em] font-normal italic` (h1 chhota, readable).
+3. `src/components/SectionHeader.tsx` — bold Inter heading + eyebrow + constrained subtext.
+4. `src/components/About.tsx` — shell + glow, crimson photo ring, glass story cards, chips/pills, `accent-ink` links, timeline glow.
+5. `src/components/Capabilities.tsx` — shell + glow, bold heading, glass cards, crimson icons.
+6. `src/components/Vision.tsx` — **left-aligned** (hero-aligned) shell, crimson radial, bold statement lines (serif hataya — bold feel chahiye thi).
+7. `src/components/Journal.tsx` — glass rows, crimson dots, pill tags.
+8. `src/components/Stats.tsx` — hero-aligned shell, bold sans numerals.
+9. `src/components/EnquiryForm.tsx` — glass `.field` inputs/select/textarea, danger text, hero-style submit pill.
+10. `src/components/Contact.tsx` — **Mux test-stream `BackgroundVideo` hata diya** (purana blue-ish background tha), crimson radial glow add, Inter h2, white pill CTA + `accent-ink` phone link.
+11. `src/components/Footer.tsx` — social links → `.chip`, status dot emerald → `bg-accent`.
+12. `src/components/Marquee.tsx` — border strengthen (`border-stroke/60` → `border-stroke`).
+13. `src/components/Navbar.tsx` — `bg-surface` → explicit `bg-bg/60 backdrop-blur-xl`, crimson scrolled shadow, "Say hi" → `.pill pill-primary`.
+14. `src/components/LoadingScreen.tsx` — inline blue box-shadow → crimson, "Rachit" → `accent-ink`, counter → extrabold sans.
+15. `src/components/SelectedWork.tsx` — section-glow, top bar/HUD text Inter, "View all work" → `.pill`, SSR `WorksFallback` crimson palette (dark `#05060a` bg hata ke theme surface).
+16. `src/components/works/*` (5 files) — `WorksScene` canvas/fog `#0a0407`/`#0d0409`, `GridFloor` crimson cells/sections, `ProjectPanel` Inter + tighter type, `WorksOverlay` Instrument-Serif accent slug + crimson progress bar + extrabold counter, `projectsData` 4 gradient pairs crimson family, `ProjectDetailCard` `.glass` + crimson glow + pill buttons, `ProjectDetailTransition` accent fallback + tile radial/coming-soon colors crimson.
+17. `src/data.ts` — `PROJECTS` accents: `#4E85BF`→`#d62e4a`, `#D946EF`→`#a11f3c`, `#8A94A6`→`#7d6a70` (×2).
+18. `src/pages/Landing.tsx` — Journal action button → `.pill` (class order/border fix).
+19. `src/pages/Resume.tsx` — `.section section-glow` + `.shell`/`.shell-inner`, bold Inter headings, accent-ink email/phone, `.chip` skills.
+
+**2 real bugs build/QA me pakde aur fix kiye:**
+- **`backdrop-filter` build me gayab ho raha tha.** Maine source me `backdrop-filter` **phir** `-webkit-backdrop-filter` likha tha → Vite ka Lightning CSS minifier dono ko collapse karke sirf `-webkit-` chhod deta tha (`.glass`/`.field` par `getComputedStyle().backdropFilter === "none"`). **Is project ka convention = prefix PEHLE, standard BAAD me** (same as existing `mask`/`-webkit-mask` rules) — 3 rules reorder ki, ab built CSS me dono emit hote hain.
+- **`.pill` ka `border:` shorthand `border-image`/gradient-ring ko reset kar raha tha** → `.pill`/`.field` me `border-width/style/color` longhands use kiye. (Note: `border-gradient-ring` `border-image` nahi, `::before` + `mask-composite` se ring banata hai — computed `borderImageSource: none` dekh ke mislead ho sakte ho.)
+
+**Verification (numbers, screenshots model ne nahi dekhe):**
+- `npm run lint` → 0 error, sirf 5 pre-existing R3F warnings. `npm run build` → pass; `dist/index.html` 40,399 B + `dist/resume/index.html` 7,973 B prerendered.
+- Preview + Playwright: `--accent #d62e4a`, `body bg rgb(10,4,7)`, Inter har heading par, Instrument Serif italic accent, glass `rgba(255,255,255,.05)` + `blur(16px)` + 24px radius, `.field` 999px (textarea 20px), gradient rings `::before` par render (CTA + nav "Say hi" + journal button), section order unchanged, **hero untouched** (`hero-base.webp`/`hero-reveal.webp`, `.hero-mask --r: 0px`).
+- 3D: canvas present, HUD slug Instrument-Serif italic `accent-ink`, progress bar crimson, Fitness panel click → glass detail card (blur 16px, 24px radius, `rgba(214,46,74,.45) 0 40px 90px -30px` glow, Inter h3, "View Details ↗" → GitHub repo link). Coming-soon panel click → card nahi (shake + auto-close) — expected.
+- `/resume` → Inter h1 72px, accent-ink email, pill chips, shell 1400/1200px, **0 console errors**.
+- Responsive: 1440/1024/390 par `scrollWidth - clientWidth = 0` **har section me**; 390 par fields 332px, submit 100×45. `#contact` ke "overflow" flags sirf Marquee ke `w-max whitespace-nowrap` track ke andar hain (parent `overflow-hidden`) — page-level overflow nahi.
+- Old-theme leftovers: `src` me `#4E85BF`, `#89AACC`, `#2F6FA3`, `#D946EF`, `#8B2FC9`, `#8A94A6`, `#3A3F4B`, `#5C6370`, `#05060a`, `#22242b`, `rgb(137,170,204)`, `emerald`, aur inline `Archivo`/`Space Grotesk` — **0 hits**.
+- Reference screenshots (user ke liye, model ne nahi dekhe): `.playwright-mcp/restyle-{1-hero,2-about,3-capabilities,4-work,5-vision,6-journal,7-stats,8-enquiry,9-contact}.png`.
+
+**Commit/push nahi kiya** (user rule). `.playwright-mcp/` test artifacts commit nahi karne.
 
 ### [v21 — Pre-rendering (SSR) + SSR-safe components + Vercel esbuild fix] — 28 Sep 2026
 **User ka brief:** (A) build ke baad har page ki HTML me saara text likha ho (nav, Who is Rachit, My Story, Capabilities, Vision, etc.), (B) browser-only code SSR-safe (3D/GSAP/Lenis/CursorGlow/HLS) taaki build crash na ho + browser me design/3D/animations pehle jaise, (D) Vercel esbuild `allowScripts` warning fix + auto-deploy ki asli wajah. **SEO work (title/meta/canonical/OG/Twitter/sitemap/robots/JSON-LD/h1/alt) user khud karega — NAI KARA.**
@@ -440,7 +492,11 @@
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
 - [x] **GitHub deploy connect (user kiya, v18)** — Vercel me Git repo connected → `main` push = auto-deploy. CLI deploy ab zaroorat nahi.
-- [ ] **Pre-render (`v21`, branch `prerender-seo`) ko `main` merge karna** jab user bole — phir Vercel auto-deploy + `/resume` prerendered HTML live verify.
+- [ ] **`v22` restyle ko `main` merge + deploy** — branch `prerender-seo` par hai, commit/push abhi nahi kiya. User ke confirm karne ke baad.
+- [ ] **`BackgroundVideo.tsx` + `VIDEO_SRC` delete karna** (`v22` ke baad Contact se unused ho gaye) — user se puchhna.
+- [ ] **`index.html` se `Archivo` + `Space Grotesk` font link hata sakte hain** (`v22` ke baad koi component use nahi karta — sirf 2 dead CSS vars bache `--font-archivo`/`--font-grotesk` `index.css:7-8`). 2 font families critical path se hat jayenge.
+- [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
+- [ ] **`prerender-seo` ko `main` merge karna** (SEO phase ke liye pre-rendering ready hai)
 - [ ] **SEO phase (user khud karega):** har page unique title/meta description/canonical/OG/Twitter, sitemap.xml, robots.txt, JSON-LD (Person), h1/alt refactor. Pre-rendering structure ready hai — `src/prerender.tsx`/`scripts/prerender.mjs` me head swap add ho sakta hai.
 - [ ] LinkedIn real profile link lagana (`src/data.ts`)
 - [ ] Instagram real profile link lagana (`src/data.ts`)

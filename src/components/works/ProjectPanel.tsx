@@ -132,24 +132,15 @@ export default function ProjectPanel({
           className="flex h-full w-full flex-col justify-between"
           style={{ width: '540px', height: '335px' }}
         >
-          <div
-            className="w-fit rounded-full border border-white/25 bg-black/25 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white backdrop-blur-sm"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
+          <div className="w-fit rounded-full border border-white/20 bg-black/35 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.25em] text-white/85 backdrop-blur-sm">
             {project.tag}
           </div>
 
           <div>
-            <h3
-              className="text-5xl leading-none tracking-tight text-white"
-              style={{ fontFamily: 'Archivo, sans-serif' }}
-            >
+            <h3 className="text-5xl font-extrabold leading-none tracking-[-0.03em] text-white">
               {project.title}
             </h3>
-            <p
-              className="mt-2 text-xs uppercase tracking-[0.3em] text-white/60"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
+            <p className="mt-2 text-xs uppercase tracking-[0.3em] text-white/60">
               View project →
             </p>
           </div>

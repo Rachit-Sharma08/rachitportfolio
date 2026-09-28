@@ -37,8 +37,9 @@ const cardAnim = {
 
 export default function About() {
   return (
-    <section id="about" className="bg-bg py-16 md:py-24">
-      <div className="mx-auto max-w-[1200px] px-6 md:px-10 lg:px-16">
+    <section id="about" className="section section-glow bg-bg">
+      <div className="shell">
+        <div className="shell-inner">
         <SectionHeader
           eyebrow="About"
           segments={[{ text: 'Who is ' }, { text: 'Rachit', italic: true }, { text: '?' }]}
@@ -57,7 +58,7 @@ export default function About() {
                 width: 240,
                 height: 240,
                 background:
-                  'linear-gradient(135deg, #89aacc 0%, #4e85bf 55%, #2f6fa3 100%)',
+                  'linear-gradient(135deg, rgba(214,46,74,0.85) 0%, #7a1226 55%, #2a0711 100%)',
               }}
             >
               <img
@@ -72,7 +73,7 @@ export default function About() {
             <motion.div
               {...cardAnim}
               transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}
-              className="w-full rounded-2xl border border-stroke bg-surface p-6"
+              className="glass lift w-full p-6"
             >
               <p className="mb-3 text-xs uppercase tracking-[0.3em] text-muted">
                 My Story
@@ -92,7 +93,7 @@ export default function About() {
             <motion.div
               {...cardAnim}
               transition={{ duration: 0.9, ease: EASE, delay: 0.05 }}
-              className="rounded-2xl border border-stroke bg-surface p-6 md:p-7"
+              className="glass lift p-6 md:p-7"
             >
               <p className="text-sm leading-relaxed text-muted md:text-base">
                 I got interested in AI in 2025, and that's when I started exploring
@@ -111,7 +112,7 @@ export default function About() {
             <motion.div
               {...cardAnim}
               transition={{ duration: 0.9, ease: EASE, delay: 0.12 }}
-              className="rounded-2xl border border-stroke bg-surface p-6 md:p-7"
+              className="glass lift p-6 md:p-7"
             >
               <p className="text-sm leading-relaxed text-muted md:text-base">
                 Now I'm working on real projects — you can check them out on my{' '}
@@ -119,7 +120,7 @@ export default function About() {
                   href={SOCIALS.github}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-text-primary underline decoration-stroke underline-offset-4 transition-colors duration-300 hover:decoration-text-primary"
+                  className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
                 >
                   GitHub
                 </a>{' '}
@@ -128,7 +129,7 @@ export default function About() {
                   href={SOCIALS.linkedin}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-text-primary underline decoration-stroke underline-offset-4 transition-colors duration-300 hover:decoration-text-primary"
+                  className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
                 >
                   LinkedIn
                 </a>
@@ -144,7 +145,7 @@ export default function About() {
             <motion.div
               {...cardAnim}
               transition={{ duration: 0.9, ease: EASE, delay: 0.19 }}
-              className="rounded-2xl border border-stroke bg-surface p-6 md:p-7"
+              className="glass lift p-6 md:p-7"
             >
               <p className="text-sm leading-relaxed text-muted md:text-base">
                 I'm also starting to build my own AI products. One of them is called{' '}
@@ -165,10 +166,7 @@ export default function About() {
               className="flex flex-wrap items-center gap-3"
             >
               {STAT_CHIPS.map((chip) => (
-                <span
-                  key={chip}
-                  className="cursor-default rounded-full border border-stroke bg-surface/50 px-4 py-2 text-xs text-muted transition-all duration-300 hover:-translate-y-0.5 hover:border-text-primary/60 hover:text-text-primary"
-                >
+                <span key={chip} className="chip cursor-default px-4 py-2 text-xs">
                   {chip}
                 </span>
               ))}
@@ -176,7 +174,7 @@ export default function About() {
                 href={SOCIALS.github}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-stroke px-5 py-2.5 text-xs text-muted transition-all duration-300 hover:-translate-y-0.5 hover:border-text-primary hover:text-text-primary"
+                className="chip px-5 py-2.5 text-xs"
               >
                 GitHub ↗
               </a>
@@ -184,7 +182,7 @@ export default function About() {
                 href={SOCIALS.linkedin}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-stroke px-5 py-2.5 text-xs text-muted transition-all duration-300 hover:-translate-y-0.5 hover:border-text-primary hover:text-text-primary"
+                className="chip px-5 py-2.5 text-xs"
               >
                 LinkedIn ↗
               </a>
@@ -219,9 +217,9 @@ export default function About() {
                   viewport={{ once: true, margin: '-60px' }}
                   transition={{ type: 'spring', stiffness: 320, damping: 18 }}
                   className="absolute -left-8 top-1.5 h-2.5 w-2.5 rounded-full accent-gradient"
-                  style={{ boxShadow: '0 0 12px rgba(137, 170, 204, 0.6)' }}
+                  style={{ boxShadow: '0 0 12px rgba(214, 46, 74, 0.65)' }}
                 />
-                <span className="font-display text-xl italic text-text-primary">
+                <span className="font-display text-xl italic text-accent-ink">
                   {item.year}
                 </span>
                 <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted md:text-base">
@@ -231,6 +229,7 @@ export default function About() {
             ))}
           </div>
         </motion.div>
+        </div>
       </div>
     </section>
   )

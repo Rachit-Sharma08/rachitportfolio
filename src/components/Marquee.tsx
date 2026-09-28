@@ -27,7 +27,7 @@ export default function Marquee() {
   ))
 
   return (
-    <div className="relative z-10 overflow-hidden border-y border-stroke/60 py-6 select-none">
+    <div className="relative z-10 overflow-hidden border-y border-stroke py-6 select-none">
       <div
         ref={trackRef}
         className="flex w-max whitespace-nowrap will-change-transform"

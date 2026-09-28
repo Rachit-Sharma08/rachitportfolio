@@ -7,10 +7,10 @@ export default function GridFloor() {
       args={[200, 200]}
       cellSize={0.6}
       cellThickness={0.6}
-      cellColor="#1f2836"
+      cellColor="#2b0d15"
       sectionSize={3}
       sectionThickness={1}
-      sectionColor="#2e3a4a"
+      sectionColor="#4a1420"
       fadeDistance={70}
       fadeStrength={2}
       infiniteGrid

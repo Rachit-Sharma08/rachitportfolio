@@ -34,12 +34,13 @@ const SKILLS = [
 
 export default function Capabilities() {
   return (
-    <section id="capabilities" className="bg-bg py-16 md:py-24">
-      <div className="mx-auto max-w-[1200px] px-6 md:px-10 lg:px-16">
+    <section id="capabilities" className="section section-glow-right bg-bg">
+      <div className="shell">
+        <div className="shell-inner">
         <RevealHeading
           as="h2"
           segments={[{ text: 'My ' }, { text: 'Capabilities', italic: true }]}
-          className="mb-14 font-display text-5xl leading-[1.05] tracking-tight text-text-primary italic md:mb-20 md:text-6xl lg:text-7xl"
+          className="mb-14 text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:mb-20 md:text-6xl lg:text-7xl"
           delay={0.1}
         />
 
@@ -56,12 +57,12 @@ export default function Capabilities() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-60px' }}
                   transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
-                  className="group flex flex-col items-center gap-3 rounded-2xl border border-stroke bg-surface/30 p-5 text-center transition-all duration-500 hover:-translate-y-1 hover:border-text-primary/50 hover:bg-surface/60"
+                  className="glass lift group flex flex-col items-center gap-3 p-5 text-center"
                 >
                   <item.icon
                     size={24}
                     strokeWidth={1.4}
-                    className="transition-colors duration-500 group-hover:text-text-primary"
+                    className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
                   />
                   <div>
                     <span className="block text-sm text-text-primary">
@@ -88,18 +89,19 @@ export default function Capabilities() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-60px' }}
                   transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
-                  className="group flex flex-col items-center gap-3 rounded-2xl border border-stroke bg-surface/30 p-5 text-center transition-all duration-500 hover:-translate-y-1 hover:border-text-primary/50 hover:bg-surface/60"
+                  className="glass lift group flex flex-col items-center gap-3 p-5 text-center"
                 >
                   <item.icon
                     size={24}
                     strokeWidth={1.4}
-                    className="transition-colors duration-500 group-hover:text-text-primary"
+                    className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
                   />
                   <span className="text-sm text-text-primary">{item.label}</span>
                 </motion.div>
               ))}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </section>

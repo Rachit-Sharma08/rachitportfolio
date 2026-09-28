@@ -32,14 +32,14 @@ export default function ProjectDetailCard({
       ref={cardRef}
       className="pointer-events-auto absolute inset-0 flex items-center justify-center p-6 opacity-0"
     >
-      <div className="relative z-10 w-full max-w-md rounded-3xl border border-stroke bg-surface/95 p-8 text-center shadow-2xl backdrop-blur-xl md:p-10">
+      <div className="glass relative z-10 w-full max-w-md p-8 text-center shadow-[0_40px_90px_-30px_rgba(214,46,74,0.45)] md:p-10">
         <p
           className="mb-3 text-[11px] uppercase tracking-[0.25em]"
           style={{ color: accent }}
         >
           {project.comingSoon ? 'Coming soon' : project.tag}
         </p>
-        <h3 className="font-display text-4xl leading-none tracking-tight text-text-primary italic md:text-5xl">
+        <h3 className="text-4xl font-extrabold leading-none tracking-[-0.03em] text-text-primary md:text-5xl">
           {project.title}
         </h3>
         <p className="mt-4 text-sm text-muted">{project.tagline}</p>
@@ -50,7 +50,7 @@ export default function ProjectDetailCard({
               ref={shakeRef}
               type="button"
               onClick={shake}
-              className="cursor-pointer rounded-full border border-stroke px-6 py-3 text-sm text-text-primary transition-transform duration-200 hover:scale-105"
+              className="pill cursor-pointer px-6 py-3 text-sm transition-transform duration-200 hover:scale-105"
             >
               Keep me posted <span className="inline-block">→</span>
             </button>
@@ -59,12 +59,12 @@ export default function ProjectDetailCard({
               href={project.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-text-primary px-6 py-3 text-sm font-medium text-bg transition-transform duration-300 hover:scale-105"
+              className="pill pill-primary cursor-pointer px-6 py-3 text-sm transition-transform duration-300 hover:scale-105"
             >
               View Details <span className="inline-block">↗</span>
             </a>
           ) : (
-            <span className="inline-flex items-center gap-2 rounded-full border border-stroke px-6 py-3 text-sm text-muted">
+            <span className="pill px-6 py-3 text-sm text-muted">
               Details coming soon
             </span>
           )}
@@ -72,7 +72,7 @@ export default function ProjectDetailCard({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="cursor-pointer rounded-full border border-stroke px-5 py-3 text-sm text-muted transition-colors duration-300 hover:text-text-primary"
+            className="pill cursor-pointer px-5 py-3 text-sm text-muted hover:text-text-primary"
           >
             ✕
           </button>

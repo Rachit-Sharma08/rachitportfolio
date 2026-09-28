@@ -62,8 +62,8 @@ export default function WorksScene({
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: false }}
     >
-      <color attach="background" args={['#05060a']} />
-      <fog attach="fog" args={['#05060a', 14, 60]} />
+      <color attach="background" args={['#0a0407']} />
+      <fog attach="fog" args={['#0d0409', 14, 60]} />
 
       <ambientLight intensity={0.6} />
       <directionalLight position={[6, 10, 6]} intensity={1.2} />

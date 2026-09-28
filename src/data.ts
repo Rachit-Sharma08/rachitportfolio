@@ -75,7 +75,7 @@ export const PROJECTS: Project[] = [
       'https://socialify.git.ci/digitalguru99908-dev/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
     aspect: 'aspect-[4/3] md:aspect-auto',
     span: 'md:col-span-7',
-    accent: '#4E85BF',
+    accent: '#d62e4a',
     tagline: 'A fitness-focused site built to practice clean UI and real brand messaging.',
     description:
       'A fitness-focused website built to practice clean UI, responsive layout, and brand messaging. Designed to feel energetic, trustworthy, and conversion-friendly across every screen size.',
@@ -89,7 +89,7 @@ export const PROJECTS: Project[] = [
       'https://socialify.git.ci/digitalguru99908-dev/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
     aspect: 'aspect-[4/3] md:aspect-auto',
     span: 'md:col-span-5',
-    accent: '#D946EF',
+    accent: '#a11f3c',
     tagline: 'A neon-soaked browser racer — built for fun, kept for the speed.',
     description:
       'A browser racing game built for fun and practice with JavaScript game loops. Fast, flashy, and built to feel arcade-smooth under the hood.',
@@ -101,7 +101,7 @@ export const PROJECTS: Project[] = [
     aspect: 'aspect-[4/3] md:aspect-auto',
     span: 'md:col-span-5',
     comingSoon: true,
-    accent: '#8A94A6',
+    accent: '#7d6a70',
     tagline: 'Currently in the workshop — shipping soon.',
     description:
       'A new project is in the works. Details coming soon.',
@@ -113,7 +113,7 @@ export const PROJECTS: Project[] = [
     aspect: 'aspect-[4/3] md:aspect-auto',
     span: 'md:col-span-7',
     comingSoon: true,
-    accent: '#8A94A6',
+    accent: '#7d6a70',
     tagline: 'A reel in progress — cut, graded, nearly ready.',
     description:
       'Creative editing work currently being crafted. More details soon.',
