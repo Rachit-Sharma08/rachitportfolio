@@ -75,6 +75,29 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v18 — Vercel ➜ GitHub connect LIVE (push = deploy) + manual deploy] — 28 Sep 2026
+**User ka symptom:** v17 push ke baad bhi live site par **purana** version dikh raha tha.
+
+**Root cause (expected behaviour, not a bug):** Vercel **GitHub se connected nahi tha** — deploy hamesha CLI (`vercel --prod`) se hota tha. Isliye `git push` karna deploy ke barabar nahi hai. Ye baat `Todo` me open thi hi ("GitHub deploy connect karna"), par v17 ke commit message me "Pushed" likhne se pata nahi chala.
+
+**Evidence (live inspect kiya, guess nahi):**
+- Live `index.html` me **koi hero preload hi nahi** → v16 hero rebuild se pehle ka build.
+- Live bundle `index-BiI3tPjh.js` vs local build `index-B7oCaJ21.js` → stale.
+- **Render par kuch deploy karne ki zaroorat nahi** — Render sirf API hold karta hai (`rootDir: server`), `/health` 200, `/` 404 (by design). Frontend sirf Vercel par hai.
+
+**Jo maine kiya (interim fix):**
+1. `.vercel/project.json` link folder **missing** tha → `vercel link --project rachitportfolio --yes` (directory me spaces hain isliye `--project` flag zaroori). Project `prj_GiCDhXYMTAsKnW3gFTQnMcMUbkai`.
+2. `vercel --prod --yes` → deploy `rachitportfolio-e4m2o9mqc-rachit-09a3.vercel.app`, aliased to **`rachitportfolio-fawn.vercel.app`**.
+3. Verify: live HTML me `hero-base.webp` + `hero-reveal.webp` ✅, `hero-base.webp` 200 / 167,812 B / `image/webp` ✅, `hero-base.png` 404 ✅, live bundle me `https://rachit-api.onrender.com` inline ✅.
+
+**Permanent fix (user ne kiya):** user ne Vercel me **Git repo connect kar di** → ab `main` push karte hi Vercel **auto-deploy** kar dega. CLI deploy ki zaroorat nahi.
+
+**Do chote notes:**
+- `vercel whoami` kabhi kabhi "Worker timed out after 10 seconds" deta hai — wo background update-check worker hai, actual command chalta hai. Retry karne par chal jata hai. Login `rachitsharma999088-2207`.
+- Vercel build log me `npm warn install-scripts ... esbuild@0.27.0 (postinstall)` aata hai — **non-blocking warning**, build pass hota hai.
+
+**Testing gotcha (headless env):** is VM me Playwright ka raw `requestAnimationFrame` **0.9 fps** chalta hai (page "visible" hone par bhi). Isliye cursor-reveal ka lerp (`r += (target-r) * 0.14` per frame) browser-me test karte waqt bahut slow lagta hai — **ye environment artifact hai, code ka bug nahi.** Verify karne ke liye `--reveal-r` ko direct CSS variable se set karke screenshot lo. Real browser me 60fps pe ~0.5s me settle hota hai (local dev par verify hua: 140px ↔ 0.03px).
+
 ### [v17 — Hero photos PNG ➜ WebP (q92) + GitHub push] — 28 Sep 2026
 **User ka brief:** "hero ke photos ko webp mai convert karke changes github par push kardo." Sirf format conversion + push — koi naya design/feature nahi.
 
@@ -330,7 +353,7 @@
 - [x] Vercel deploy — **LIVE: `https://rachitportfolio-fawn.vercel.app`**
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
-- [ ] GitHub deploy connect karna (optional, `vercel git connect`) — abhi CLI deploy hota hai
+- [x] **GitHub deploy connect (user kiya, v18)** — Vercel me Git repo connected → `main` push = auto-deploy. CLI deploy ab zaroorat nahi.
 - [ ] LinkedIn real profile link lagana (`src/data.ts`)
 - [ ] Instagram real profile link lagana (`src/data.ts`)
 - [ ] `VIDEO_SRC` ko real video (HLS/MP4) se replace karna
