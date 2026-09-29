@@ -131,6 +131,8 @@
 
 **Files changed (v28):** MOD `scripts/prerender.mjs`, `src/prerender.tsx`, `scripts/verify-prerender.mjs`, `AGENTS.md`.
 
+**🐛 Blog link ka miss (user ne 2nd round me pakda):** blog page banayi hui thi + sitemap me thi, lekin **kahin se link hi nahi tha** — `NAV_LINKS` me nahi, footer me nahi, aur Journal section ka CTA button `SOCIALS.github` kholta tha. Matlab `/blog` index **orphaned** tha (sirf URL type karne se/post se "back to blog" se reachable). Fix: `src/data.ts` `NAV_LINKS` me `{ label: 'Journal', target: 'blog', route: '/blog' }` (Resume se pehle). `Navbar.tsx` ka route-link path already generic tha — koi component change nahi. Nav pill pehle se `max-w-[calc(100vw-2rem)] overflow-x-auto` hai, isliye mobile par 8th link page overflow nahi karega. Commit `c1f163c`. Verify: homepage 49,525 → 49,711 B, raw HTML me `>Journal<` + `href="/blog"` (crawler-visible), `/blog` runtime pe Journal `aria-current="page"` + 4 post links + indexable (`noindex` false — sahi, sitemap me hai).
+
 ### [v27 — Supabase CMS + blog + deploy-hook re-render] — 29 Sep 2026
 **User ka brief:** site ka editable banao — projects/posts/story/images ek Supabase-backed single-admin CMS se chale, public blog add karo, aur publish karte hi naya post **static HTML me pre-render** ho jaye (crawler ko turant dikhe). Design/copy/hero effect **bilkul mat badlo.**
 
