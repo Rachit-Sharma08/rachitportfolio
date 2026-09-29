@@ -35,7 +35,8 @@
 
 ## 🧱 Current State (as of last update)
 
-- **NEW (`v27`) — Supabase CMS + blog + deploy-hook re-render (sab poora, verified):** Supabase-backed single-admin CMS (`/admin`) + public blog (`/blog`, `/blog/:slug`), saara editable content (projects, posts, story, hero/OG images). RLS + `public.is_admin()` + browser UX gate teenon layers. 2 Vercel functions: `/api/content` (anon settings+story) + `/api/rebuild` (auth-guarded Deploy Hook). Publish/unpublish/delete se Supabase DB Edge Function webhook → Vercel deploy → **static HTML re-pre-render**, isliye naye posts turant crawlable hain. **11 real bugs pakde + fix kiye QA me** (sabse serious: lazy `BlogPost` SSR me sirf Suspense fallback render hota tha — har post page crawler ko "Loading…" dikhata; `vercel.json` catch-all me `admin` exclude karne se poora panel 404; `api/` type-check hi nahi hota tha). `npm run verify` (NEW, 38 assertions) pre-render pipeline + XSS + empty-state cover karta hai. **⚠️ Live Supabase/Vercel env abhi set NAHI hua** — schema/seed chalane + deploy ka kaam bacha hai (exact steps neeche). Detail: Changelog `v27`.
+- **NEW (`v28`) — CMS + blog ab LIVE (Supabase wired, 7 Vercel envs set, deploy hook bana):** `/admin` login karta hai, 4 posts publish hain, sab kuch live. Ek **serious pre-render bug** pakda jo v27 ke QA se chhut gaya tha: `prerender.mjs` `site_story` ko galat column (`key` vs `section_key`) se padhta tha → poora build snapshot discard → sitemap me sirf 3 URLs, `/blog` khali, post pages homepage HTML serve kar rahe the. Fix + **test fixture bhi theek kiya** (wahi galat shape use kar raha tha, isliye 38/38 pass the tab bhi jab production toota hua tha). Ab: sitemap **7 URLs**, 4 post pages static HTML me render. Live verify: `/api/content` 200, `/api/rebuild` 401/403/405 (forged JWT bhi 403), `/admin` runtime pe `noindex` + login. Detail: Changelog `v28`.
+- **NEW (`v27`) — Supabase CMS + blog + deploy-hook re-render (sab poora, verified):** Supabase-backed single-admin CMS (`/admin`) + public blog (`/blog`, `/blog/:slug`), saara editable content (projects, posts, story, hero/OG images). RLS + `public.is_admin()` + browser UX gate teenon layers. 2 Vercel functions: `/api/content` (anon settings+story) + `/api/rebuild` (auth-guarded Deploy Hook). Publish karte hi deploy khud trigger hota hai (admin panel → `/api/rebuild` → deploy hook), isliye naye posts turant crawlable hain. **11 real bugs pakde + fix kiye QA me** (sabse serious: lazy `BlogPost` SSR me sirf Suspense fallback render hota tha — har post page crawler ko "Loading…" dikhata; `vercel.json` catch-all me `admin` exclude karne se poora panel 404; `api/` type-check hi nahi hota tha). `npm run verify` (NEW, 38 assertions) pre-render pipeline + XSS + empty-state cover karta hai. ⚠️ **v27 ka pre-render bug `v28` me pakda + fix hua** — zyada detail upar. Detail: Changelog `v27`.
 - **NEW (`v26`) — FULL SEO + a11y pass:** prerendered head har route par (canonical/OG/Twitter/main theme-color/manifest/icons/robots/JSON-LD Person+WebSite) + `robots.txt` + `sitemap.xml`, `SITE_URL` single source of truth (`scripts/seo-config.mjs`), real anchor nav (`data-no-intercept`), skip link + `main` landmark + 404 page + client-side `<title>` sync, sr-only/focus-visible/nav-hit CSS. **Lighthouse: Access 100 · BP 100 · SEO 100.** Detail: Changelog `v26`.
 - **NEW (`v25`) — Consistent animation system + Lenis fixes:** once-only masked reveals (`Reveal`/`RevealHeading`/`RevealGroup`, shared tokens `src/lib/motion.ts`), LoadingScreen delete, Magnetic clamp, ScrollProgress, Navbar hide/show + active observer, story scrub, Lenis cross-route/queued/scroll-margin fixes. Important: `<section[id]> { scroll-margin-top: 96px }` = SINGLE scroll offset knob. Detail: Changelog `v25`.
 
@@ -93,6 +94,42 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v28 — LIVE SETUP + pre-render snapshot bug fix] — 29 Sep 2026
+**User ka brief:** Supabase connect karwa do, baaki kaam agent khud kare. Result: **CMS + blog ab LIVE hain.**
+
+**🐛 SAABSE SERIOUS BUG (v27 ne live deploy tak nahi pakda):** `scripts/prerender.mjs` build-time snapshot me `site_story` ko `select('key, content')` se padh raha tha — par table ka column **`section_key`** hai (`supabase/schema.sql:43`). Query error → `failed.length` → **`return null`** → poora snapshot discard. Matlab build ne **kuch bhi bake nahi kiya**: na projects, na posts, na story, na settings.
+- Live symptom: `sitemap.xml` me sirf **3 URLs** (post pages 0), `/blog` empty-state dikha raha tha (sirf shell), `/blog/<slug>` **homepage HTML** return kar raha tha (49,050 B = `/` ke barabar).
+- Fix 1: `scripts/prerender.mjs:72` → `select('section_key, content')`
+- Fix 2: `src/prerender.tsx:47` → `story[String(row.section_key)]` (`row.key` tha)
+- **Fix 3 (test ka hi bug):** `scripts/verify-prerender.mjs` ka synthetic fixture bhi `key:` use kar raha tha lines 90/91/181 — **yaani test ne galat shape ke saath bug ko validate kiya**, isliye v27 QA me 38/38 pass the tab bhi jab production toota hua tha. Fixtures ab `section_key:` use karte hain. 💡 **Lesson: fixture real DB schema se match karna zaroori hai, warna verify green rehta hai par production khaali hota hai.**
+- Baaki code pehle se sahi tha: `api/content.ts:55,68` + `src/lib/adminApi.ts` already `section_key` use karte hain — isiliye `/api/content` pehle se theek tha, sirf build path toota tha.
+
+**Setup — user ke env ke bina kuch nahi, isliye script banayi:** `C:\Users\fvcvv\AppData\Local\Temp\opencode\setup\` (repo ke bahar, git se safe):
+- `secrets.txt` — user ne 3 Supabase values yahan paste ki (chat me **kabhi nahi** aayi).
+- `supabase-admin.mjs` — keys verify + admin user create. ⚠️ **PowerShell ka `Invoke-RestMethod` Supabase se 401 deta hai** (Cloudflare UA block) — jabki `curl`/`fetch` 200 dete hain. Isliye Supabase calls **Node `fetch`** se karni, PowerShell se nahi.
+- `vercel-setup.ps1` — deploy hook + env vars (`vercel CLI 59.19.0`, login `rachitsharma999088-2207`).
+- `admin-credentials.txt` — generated password (chat me nahi gaya).
+
+**Supabase (`https://rynizhsmvxmvwqvldwkt.supabase.co`):** ⚠️ **Naya API key format** — `sb_publishable_…` (anon) + `sb_secret_…` (service_role), purana `eyJ…` JWT nahi. supabase-js `^2.117.2` dono support karta hai. `schema.sql` + `seed.sql` SQL Editor me chala diye. Verified: anon key + RLS → 4 published posts; `site_story` pe anon → **0 rows** (no anon policy, by design); secret key → 2 story rows; bucket `site-media` public. **Admin user** `rachitsharma999088@gmail.com` banaya + `email_confirm: true` + 24-char random password (`admin-credentials.txt` me).
+
+**Vercel — 7 env vars set:** `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` / `VITE_ADMIN_EMAIL` (`--type config`) + `SUPABASE_SERVICE_ROLE_KEY` / `ADMIN_EMAIL` / `SITE_REBUILD_HOOK` / `SITE_URL` (secret).
+- ⚠️ **`VITE_*` vars `--sensitive` se reject hote hain** — Vercel CLI jaanta hai `VITE_` client bundle me jata hai: *"cannot be a Secret"*. `--type config` chahiye. Ye **correct** hai (anon key RLS se protected hai, public hone layak hai).
+- **Deploy hook** `cms-rebuild` (ref `main`) `vercel deploy-hooks create` se bana.
+- 💡 **Supabase Database Webhook ki zaroorat hi nahi** — `src/lib/adminApi.ts:214` `requestRebuild()` → `/api/rebuild` (user JWT) → deploy hook. Admin panel se publish karte hi deploy khud trigger hota hai. Dashboard step skip.
+
+**Verification (live, `https://rachitportfolio-fawn.vercel.app`):**
+- `sitemap.xml` **7 URLs** (3 → 7; 4 post URLs added). `/blog` 12,692 B, **4 post links** + titles present.
+- 4 post pages: HTTP 200, 11,302–11,991 B, real body text present, `>Loading` **0**. Chrome headless: h1 = post title, `<article>` rendered, 5 `<p>`, canonical = per-post, `BlogPosting` JSON-LD, per-post `og:image`.
+- `/api/content` HTTP 200, live Supabase values (`heroBaseUrl: /assets/hero-base.webp`, `storyCard`, `storyBody`).
+- **`/api/rebuild` security:** GET 405 · no auth **401** · garbage token **403** · **forged JWT claiming the admin email 403** (token Supabase auth server se verify hota hai, locally decode nahi).
+- `/admin` raw HTML = homepage shell (SPA fallback — prerender me admin shamil nahi, **by design**), par **runtime** pe: `robots: noindex, nofollow` ✅, login form ✅, title `Admin — Rachit Sharma` ✅, public nav leak **0** ✅, 1 h1 ✅. `/admin/blog` bhi 200 (v27 ka catch-all 404 bug fix kaam kar raha hai).
+- Homepage: 49,525 B, Supabase story baked in, 1 h1, canonical, JSON-LD Person+WebSite.
+- `npm run verify` **All checks passed** (real Supabase ke against). `npm run lint` **0 errors**, 7 advisory warnings (same pre-existing). `npm run build` pass — `[prerender] Baked 4 projects, 4 published posts`.
+
+**Commits:** `7aa790e` (v27, 44 files) → push. `734d92b` (v28 fix, 3 files) → push. Dono `main` pe, Vercel auto-deploy LIVE.
+
+**Files changed (v28):** MOD `scripts/prerender.mjs`, `src/prerender.tsx`, `scripts/verify-prerender.mjs`, `AGENTS.md`.
 
 ### [v27 — Supabase CMS + blog + deploy-hook re-render] — 29 Sep 2026
 **User ka brief:** site ka editable banao — projects/posts/story/images ek Supabase-backed single-admin CMS se chale, public blog add karo, aur publish karte hi naya post **static HTML me pre-render** ho jaye (crawler ko turant dikhe). Design/copy/hero effect **bilkul mat badlo.**
@@ -688,6 +725,12 @@
 
 ## 📌 Todo / Pending
 
+- [x] **Supabase LIVE (`v28`)** — schema + seed SQL chala diye, admin user bana + confirmed, 7 Vercel env vars set, `cms-rebuild` deploy hook bana, commit push + live verify. Login: `https://rachitportfolio-fawn.vercel.app/admin` (email `rachitsharma999088@gmail.com`, password `C:\Users\fvcvv\AppData\Local\Temp\opencode\setup\admin-credentials.txt`).
+- [ ] **`/admin` se ek real post publish karke end-to-end test** — save → deploy trigger → naya post sitemap me dikhe. (Code path verify ho chuka hai, par ek live save abhi tak nahi kiya gaya.)
+- [ ] **Admin password yaad kar lo / rotate karo** — abhi `admin-credentials.txt` me hai, wo file delete karke Supabase → Authentication → Users → Reset password se strong naya password set kar lo.
+- [ ] **Custom domain par `SITE_URL` update** — abhi `https://rachitportfolio-fawn.vercel.app` set hai. Domain change karoge to Vercel env me `SITE_URL` bhi badalna (canonical/sitemap usi se bante hain).
+- [ ] **Supabase storage me images migrate** — abhi `site_settings` me local paths (`/assets/hero-base.webp`) hain. Admin → Images se upload karne par Supabase Storage URLs set ho jayenge.
+- [ ] **Contact form test** — Render backend abhi tak theek chal raha hai ya nahi, ek baar `/` se enquiry bhej ke confirm kar lena (`VITE_API_URL` still set hai).
 - [x] **Vercel deploy — **LIVE: `https://rachitportfolio-fawn.vercel.app`**
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
