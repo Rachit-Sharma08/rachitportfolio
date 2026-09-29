@@ -10,7 +10,7 @@ export const PAGES = {
   '/': {
     title: 'Rachit Sharma — Digital Marketer Building With AI',
     description:
-      'Rachit Sharma is a self-taught marketer pairing campaign strategy with 25+ AI tools to build brands and AI products. See his story, projects and notes.',
+      'Rachit Sharma is a Haryana-based digital marketer pairing campaign strategy with 25+ AI tools to build brands, campaigns and his own AI products.',
   },
   '/resume': {
     title: 'Rachit Sharma — Resume',
@@ -43,6 +43,12 @@ export function personSchema(url) {
       'Copywriting',
       'Campaign Planning',
     ],
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Kaithal',
+      addressRegion: 'Haryana',
+      addressCountry: 'IN',
+    },
   }
 }
 
