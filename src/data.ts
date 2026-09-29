@@ -36,6 +36,7 @@ export const NAV_LINKS = [
   { label: 'Work', target: 'work' },
   { label: 'Vision', target: 'vision' },
   { label: 'Contact', target: 'contact' },
+  { label: 'Journal', target: 'blog', route: '/blog' },
   { label: 'Resume', target: 'resume', route: '/resume' },
 ]
 
