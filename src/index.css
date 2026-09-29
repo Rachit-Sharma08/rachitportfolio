@@ -1,6 +1,40 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+/* Self-hosted latin subsets of the two families, lifted byte-for-byte from the
+   exact files fonts.gstatic.com serves for this project's Google Fonts request
+   (Inter v20 variable 400-800, Instrument Serif v5 italic 400). Same family
+   names, same weight range, same style, same latin unicode-range and the same
+   `font-display: swap` the remote stylesheet declared — so glyph selection,
+   metrics and the swap-in moment are unchanged.
+
+   Hosting them is what removes the render-blocking request: the remote
+   stylesheet was the single largest block on first paint, because the browser
+   cannot start laying out text until a third-party CSS file has downloaded.
+   index.html preloads both files, so they arrive in parallel with the app's own
+   stylesheet instead of one DNS + TLS + round trip later. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/inter-latin-var.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @theme {
   --font-body: "Inter", "Inter Fallback", sans-serif;
   --font-display: "Instrument Serif", serif;

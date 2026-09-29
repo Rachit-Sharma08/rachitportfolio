@@ -71,7 +71,15 @@ export default function About() {
                 }}
               >
                 <img
-                  src="/rachit.jpg"
+                  src="/rachit-480.webp"
+                  /* The frame is a fixed 240px ring with 2px of padding, so the
+                     image box is 236 CSS px at every viewport. Each width below
+                     is then the exact device-pixel need of one DPR
+                     (236 x 1 / 1.75 / 2 / 3), so no viewport downloads more
+                     than it draws — the 1200px JPEG this replaced cost 92 KiB
+                     per visit into that box. */
+                  srcSet="/rachit-240.webp 240w, /rachit-420.webp 420w, /rachit-480.webp 480w, /rachit-720.webp 720w"
+                  sizes="236px"
                   alt="Rachit Sharma — digital marketer building with AI"
                   className="h-full w-full rounded-full object-cover"
                   width={240}

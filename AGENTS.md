@@ -35,6 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v29`) — Performance pass (Lighthouse 41 → 77, best 82):** self-hosted fonts (`public/fonts/`, `font-display: swap`, Google Fonts link gone), hero `{480,720,1086}` responsive tiers (+ `hasBundledVariants()` srcset guard), **Supabase SDK code-split out of the public bundle** (ab sirf `/admin*` me; `index-*.js` me 0 references), `/api/content` ab projects+posts+settings+story serve karta hai (client ek hi fetch), `dist/llms.txt`, `/.well-known/*` real 404, portrait 92 KiB JPEG → 4 WebP tiers. `npm run verify` **54/54**. ⚠️ Lighthouse VM-noisy hai — stray `chrome.exe` kill karke **median** lo. Detail: Changelog `v29`.
 - **NEW (`v28`) — CMS + blog ab LIVE (Supabase wired, 7 Vercel envs set, deploy hook bana):** `/admin` login karta hai, 4 posts publish hain, sab kuch live. Ek **serious pre-render bug** pakda jo v27 ke QA se chhut gaya tha: `prerender.mjs` `site_story` ko galat column (`key` vs `section_key`) se padhta tha → poora build snapshot discard → sitemap me sirf 3 URLs, `/blog` khali, post pages homepage HTML serve kar rahe the. Fix + **test fixture bhi theek kiya** (wahi galat shape use kar raha tha, isliye 38/38 pass the tab bhi jab production toota hua tha). Ab: sitemap **7 URLs**, 4 post pages static HTML me render. Live verify: `/api/content` 200, `/api/rebuild` 401/403/405 (forged JWT bhi 403), `/admin` runtime pe `noindex` + login. Detail: Changelog `v28`.
 - **NEW (`v27`) — Supabase CMS + blog + deploy-hook re-render (sab poora, verified):** Supabase-backed single-admin CMS (`/admin`) + public blog (`/blog`, `/blog/:slug`), saara editable content (projects, posts, story, hero/OG images). RLS + `public.is_admin()` + browser UX gate teenon layers. 2 Vercel functions: `/api/content` (anon settings+story) + `/api/rebuild` (auth-guarded Deploy Hook). Publish karte hi deploy khud trigger hota hai (admin panel → `/api/rebuild` → deploy hook), isliye naye posts turant crawlable hain. **11 real bugs pakde + fix kiye QA me** (sabse serious: lazy `BlogPost` SSR me sirf Suspense fallback render hota tha — har post page crawler ko "Loading…" dikhata; `vercel.json` catch-all me `admin` exclude karne se poora panel 404; `api/` type-check hi nahi hota tha). `npm run verify` (NEW, 38 assertions) pre-render pipeline + XSS + empty-state cover karta hai. ⚠️ **v27 ka pre-render bug `v28` me pakda + fix hua** — zyada detail upar. Detail: Changelog `v27`.
 - **NEW (`v26`) — FULL SEO + a11y pass:** prerendered head har route par (canonical/OG/Twitter/main theme-color/manifest/icons/robots/JSON-LD Person+WebSite) + `robots.txt` + `sitemap.xml`, `SITE_URL` single source of truth (`scripts/seo-config.mjs`), real anchor nav (`data-no-intercept`), skip link + `main` landmark + 404 page + client-side `<title>` sync, sr-only/focus-visible/nav-hit CSS. **Lighthouse: Access 100 · BP 100 · SEO 100.** Detail: Changelog `v26`.
@@ -77,23 +78,56 @@
 | File | Kaam |
 |---|---|
 | `src/App.tsx` | Router + public/admin route split + page transitions |
-| `src/lib/content.tsx` | Supabase content provider + `FALLBACK` static copy (v27) |
+| `src/lib/content.tsx` | Supabase content provider + `FALLBACK` static copy (v27). v29 se **SDK import `nahi`** — sirf `loadRemoteContent()` → `/api/content` |
 | `src/lib/seo.ts` | Per-route title/desc/canonical/OG/Twitter + JSON-LD (v26/v27) |
 | `src/lib/markdown.ts` | Escaped, scheme-checked sync Markdown renderer (v27) |
 | `supabase/schema.sql` | Tables, RLS, `is_admin()`, storage bucket (v27) |
-| `api/content.ts` | Server-only anon settings+story endpoint (v27) |
+| `api/content.ts` | Anon settings+story **+ projects + published posts** endpoint (v27, v29 me extend) |
 | `api/rebuild.ts` | Auth-guarded Vercel Deploy Hook (v27) |
-| `scripts/verify-prerender.mjs` | `npm run verify` — 38 pre-render/XSS/empty assertions (v27) |
-| `src/data.ts` | Bundled static copy (fallback when Supabase unset) |
+| `scripts/verify-prerender.mjs` | `npm run verify` — **54** pre-render/XSS/empty/llms/bundle assertions (v27, v29 me extend) |
+| `scripts/seo-config.mjs` | `SITE_URL`, `PAGES`, `SOCIALS`, `CONTACT_EMAIL` — SEO + `/llms.txt` ka single source (v26/v29) |
+| `src/data.ts` | Bundled static copy (fallback when Supabase unset) + `HERO_SRCSET`/`HERO_SIZES` (v29) |
 | `src/pages/Landing.tsx` | Home page |
 | `src/pages/Resume.tsx` | Resume page |
 | `src/components/` | Saare UI sections (Hero, Navbar, Contact, ...) |
-| `public/assets/` | Hero cut-out photos, **WebP** (`hero-base.webp` = black blazer, `hero-reveal.webp` = silver). Source PNGs `D:\Pictures\photo 1.png` + `photo 2.png` me safe hain |
-| `index.html` | SEO meta + fonts (Inter, Instrument Serif) + hero image preloads |
+| `public/assets/` | Hero cut-out photos, **WebP** — `hero-{base,reveal}.webp` (1086w) + `hero-{480,720}.{base,reveal}.webp` tiers (v29). Source PNGs `D:\Pictures\photo 1.png` + `photo 2.png` me safe hain |
+| `public/fonts/` | Self-hosted Inter + Instrument Serif `.woff2` (v29; Google Fonts link hataya) |
+| `public/rachit-*.webp` | About portrait ke 4 tiers (v29). Source: `tools/source/rachit.jpg` (1200×1600) |
+| `tools/` | `optimize-static-images.py` (portrait WebP + og probe), `generate-hero-assets.py`, `measure-hero-quality.py` |
+| `index.html` | SEO meta + hero image preloads (fonts ab `src/index.css` `@font-face` se) |
 
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v29 — Performance pass: self-hosted fonts, responsive images, admin-only SDK, /llms.txt] — 29 Sep 2026
+**User ka brief:** Lighthouse performance badhao — non-blocking/self-hosted fonts, optimized responsive images, sirf admin tak wala JS, AI catalog paths (`/.well-known/ai-catalog.json`, `/.well-known/ard.json`) ke liye real 404, aur `/llms.txt`. Design/layout/typography/hero cursor-reveal **bilkul unchanged**; SEO + Accessibility (jo 100 par hain) **touch nahi**.
+
+**Baseline (mobile, `http://localhost:4180/`): PERF 41 · A11Y 100 · BP 96 · SEO 100 — FCP 3454 ms, LCP 5785 ms, TBT 1807 ms, SI 5078 ms, CLS 0.0036.**
+
+**1 — Fonts: Google Fonts hataya → self-hosted + non-blocking.** `public/fonts/inter-latin-var.woff2` (48,256 B) + `instrument-serif-italic-latin.woff2` (22,128 B) repo me; `src/index.css` me `@font-face` + `font-display: swap`. `index.html` se Google Fonts `<link>` + dono `preconnect` delete → render-blocking Google Fonts entry (992 ms) gaya, ab sirf `index-*.css` (~160 ms) render-blocking hai.
+
+**2 — Hero responsive tiers.** `public/assets/hero-{480,720}.{base,reveal}.webp` add hue, `src/data.ts` me `HERO_SRCSET` + `HERO_SIZES`. **Bug pakda:** `hasBundledVariants()` guard missing tha → prerendered HTML hamesha sirf `src` deta tha (srcset hi nahi). 8 viewports par verify: 412@1.75 (need 497) → 720w, 390@3 → 1086w, 375@2 → 480w, 1440@1 → 720w. ⚠️ 412@1.75 ko 497 chahiye aur 480w tier 480 hai → 720w pick hota hai (96 KiB ka `uses-responsive-images` miss). **Hero tiers regenerate karne ka decision abhi pending hai** — reveal alignment abhi control-test se verify hua hai, dobara scale karne se pehle socho.
+
+**3 — Supabase SDK ab SIRF admin me (bundle ka sabse bada win).** `api/content.ts` ab `projects` + `blog_posts` + `site_settings` + `site_story` ek hi `Promise.all` me serve karta hai; rows raw aate hain, mapping client par hoti hai. ⚠️ Service-role RLS bypass karta hai, isliye `blog_posts` par **explicit `.eq('published', true)`** mandatory hai (warna draft leak). Kisi bhi ek upstream error par **502 `upstream_failed`** (half-populated payload kabhi nahi). `src/lib/content.tsx` se `supabase` import + `loadProjects`/`loadPosts` + `loaders` export **delete** — ab sirf ek `loadRemoteContent()`; provider effect `mapBuildContent` ke saath same sort/filter mirror karta hai taaki crawler HTML aur client paint drift na kare. Result: SDK chunk (`dist-*.js`, 214,186 B, `GoTrue` marker) sirf `Fields-*.js` se import hota; `index-*.js` me **0** references; `/`, `/resume`, `/blog`, `/blog/:slug`, 404 slug — **kahin bhi SDK download nahi**.
+
+**4 — `/llms.txt`.** `scripts/prerender.mjs` ke end me `dist/llms.txt` (823 B): H1, Key pages (`/`, `/resume`, `/blog`), GitHub + LinkedIn, contact email, `Sitemap: <SITE_URL>/sitemap.xml`, posts (live build me service key ke saath; local build me 0 posts — expected). `scripts/seo-config.mjs` me `SOCIALS` + `CONTACT_EMAIL` export add (same values, same order → `personSchema.sameAs` identical, JSON-LD change nahi). **`vercel.json` change ki zaroorat nahi** — Vercel rewrites filesystem ke BAAD check karta hai (`sitemap.xml` se proof: XML serve hota hai, index.html nahi).
+
+**5 — AI catalog paths → real 404.** `vercel.json` catch-all ab `"/((?!api|assets/|.well-known/).*)"` → `/index.html`. Ab `/.well-known/ai-catalog.json` + `/.well-known/ard.json` **real 404** dete hain (SPA shell nahi). Poora AI catalog/ARD manifest user ne **nahi** chaha tha.
+
+**6 — Portrait: 92 KiB JPEG → 4 WebP tiers.** `public/rachit.jpg` **delete**; `About.tsx` ab `src` + `srcSet` (`rachit-{240,420,480,720}.webp`) + **`sizes="236px"`**. ⚠️ **240 nahi, 236px:** frame `width:240` ring hai `p-[2px]` ke saath aur Tailwind preflight `box-sizing:border-box` hai → image box **236px**. Widths = 236 × {1, 1.75, 2, 3} = {240, 420, 480, 720}, isliye har common DPR par **exact** pick. ⚠️ **Source ko repo me rakhna pada:** `D:\Pictures/rachit.jpg` **alag image hai** (2592×1456 landscape — user ne replace kar di), asli portrait 1200×1600 hai jo sirf temp backup me tha → `tools/source/rachit.jpg` (162,406 B) commit. `tools/optimize-static-images.py` rewritten: `PORTRAIT_WIDTHS`/`PORTRAIT_QUALITY`, dead `JPEG_QUALITIES` hata diya, `D:\Pictures` dependency nahi, **encoder kabhi apna output nahi khelta**. Verified 6 viewport×DPR: 236→240w, 413→420w, 472→480w, 708→720w; **purana `rachit.jpg` kahin request nahi**; 0 console errors; SSIM 0.9888–0.9917, PSNR 37.2–40.4 dB.
+
+**7 — og-image: measured, deliberately NOT rewritten.** 256-colour dither 342,765 → 140,677 B (−59%), text band SSIM 0.9998 — par **max per-channel error 85** headline ke andar = wo average score chhupata hua colour banding. Share card page ke critical path par hai hi nahi (koi visitor ise fetch nahi karta, Lighthouse me bhi nahi) → visible design asset badal kar number lena brief ke galat side par. `probe_og()` ab bhi report-only.
+
+**Hero cursor-reveal — control comparison se verified (`heroreveal.mjs`):** third image `closed2.png` ko control ki tarah use karke: torso closed→open mean **11.98 / max 215 / 24.4%** changed vs control **0.44 / max 4 / 0%**; head **0.29** vs control 0.20; background **2.70** vs control 1.82; **outsideCircle 0.017%** vs control 0.018% (donome outliers navbar/hero-copy par hain, figure x=1073 se shuru hota hai) → **zero bleed**. `figureDevice { x: 1072.78, y: 360, w: 1080, h: 1440 }`.
+
+**Verify (sab pass):** `npm run lint` **0 errors** (6 pre-existing warnings: 4 `only-export-components` content.tsx + 2 `set-state-in-effect` admin). `npm run build` → `/` **51,875 B**, `/resume` 12,861, `/blog` 13,342, robots.txt, sitemap (3 urls), `llms.txt`. `npm run verify` **54/54** (pehle 38; +12 llms.txt + 4 SDK-bundle). `contenttest.mjs` (stub `/api/content` server + CDP) **21/21**.
+
+**Lighthouse (mobile, clean run): PERF 41 → 77 · A11Y 100 · BP 96 · SEO 100.** FCP 3454 → **2123**, LCP 5785 → **4195**, TBT 1807 → **271**, SI 5078 → **3744**, CLS 0.0036 → **0**. `modern-image-formats` + `uses-responsive-images` dono audit **report se gayab**, `font-display` score **1**, `total-byte-weight` 569 KiB, sirf `index-*.css` render-blocking (~160 ms). Ab bhi flagged: `unused-javascript` **87 KiB / 450 ms** (`index-*.js` 178 kB) — yehi ab sabse bada bacha hua lever hai (code-splitting, riskier).
+- ⚠️ **Lighthouse is VM-noisy — median lo, ek run mat lo.** Best run **PERF 82 / TBT 131 ms**; ek beech ka run **60** aur ek **71** gaya kyunki **13 stray `chrome.exe` processes** chal rahe the (TBT 816, mainthread 6.7 s). `Get-Process chrome | Stop-Process -Force` karke re-run karo.
+- ⚠️ Report likhne ke baad chrome-launcher ka `rmSync` EPERM aata hai (`C:\Users\fvcvv\AppData\Local\Temp\lighthouse.*`) — **non-blocking**, report file likh chuki hoti hai.
+
+**Files changed (v29):** MOD `index.html`, `src/index.css`, `src/data.ts`, `src/components/Hero.tsx`, `src/components/About.tsx`, `src/lib/content.tsx`, `api/content.ts`, `scripts/prerender.mjs`, `scripts/seo-config.mjs`, `scripts/verify-prerender.mjs`, `vercel.json`, `tools/optimize-static-images.py`; NEW `public/fonts/*` (2), `public/assets/hero-{480,720}.*.webp` (4), `public/rachit-{240,420,480,720}.webp` (4), `tools/source/rachit.jpg`; DELETED `public/rachit.jpg`. AGENTS.md bhi. **Commit/push user ke aadesh par.**
 
 ### [v28 — LIVE SETUP + pre-render snapshot bug fix] — 29 Sep 2026
 **User ka brief:** Supabase connect karwa do, baaki kaam agent khud kare. Result: **CMS + blog ab LIVE hain.**
@@ -727,6 +761,12 @@
 
 ## 📌 Todo / Pending
 
+- [ ] **`v29` commit + push `main`** — saara perf kaam local hai. User ke aadesh par hi commit/push karna (files list changelog `v29` me hai).
+- [ ] **Deploy ke baad live verify karna** — local `vite preview` Vercel functions nahi chalata, isliye `/api/content` ka naya `{settings, story, projects, posts}` shape aur `/.well-known/*` ke real 404 sirf production par confirm ho sakte hain. Push ke baad: `https://rachitportfolio-fawn.vercel.app/api/content` + `/.well-known/ai-catalog.json` (404) + `/llms.txt` (200).
+- [ ] **Hero tiers ka boundary decision** — 412@1.75 ko 497 device px chahiye par 480w tier sirf 480 hai → 720w pick hota hai (96 KiB ka responsive-images miss). `hero-{480,720}` ko `{497,720}` ya 3-tier me badalna is possible win, par hero cursor-reveal alignment is source sizes par **control-test se verify hua hai** — dobara scale karne se pehle `heroreveal.mjs` se re-verify karna.
+- [ ] **`unused-javascript` 87 KiB (450 ms) — ab sabse bada bacha hua lever.** `index-*.js` 178 kB me se 87 unused. Route-wise code-splitting se win hai, par yeh **risky** hai (prerender SSR graph + admin bundle split already carefully tuned hai).
+- [ ] **Lighthouse abhi bhi VM-noisy hai — median lo.** Stray `chrome.exe` processes TBT ko 131 → 816 ms tak le jaate hain. `Get-Process chrome | Stop-Process -Force` karo, phir 2-3 runs ka median.
+- [x] **`v29` performance pass (local) done** — fonts, hero tiers, admin-only SDK, llms.txt, well-known 404, portrait WebP; lint 0 errors, build pass, verify 54/54, contenttest 21/21, Lighthouse 41 → 77 (best 82).
 - [x] **Supabase LIVE (`v28`)** — schema + seed SQL chala diye, admin user bana + confirmed, 7 Vercel env vars set, `cms-rebuild` deploy hook bana, commit push + live verify. Login: `https://rachitportfolio-fawn.vercel.app/admin` (email `rachitsharma999088@gmail.com`, password `C:\Users\fvcvv\AppData\Local\Temp\opencode\setup\admin-credentials.txt`).
 - [ ] **`/admin` se ek real post publish karke end-to-end test** — save → deploy trigger → naya post sitemap me dikhe. (Code path verify ho chuka hai, par ek live save abhi tak nahi kiya gaya.)
 - [ ] **Admin password yaad kar lo / rotate karo** — abhi `admin-credentials.txt` me hai, wo file delete karke Supabase → Authentication → Users → Reset password se strong naya password set kar lo.
@@ -742,7 +782,7 @@
 - [x] **`index.html` se `Archivo` + `Space Grotesk` hata diya** (`v23`) — ab font link me sirf Inter + Instrument Serif; `--font-archivo`/`--font-grotesk` tokens bhi dead the, delete.
 - [x] **`v25` commit + push `main`** — `dc87312` "Consistent subtle animation system + Lenis scroll fixes" (Vercel auto-deploy). [v25 entry me ye section poora revert-type volume thi; chahe short entry bhi]
 - [x] **SEO + a11y phase (`v26`)** — seo-config/prerender head/robots/sitemap/JSON-LD, nav anchors, skip link, 404, client title sync, Lighthouse 100/100/100; push `main`.
-- [ ] **`v27` LIVE SETUP baaki hai (user ke env ke bina nahi ho sakta):** Supabase SQL Editor me `supabase/schema.sql` + `supabase/seed.sql` chalao → admin user banao → Vercel me 7 env vars set karo → Supabase Database Webhook (`blog_posts` INSERT/UPDATE/DELETE → `SITE_REBUILD_HOOK` POST) banao → push. Tab tak `/admin` static content dikhayega (auth kuch nahi kar paayega), naye posts live nahi honge. `npm run verify` se pehle hi sab verify ho chuka hai.
+- [x] **`v27` LIVE SETUP — ho chuka (`v28` me):** schema + seed SQL, admin user, 7 Vercel env vars, deploy hook — sab live verify. (Agar kabhi dobara setup chahiye to procedure changelog `v27` Step-3/4 me hai.)
 - [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
 - [ ] **`v24` projects rebuild ka visual QA user dekhe** — screenshots `.playwright-mcp/v24-*.png` (top / stack-mid / stack-end / mobile). Numbers sab verify hue hain par **model image support nahi karta**, isliye aankhon se final confirm user ka hai. Mobile card 80.1% vh hai (content preserve karne ki wajah se) — chhota lagta hai to batao.
 - [x] **`prerender-seo` ka kaam `main` me merge ho chuka** — pre-rendering + SEO head ab `v26` me LIVE (`main`, auto-deploy).

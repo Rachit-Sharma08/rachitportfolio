@@ -1,15 +1,26 @@
 /**
  * GET /api/content
  *
- * The public read for `site_settings` and `site_story`. Those two tables have no
- * anon RLS policy on purpose — the browser must not be able to read or write
- * them. This function is the sanctioned way in: it runs on Vercel's Node
- * runtime, holds the service-role key in a server-only env var, and returns
- * only the handful of fields the public site actually renders.
+ * The public read for everything the site renders from the database:
+ * `site_settings`, `site_story`, `projects`, and published `blog_posts`.
  *
- * The service-role key bypasses RLS, which is exactly why it must never be
- * reachable from the browser. It is read here via `process.env`, not
- * `import.meta.env`, and the file is not imported by anything under `src/`.
+ * The first two have no anon RLS policy on purpose — the browser must not be
+ * able to read or write them. The latter two do have anon read policies, but
+ * reading them here as well is what lets the client drop `@supabase/supabase-js`
+ * entirely: without this function the public bundle would download the SDK
+ * (~214 kB) on every page view just to run four queries, and only the admin
+ * ever needs it.
+ *
+ * This function runs on Vercel's Node runtime, holds the service-role key in a
+ * server-only env var, and returns only the fields the public site renders. The
+ * service-role key bypasses RLS, which is exactly why `blog_posts` is filtered
+ * to `published = true` here rather than trusting a policy — a draft must not
+ * leak through the one path that skips RLS. The key is read via `process.env`,
+ * never `import.meta.env`, and this file is not imported by anything in `src/`.
+ *
+ * Rows are returned in their raw snake_case form and mapped by the client with
+ * the same `toProject`/`toPost` helpers the admin uses, so the shape is defined
+ * in exactly one place.
  *
  * Response is cached at the edge for 5 minutes, so a cold function start and
  * the Supabase round trip are both off the critical path for repeat visitors.
@@ -50,12 +61,21 @@ export default async function handler(req: Req, res: Res) {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const [settings, story] = await Promise.all([
+  const [projects, posts, settings, story] = await Promise.all([
+    supabase.from('projects').select('*').order('display_order', { ascending: true }),
+    supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('published', true)
+      .order('published_at', { ascending: false }),
     supabase.from('site_settings').select('key, value'),
     supabase.from('site_story').select('section_key, content'),
   ])
 
-  if (settings.error || story.error) {
+  // One upstream failure returns nothing rather than a half-populated payload:
+  // the client treats a non-200 as "no answer" and keeps the bundled copy, so a
+  // flaky table can't mix live settings with stale projects on the same page.
+  if (projects.error || posts.error || settings.error || story.error) {
     res.setHeader('Cache-Control', 'no-store')
     res.status(502).json({ error: 'upstream_failed' })
     return
@@ -76,5 +96,7 @@ export default async function handler(req: Req, res: Res) {
     },
     storyCard: copy.my_story_card ?? '',
     storyBody: copy.my_story ?? '',
+    projects: projects.data ?? [],
+    posts: posts.data ?? [],
   })
 }

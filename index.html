@@ -14,14 +14,50 @@
       content="Rachit Sharma is a self-taught marketer pairing campaign strategy with 25+ AI tools to build brands and AI products. See his story, projects and notes."
     />
     <title>Rachit Sharma — Digital Marketer Building With AI</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts are self-hosted (see the @font-face block in src/index.css), so
+         they preload from the same origin as the app instead of blocking first
+         paint behind a third-party stylesheet. `crossorigin` is required: font
+         fetches are always CORS-mode, and without it the preload is discarded
+         and the file is downloaded twice. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=Instrument+Serif:ital@1&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      href="/fonts/inter-latin-var.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
-    <link rel="preload" as="image" href="/assets/hero-base.webp" type="image/webp" fetchpriority="high" />
-    <link rel="preload" as="image" href="/assets/hero-reveal.webp" type="image/webp" fetchpriority="low" />
+    <link
+      rel="preload"
+      href="/fonts/instrument-serif-italic-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <!-- The hero cut-out is sized in viewport height (46/54/74/80vh at aspect
+         3/4), so its width is 0.75x that. `imagesrcset`/`imagesizes` have to
+         restate the figure's own breakpoints, because a preload that guesses
+         differently from the <img> makes the browser fetch two candidates for
+         the same picture. Keep these strings in step with HERO_SRCSET /
+         HERO_SIZES in src/data.ts and the className on .hero-figure in
+         src/components/Hero.tsx. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/assets/hero-base.webp"
+      type="image/webp"
+      fetchpriority="high"
+      imagesrcset="/assets/hero-base-480.webp 480w, /assets/hero-base-512.webp 512w, /assets/hero-base-720.webp 720w, /assets/hero-base.webp 1086w"
+      imagesizes="(min-width: 1280px) calc(0.75 * 80vh), (min-width: 1024px) calc(0.75 * 74vh), (min-width: 640px) calc(0.75 * 54vh), calc(0.75 * 46vh)"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/assets/hero-reveal.webp"
+      type="image/webp"
+      fetchpriority="low"
+      imagesrcset="/assets/hero-reveal-480.webp 480w, /assets/hero-reveal-512.webp 512w, /assets/hero-reveal-720.webp 720w, /assets/hero-reveal.webp 1086w"
+      imagesizes="(min-width: 1280px) calc(0.75 * 80vh), (min-width: 1024px) calc(0.75 * 74vh), (min-width: 640px) calc(0.75 * 54vh), calc(0.75 * 46vh)"
+    />
     <!-- Marks the document as script-capable before first paint. The page
          fade-in is scoped to `.js` so that a crawler or a visitor without JS
          sees the content immediately instead of a permanently blank root. -->

@@ -18,12 +18,43 @@ export const SOCIAL_LINKS = [
 ]
 
 // Both cut-outs are 1086x1448 (exactly 3:4) and pixel-aligned with each
-// other. `reveal` sits on the bottom layer, `base` on top with a radial
-// mask hole that follows the cursor. Lossless-quality WebP (q92, alpha
-// bit-identical to the source PNGs) — originals kept at D:\Pictures.
+// other. `base` is the bottom layer, always visible; `reveal` is masked on top
+// and only shows through the circle that follows the cursor.
+//
+// Served responsively. The figure's height is viewport-relative (46/54/74/80vh
+// at `sm`/`lg`/`xl`) and its aspect is 3:4, so a phone was downloading a
+// 1086px-wide file to fill a 291px-wide box. Every width below is the same
+// source resampled onto an identical grid for both layers, which the reveal
+// effect depends on: layers on different grids would let the reveal's edge
+// escape the base silhouette (that was the v19 sunglasses-bleed bug).
+//
+// WebP q88, alpha bit-identical to the source PNGs, which is the highest
+// quality that still measures SSIM >= 0.98 / PSNR >= 40 dB composited over the
+// page background. Regenerate with tools/generate-hero-assets.py; originals
+// stay at D:\Pictures.
 export const HERO_IMAGES = {
   base: '/assets/hero-base.webp',
   reveal: '/assets/hero-reveal.webp',
+}
+
+const heroSrcset = (name: string) =>
+  `/assets/hero-${name}-480.webp 480w, ` +
+  `/assets/hero-${name}-512.webp 512w, ` +
+  `/assets/hero-${name}-720.webp 720w, ` +
+  `/assets/hero-${name}.webp 1086w`
+
+/**
+ * Mirrors the `h-[46vh] sm:h-[54vh] lg:h-[74vh] xl:h-[80vh]` and `aspect-[3/4]`
+ * on .hero-figure, with width = 0.75 x height. index.html repeats this
+ * verbatim in `imagesizes` so the preload and the <img> resolve to the same
+ * candidate — if they disagree the browser downloads two copies of the picture.
+ */
+export const HERO_SIZES =
+  '(min-width: 1280px) calc(0.75 * 80vh), (min-width: 1024px) calc(0.75 * 74vh), (min-width: 640px) calc(0.75 * 54vh), calc(0.75 * 46vh)'
+
+export const HERO_SRCSET = {
+  base: heroSrcset('base'),
+  reveal: heroSrcset('reveal'),
 }
 
 export const HERO_INTRO =

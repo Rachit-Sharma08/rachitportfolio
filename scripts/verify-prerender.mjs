@@ -3,6 +3,8 @@
 //   node scripts/verify-prerender.mjs
 import { pathToFileURL } from 'node:url'
 import path from 'node:path'
+import { readdir, readFile } from 'node:fs/promises'
+import { SITE_URL } from './seo-config.mjs'
 
 const ssr = await import(
   pathToFileURL(path.join(process.cwd(), 'dist-ssr', 'prerender.js')).href
@@ -195,6 +197,68 @@ check('emptied home still renders', emptiedHome.includes('hero-base.webp'), true
 
 const emptiedBlog = renderRoute('/blog', emptied)
 check('emptied blog shows the empty state', emptiedBlog.includes('No posts published yet'), true)
+
+/* -------------------------------------------------------------------------- */
+/*  llms.txt                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const llmsPath = path.join(process.cwd(), 'dist', 'llms.txt')
+const llms = await readFile(llmsPath, 'utf8').catch(() => null)
+check('llms.txt written', llms !== null, true)
+if (llms !== null) {
+  check('llms.txt opens with the H1', llms.startsWith('# Rachit Sharma\n'), true)
+  check(
+    'llms.txt links Home from SITE_URL',
+    llms.includes(`[Home](${SITE_URL}/)`),
+    true,
+  )
+  check(
+    'llms.txt links Resume',
+    llms.includes(`[Resume](${SITE_URL}/resume)`),
+    true,
+  )
+  check('llms.txt links Journal', llms.includes(`[Journal](${SITE_URL}/blog)`), true)
+  check('llms.txt lists GitHub', llms.includes('github.com/digitalguru99908-dev'), true)
+  check('llms.txt lists LinkedIn', llms.includes('linkedin.com/in/rachit-sharma'), true)
+  check('llms.txt lists the contact address', llms.includes('rachitsharma999088@gmail.com'), true)
+  check(
+    'llms.txt points at the sitemap',
+    llms.includes(`Sitemap: ${SITE_URL}/sitemap.xml`),
+    true,
+  )
+  // A half-built template leaks as a literal "undefined" somewhere.
+  check('llms.txt has no unrendered placeholder', llms.includes('undefined'), false)
+  // Same-origin only: an llms.txt that hands over a localhost or preview host is
+  // worse than none.
+  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-fawn\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com)/.test(llms), false)
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Bundle: the Supabase SDK must stay admin-only                             */
+/* -------------------------------------------------------------------------- */
+
+// `content.tsx` used to pull the browser client in through a dynamic import, so
+// every public page downloaded ~214 kB to run four reads. It now goes through
+// /api/content. `GoTrue` only occurs inside the SDK itself, which makes it a
+// reliable way to find the code-split chunk and confirm the public entry has no
+// reference to it.
+const assetsDir = path.join(process.cwd(), 'dist', 'assets')
+const chunks = (await readdir(assetsDir)).filter((f) => f.endsWith('.js'))
+const entryFile = chunks.find((f) => /^index-[\w-]+\.js$/.test(f))
+check('public entry chunk present', entryFile !== undefined, true)
+
+const sdkChunks = []
+for (const file of chunks) {
+  const src = await readFile(path.join(assetsDir, file), 'utf8')
+  if (src.includes('GoTrue')) sdkChunks.push(file)
+}
+check('Supabase SDK is code-split into one chunk', sdkChunks.length, 1)
+
+if (entryFile && sdkChunks.length === 1) {
+  const entry = await readFile(path.join(assetsDir, entryFile), 'utf8')
+  check('SDK chunk is not statically imported by the public entry', entry.includes(sdkChunks[0]), false)
+  check('public entry contains no SDK code', entry.includes('GoTrue'), false)
+}
 
 console.log(`\n${failures === 0 ? 'All checks passed' : `${failures} check(s) FAILED`}`)
 process.exit(failures === 0 ? 0 : 1)

@@ -1,13 +1,24 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import Magnetic from './Magnetic'
-import { HERO_IMAGES, HERO_INTRO } from '../data'
+import { HERO_IMAGES, HERO_INTRO, HERO_SIZES, HERO_SRCSET } from '../data'
 import { useSiteContent } from '../lib/content'
 import { scrollToSection } from '../lib/lenis'
 
 const REVEAL_RADIUS = 140
 const LERP = 0.14
 const SWEEP_RESUME_MS = 2600
+
+/**
+ * `settings` is pre-seeded with these same paths (content.tsx FALLBACK), so a
+ * truthy `heroBaseUrl` alone does not mean the CMS was overridden — testing
+ * truthiness would silently disable responsive loading on every normal visit.
+ * The -480/-720 derivatives only exist for the two cut-outs shipped in
+ * public/assets; a CMS-supplied storage URL is a lone file with no siblings, so
+ * srcset is offered only for ours rather than 404ing on made-up variants.
+ */
+const hasBundledVariants = (src: string) =>
+  src === HERO_IMAGES.base || src === HERO_IMAGES.reveal
 
 interface HeroProps {
   ready?: boolean
@@ -17,6 +28,11 @@ export default function Hero({ ready = true }: HeroProps) {
   const { settings } = useSiteContent()
   const sectionRef = useRef<HTMLElement>(null)
   const figureRef = useRef<HTMLDivElement>(null)
+
+  // Resolve the empty-string case here so the variants test sees the path that
+  // will actually be fetched, not the "not set" marker.
+  const baseSrc = settings.heroBaseUrl || HERO_IMAGES.base
+  const revealSrc = settings.heroRevealUrl || HERO_IMAGES.reveal
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -183,21 +199,27 @@ export default function Hero({ ready = true }: HeroProps) {
       >
         <div className="hero-photo absolute inset-0">
           <img
-            src={settings.heroBaseUrl || HERO_IMAGES.base}
+            src={baseSrc}
             alt="Rachit Sharma, Digital Marketer"
             width={1086}
             height={1448}
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
+            {...(hasBundledVariants(baseSrc)
+              ? { srcSet: HERO_SRCSET.base, sizes: HERO_SIZES }
+              : {})}
           />
           <img
-            src={settings.heroRevealUrl || HERO_IMAGES.reveal}
+            src={revealSrc}
             alt=""
             aria-hidden="true"
             width={1086}
             height={1448}
             draggable={false}
             className="hero-mask pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
+            {...(hasBundledVariants(revealSrc)
+              ? { srcSet: HERO_SRCSET.reveal, sizes: HERO_SIZES }
+              : {})}
           />
         </div>
       </div>

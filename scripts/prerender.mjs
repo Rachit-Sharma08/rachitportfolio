@@ -10,6 +10,8 @@ import {
   personSchema,
   websiteSchema,
   BLOG_DESCRIPTION,
+  SOCIALS,
+  CONTACT_EMAIL,
 } from './seo-config.mjs'
 
 const root = process.cwd()
@@ -301,3 +303,54 @@ const urlset = [
 ].join('\n')
 await writeFile(path.join(distDir, 'sitemap.xml'), urlset)
 console.log(`Wrote dist/sitemap.xml (${routes.length} urls)`)
+
+/* -------------------------------------------------------------------------- */
+/*  llms.txt                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A machine-readable index of the site for AI agents and crawlers: who runs it,
+ * which URLs matter, and what each one is. Generated rather than hand-written so
+ * it can never disagree with SITE_URL or with the posts that were actually
+ * published at build time — an unpublish removes its line here too, exactly as
+ * it leaves the sitemap.
+ */
+const llms = [
+  '# Rachit Sharma',
+  '',
+  `> ${PAGES['/'].description}`,
+  '',
+  '## Key pages',
+  '',
+  `- [Home](${SITE_URL}/): Portfolio landing page — about, capabilities, selected work, journal and contact.`,
+  `- [Resume](${SITE_URL}/resume): Education, skills and projects.`,
+  `- [Journal](${SITE_URL}/blog): Notes on digital marketing, AI tooling, SEO and building with AI.`,
+  '',
+]
+
+const published = (content?.posts ?? []).filter((post) => post.slug)
+if (published.length) {
+  llms.push('## Journal posts', '')
+  for (const post of published) {
+    const summary = post.excerpt ? `: ${post.excerpt.replace(/\s+/g, ' ').trim()}` : ''
+    llms.push(`- [${post.title}](${SITE_URL}/blog/${post.slug})${summary}`)
+  }
+  llms.push('')
+}
+
+llms.push(
+  '## Elsewhere',
+  '',
+  `- [GitHub](${SOCIALS.github})`,
+  `- [LinkedIn](${SOCIALS.linkedin})`,
+  `- [Instagram](${SOCIALS.instagram})`,
+  '',
+  '## Contact',
+  '',
+  `- Email: ${CONTACT_EMAIL}`,
+  '',
+  `Sitemap: ${SITE_URL}/sitemap.xml`,
+  '',
+)
+await writeFile(path.join(distDir, 'llms.txt'), llms.join('\n'))
+console.log(`Wrote dist/llms.txt (${published.length} posts listed)`)

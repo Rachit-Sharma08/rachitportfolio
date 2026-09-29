@@ -7,7 +7,6 @@ import {
 } from 'react'
 import type { ReactNode } from 'react'
 import { JOURNAL, PROJECTS, STORY } from '../data'
-import { supabase } from './supabase'
 
 /* -------------------------------------------------------------------------- */
 /*  Shapes                                                                    */
@@ -141,47 +140,30 @@ export const FALLBACK: SiteContent = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Live loaders                                                              */
+/*  Live content                                                              */
 /* -------------------------------------------------------------------------- */
 
-async function loadProjects(): Promise<Project[] | null> {
-  const client = await supabase()
-  if (!client) return null
-  const { data, error } = await client
-    .from('projects')
-    .select('*')
-    .order('display_order', { ascending: true })
-  // An empty result is a real answer, not a failure: the admin is allowed to
-  // delete every project. Only a failed query falls back to the bundled copy,
-  // otherwise deleting the last project would silently resurrect all four.
-  if (error || !Array.isArray(data)) return null
-  return (data as Row[]).map(toProject)
-}
-
-/** Published posts only — the anon role can't see drafts even if it tried. */
-async function loadPosts(limit?: number): Promise<Post[] | null> {
-  const client = await supabase()
-  if (!client) return null
-  let query = client
-    .from('blog_posts')
-    .select('*')
-    .eq('published', true)
-    .order('published_at', { ascending: false })
-  if (limit) query = query.limit(limit)
-  const { data, error } = await query
-  if (error || !Array.isArray(data)) return null
-  return (data as Row[]).map(toPost)
-}
-
 /**
- * site_settings and site_story have no anon policy, by design. This is the
- * "server-side call" the public site is allowed to make. The function caches for
- * five minutes, so a cold function start isn't on the critical path.
+ * One request to `api/content.ts` for every table this page renders.
+ *
+ * This used to be three queries run straight from the browser through
+ * `@supabase/supabase-js`. Four requests can't justify ~214 kB of SDK on a
+ * public page view when the data is plain reads, and the service-role side is
+ * the only place drafts and the admin-only tables are handled anyway. The SDK
+ * is now reached only from the admin, which is where auth and writes live.
+ *
+ * Returns null when the endpoint is unreachable, unconfigured, or upstream —
+ * i.e. whenever there is genuinely "no answer". An empty `projects`/`posts`
+ * array that comes back inside a 200 is a deliberate answer and is honoured, so
+ * deleting the last project still empties the section instead of resurrecting
+ * the bundled copy.
  */
 async function loadRemoteContent(): Promise<{
   settings?: Partial<SiteSettings>
   storyCard?: string
   storyBody?: string
+  projects?: Row[]
+  posts?: Row[]
 } | null> {
   try {
     const response = await fetch('/api/content', { headers: { accept: 'application/json' } })
@@ -191,9 +173,6 @@ async function loadRemoteContent(): Promise<{
     return null
   }
 }
-
-/** Exported for the pre-renderer, which runs the same queries from Node. */
-export const loaders = { loadProjects, loadPosts, loadRemoteContent }
 
 /* -------------------------------------------------------------------------- */
 /*  Provider                                                                  */
@@ -221,21 +200,28 @@ export function SiteContentProvider({ initial, children }: ProviderProps) {
     let cancelled = false
 
     void (async () => {
-      const [projects, posts, remote] = await Promise.all([
-        loadProjects(),
-        loadPosts(),
-        loadRemoteContent(),
-      ])
+      const remote = await loadRemoteContent()
       if (cancelled) return
       setContent((prev) => ({
-        // `null` means "no answer" (unconfigured, offline, or the query failed)
-        // and keeps whatever is already on screen. An empty array or empty
-        // string is a deliberate answer from the admin and is honoured, so
+        // `null` (endpoint unreachable, unconfigured, or upstream failure) means
+        // "no answer" and keeps whatever is already on screen. An empty array
+        // inside a 200 is a deliberate answer from the admin and is honoured, so
         // deleting the last project actually empties the section. Image URLs are
         // the exception: blanking one falls back to the bundled asset, because an
         // empty src would render a broken image.
-        projects: projects ?? prev.projects,
-        posts: posts ?? prev.posts,
+        //
+        // Projects and posts are filtered and sorted here exactly as
+        // mapBuildContent does for the static HTML, so the content a crawler reads
+        // and the content this effect paints cannot drift apart.
+        projects:
+          remote?.projects?.map(toProject).sort((a, b) => a.displayOrder - b.displayOrder) ??
+          prev.projects,
+        posts:
+          remote?.posts
+            ?.map(toPost)
+            .filter((post) => post.published)
+            .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '')) ??
+          prev.posts,
         settings: {
           heroBaseUrl: remote?.settings?.heroBaseUrl || prev.settings.heroBaseUrl,
           heroRevealUrl:

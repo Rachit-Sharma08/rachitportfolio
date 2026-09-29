@@ -6,6 +6,15 @@ export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
 
 export const OG_IMAGE = `${SITE_URL}/og-image.png`
 
+// Shared by the Person schema's `sameAs` and /llms.txt, so a profile URL only
+// ever has to be corrected in one place.
+export const SOCIALS = {
+  github: 'https://github.com/digitalguru99908-dev',
+  linkedin: 'https://www.linkedin.com/in/rachit-sharma',
+  instagram: 'https://www.instagram.com/rachitsharma',
+}
+export const CONTACT_EMAIL = 'rachitsharma999088@gmail.com'
+
 export const PAGES = {
   '/': {
     title: 'Rachit Sharma — Digital Marketer Building With AI',
@@ -34,11 +43,7 @@ export function personSchema(url) {
     jobTitle: 'Digital Marketer',
     description:
       'Self-taught digital marketer pairing campaign strategy with 25+ AI tools. Building brands, campaigns and AI products.',
-    sameAs: [
-      'https://github.com/digitalguru99908-dev',
-      'https://www.linkedin.com/in/rachit-sharma',
-      'https://www.instagram.com/rachitsharma',
-    ],
+    sameAs: [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram],
     knowsAbout: [
       'Digital Marketing',
       'AI Tools',
