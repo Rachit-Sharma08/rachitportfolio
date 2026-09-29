@@ -69,7 +69,7 @@ async function loadBuildContent() {
         .eq('published', true)
         .order('published_at', { ascending: false }),
       client.from('site_settings').select('key, value'),
-      client.from('site_story').select('key, content'),
+      client.from('site_story').select('section_key, content'),
     ])
 
     const failed = [projects, posts, settings, story].filter((r) => r.error)

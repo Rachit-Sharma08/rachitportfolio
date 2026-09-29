@@ -44,7 +44,7 @@ export function mapBuildContent(raw: BuildContentRaw): SiteContent {
   }
   const story: Record<string, string> = {}
   for (const row of raw.story ?? []) {
-    story[String(row.key)] = String(row.content ?? '')
+    story[String(row.section_key)] = String(row.content ?? '')
   }
 
   // Distinguishes "no row saved yet" from "row saved and deliberately blank".

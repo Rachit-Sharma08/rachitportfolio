@@ -87,8 +87,8 @@ const RAW = {
     { key: 'og_image_url', value: 'https://x.supabase.co/og.webp' },
   ],
   story: [
-    { key: 'my_story_card', content: 'A **new** card.' },
-    { key: 'my_story', content: 'First para.\n\nSecond para.' },
+    { section_key: 'my_story_card', content: 'A **new** card.' },
+    { section_key: 'my_story', content: 'First para.\n\nSecond para.' },
   ],
 }
 
@@ -178,7 +178,10 @@ const emptied = mapBuildContent({
   projects: [],
   posts: [],
   settings: [],
-  story: [{ key: 'my_story_card', content: '' }, { key: 'my_story', content: '' }],
+  story: [
+    { section_key: 'my_story_card', content: '' },
+    { section_key: 'my_story', content: '' },
+  ],
 })
 check('empty project table is honoured', emptied.projects, [])
 check('empty post table is honoured', emptied.posts, [])
