@@ -35,6 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v27`) — Supabase CMS + blog + deploy-hook re-render (sab poora, verified):** Supabase-backed single-admin CMS (`/admin`) + public blog (`/blog`, `/blog/:slug`), saara editable content (projects, posts, story, hero/OG images). RLS + `public.is_admin()` + browser UX gate teenon layers. 2 Vercel functions: `/api/content` (anon settings+story) + `/api/rebuild` (auth-guarded Deploy Hook). Publish/unpublish/delete se Supabase DB Edge Function webhook → Vercel deploy → **static HTML re-pre-render**, isliye naye posts turant crawlable hain. **11 real bugs pakde + fix kiye QA me** (sabse serious: lazy `BlogPost` SSR me sirf Suspense fallback render hota tha — har post page crawler ko "Loading…" dikhata; `vercel.json` catch-all me `admin` exclude karne se poora panel 404; `api/` type-check hi nahi hota tha). `npm run verify` (NEW, 38 assertions) pre-render pipeline + XSS + empty-state cover karta hai. **⚠️ Live Supabase/Vercel env abhi set NAHI hua** — schema/seed chalane + deploy ka kaam bacha hai (exact steps neeche). Detail: Changelog `v27`.
 - **NEW (`v26`) — FULL SEO + a11y pass:** prerendered head har route par (canonical/OG/Twitter/main theme-color/manifest/icons/robots/JSON-LD Person+WebSite) + `robots.txt` + `sitemap.xml`, `SITE_URL` single source of truth (`scripts/seo-config.mjs`), real anchor nav (`data-no-intercept`), skip link + `main` landmark + 404 page + client-side `<title>` sync, sr-only/focus-visible/nav-hit CSS. **Lighthouse: Access 100 · BP 100 · SEO 100.** Detail: Changelog `v26`.
 - **NEW (`v25`) — Consistent animation system + Lenis fixes:** once-only masked reveals (`Reveal`/`RevealHeading`/`RevealGroup`, shared tokens `src/lib/motion.ts`), LoadingScreen delete, Magnetic clamp, ScrollProgress, Navbar hide/show + active observer, story scrub, Lenis cross-route/queued/scroll-margin fixes. Important: `<section[id]> { scroll-margin-top: 96px }` = SINGLE scroll offset knob. Detail: Changelog `v25`.
 
@@ -74,8 +75,15 @@
 
 | File | Kaam |
 |---|---|
-| `src/App.tsx` | Router + loading screen + page transitions |
-| `src/data.ts` | Saara content ek jagah (info, socials, projects, stats) |
+| `src/App.tsx` | Router + public/admin route split + page transitions |
+| `src/lib/content.tsx` | Supabase content provider + `FALLBACK` static copy (v27) |
+| `src/lib/seo.ts` | Per-route title/desc/canonical/OG/Twitter + JSON-LD (v26/v27) |
+| `src/lib/markdown.ts` | Escaped, scheme-checked sync Markdown renderer (v27) |
+| `supabase/schema.sql` | Tables, RLS, `is_admin()`, storage bucket (v27) |
+| `api/content.ts` | Server-only anon settings+story endpoint (v27) |
+| `api/rebuild.ts` | Auth-guarded Vercel Deploy Hook (v27) |
+| `scripts/verify-prerender.mjs` | `npm run verify` — 38 pre-render/XSS/empty assertions (v27) |
+| `src/data.ts` | Bundled static copy (fallback when Supabase unset) |
 | `src/pages/Landing.tsx` | Home page |
 | `src/pages/Resume.tsx` | Resume page |
 | `src/components/` | Saare UI sections (Hero, Navbar, Contact, ...) |
@@ -85,6 +93,45 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v27 — Supabase CMS + blog + deploy-hook re-render] — 29 Sep 2026
+**User ka brief:** site ka editable banao — projects/posts/story/images ek Supabase-backed single-admin CMS se chale, public blog add karo, aur publish karte hi naya post **static HTML me pre-render** ho jaye (crawler ko turant dikhe). Design/copy/hero effect **bilkul mat badlo.**
+
+**Naya stack:** `@supabase/supabase-js@^2.117.2` + `marked@^18.0.14` (server packages hata diye — `npm audit` 0 vulnerabilities).
+
+**Schema + seed:** `supabase/schema.sql` — tables `site_settings`, `site_story`, `projects`, `blog_posts`; `public.is_admin()`; RLS (anon ko sirf published posts + projects); storage bucket `site-media`. `supabase/seed.sql` — current settings/story + 4 projects + 4 posts.
+
+**2 Vercel functions:** `api/content.ts` (anon — settings + story, 5-min cache, `site_settings`/`site_story` par anon policy nahi hai isliye server-side call) + `api/rebuild.ts` (JWT check → email match → Deploy Hook POST). Client Supabase SDK **dynamic import** (214 kB alag chunk — public visitor ko tab hi download hota hai jab content fetch ho).
+
+**Admin (`/admin`):** `AdminLogin/Layout` (+`AdminGuard`), `AdminDashboard`, `AdminProjects`, `AdminImages`, `AdminStory`, `AdminBlog`, `src/components/admin/Fields.tsx`, `src/lib/adminApi.ts`, `src/lib/useAdminAuth.ts`, `src/lib/imagePrep.ts`, `src/pages/admin/constants.ts`. Projects/posts full CRUD + draft/publish, image prepare→WebP→upload, hero-pair dimension match, story preview, deploy-hook rebuild, delete confirmation. **3 layers:** browser UX gate + `ADMIN_EMAIL` check + RLS.
+
+**Public:** `src/pages/Blog.tsx` + `BlogPost.tsx` + `src/components/RichText.tsx` + `.rich-text` CSS; `src/lib/content.tsx` (`SiteContentProvider`, `FALLBACK`, `loaders`) se `SelectedWork`/`Journal`/`About`/`Hero`(sirf image src) live. `src/lib/seo.ts` extended (per-route title/desc/canonical/OG/Twitter, `BlogPosting` JSON-LD, `setNoIndex`).
+
+**11 real bugs QA me pakde + fix kiye:**
+1. **Lazy `BlogPost` → har post page "Loading…" pre-render hota tha.** `renderToStaticMarkup` Suspense await nahi karta — crawler ko post body kabhi nahi milti. Fix: `BlogPost` ab eager (saves 3.8 kB only; `marked` already main chunk me `About` ke liye hai). Admin lazy hi rakha.
+2. **`<link rel="canonical">` par `content` attribute** (`upsert` `href` use nahi kar raha tha) → blog page ka canonical homepage URL rehta tha. Fix: `tag === 'link' ? 'href' : 'content'`.
+3. **`vercel.json` catch-all me `admin` exclude** → poora panel 404 (SPA fallback nahi milta). `vite preview` ne pakda nahi (uska apna fallback hai) — `vercel build` pakda.
+4. **`api/` type-check hi nahi hota tha** → `vercel build` par 8× `TS2591 Cannot find name 'process'` (local `tsc -b` green rehta tha). Fix: `api/tsconfig.json` (`types: ["node"]`) + root `tsconfig.json` me reference.
+5. **Empty-vs-failed confusion** — admin last project/post delete kare to static copy zinda ho jaati thi. Fix: `null` = "no answer" (fallback), `[]`/`''` = jaan-boojh kar empty (honoured). Client loader + `mapBuildContent` dono me.
+6. **`routesFor` slugless posts** se duplicate `/blog/` route + sitemap entry. Fix: `.filter((post) => post.slug)`.
+7. **Post OG image hamesha site-wide `OG_IMAGE`** (per-post cover sirf JSON-LD me jata tha) + `SITE_URL + absoluteUrl` → `https://site.comhttps://…` malformed. Fix: `absoluteUrl()` + cover OG/Twitter dono me.
+8. **JSON-LD me `<` unescaped** — post title me `</script>` se tag early close → stored XSS. Fix: `safeJson()` (`<` → `<`).
+9. **Lenis/anchors/keepalive `/admin` par bhi chal rahe the** — admin plain page hona chahiye. Fix: effect `[admin]`-scoped.
+10. **`/admin` index ho raha tha** (pre-rendered homepage head inherit). Fix: `setNoIndex()` + `setIndexable()` on exit.
+11. **"Upload anyway" stale size** — forced hero upload ke baad `sizes` update nahi hota, next upload galat layer se compare karta. Fix: `setSizes` after upload.
+
+**`npm run verify` (NEW, `scripts/verify-prerender.mjs`, 38 assertions):** real SSR bundle ko synthetic Supabase rows se drive karta hai — sort/filter/order, slugless-route filter, markdown render (heading/bold/list), excerpt, XSS (`<script>`/`<img onerror>` escape + `javascript:` drop), empty-vs-failed dono branches, `dist/blog` head (canonical/og:url/JSON-LD). **`vite preview` 404 on `/api/content` expected hai** (Vercel functions nahi chalti) — production me `/api/content` hai.
+
+**Verification:** `npm run lint` **0 errors** (7 advisory warnings: Fast Refresh exports + setState-in-effect). `npm run build` pass — `/` 49,050 B, `/resume` 11,214 B, `/blog` 11,677 B + robots + sitemap (3 urls, no service key). `npm run verify` **38/38 pass**. `npx tsc -b` 0. `vercel build` **0 errors** + `api/content.func` + `api/rebuild.func` detected. Chrome headless: har route 1×h1, `/admin*` login guard + noindex + no public nav, `/blog/nope` not-found, overflow 0. PowerShell-edited files me **koi mojibake nahi** (U+FFFD scan 0).
+
+**⚠️ SETUP ABHI BAAKI HAI (user ke bina env ke nahi ho sakta):**
+1. Supabase project → SQL Editor me `supabase/schema.sql` chalao → phir `supabase/seed.sql`.
+2. Auth me admin user banao (`rachitsharma999088@gmail.com`).
+3. Vercel env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_ADMIN_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY` (server-only!), `ADMIN_EMAIL`, `SITE_REBUILD_HOOK`, `SITE_URL`.
+4. Supabase → Database → Webhooks → **Insert** → trigger `blog_posts` (INSERT/UPDATE/DELETE) → HTTP POST `SITE_REBUILD_HOOK`.
+5. Push → Vercel auto-deploy.
+
+**Files changed (v27):** NEW `supabase/schema.sql`, `supabase/seed.sql`, `api/content.ts`, `api/rebuild.ts`, `api/tsconfig.json`, `src/lib/content.tsx`, `supabase.ts`, `markdown.ts`, `imagePrep.ts`, `useAdminAuth.ts`, `adminApi.ts`, `seo.ts` (MOD), `src/components/RichText.tsx`, `src/components/admin/Fields.tsx`, `src/pages/Blog.tsx`, `BlogPost.tsx`, `src/pages/admin/*` (7), `scripts/verify-prerender.mjs`; MOD `scripts/prerender.mjs`, `scripts/seo-config.mjs`, `src/prerender.tsx`, `src/App.tsx`, `src/pages/Landing.tsx`, `src/components/{About,Journal,SelectedWork,Hero,Stats,SectionHeader}.tsx`, `src/index.css`, `src/data.ts`, `vercel.json`, `tsconfig.json`, `package.json`, `.env.example`, AGENTS.md.
 
 ### [v26 — FULL SEO + a11y pass: prerendered head, 100/100/100 Lighthouse] — 29 Sep 2026
 **User ka brief:** poore project par SEO + responsiveness + web-accessibility + Lighthouse 100/100 target. Koi design change NAHI; sirf visible copy change = About heading `Who is Rachit?` → `Who is Rachit Sharma?` (pehle user ko report diya + confirm liya).
@@ -110,7 +157,7 @@
 - Headings tree live: 1×h1 (`#home-heading`) + ordered h2s (about-heading, My Journey, capabilities-heading, work-heading, vision-heading, journal-heading, enquiry-heading, contact-heading) + h3s. `sectionsWithMissingLabel: []`. lang `en`.
 - Nav anchors: `/`, `#home`, `#about`, `#capabilities`, `#work`, `#vision`, `#contact`, `/resume`, `#contact` — sab real `<a href>`. Anchor click → section top **96px** (Lenis scroll-margin convention). Skip link: real keyboard Tab → visible pill (top 16px), Enter → `#main` top 0. 404 route renders (h1, nav, Back to home). Client-side nav title flips both ways (`/` ⇄ `/resume`).
 - Console: **0 errors / 0 warnings** (landing + resume fresh loads). Overflow: 360px viewport `scrollWidth == clientWidth` (0 overflow; flagged elements sab `overflow-hidden` parents ke andar — marquee track).
-- Prerender export (node verify): `/` aur `/resume/index.html` dono me per-route title + description + canonical + OG + Twitter + JSON-LD (`Person` sameAs 3 profiles, `WebSite`); `dist/robots.txt` + `dist/sitemap.xml` ok. Em-dash `—` file me sahi hain (PowerShell Get-Content ka `�?"` sirf console mojibake hain, file safe).
+- Prerender export (node verify): `/` aur `/resume/index.html` dono me per-route title + description + canonical + OG + Twitter + JSON-LD (`Person` sameAs 3 profiles, `WebSite`); `dist/robots.txt` + `dist/sitemap.xml` ok. Em-dash — file me sahi hain (PowerShell `Get-Content` rendering sirf console mojibake hain, file safe).
 - `npm run lint` 0 + `npm run build` pass (`dist/index.html` 49,171 B, `dist/resume/index.html` 11,102 B; chunk-size warning pre-existing hi).
 
 **⚠️ Manual notes (user ko batana):** (1) custom domain par `SITE_URL` env set karna (Vercel), (2) Search Console → submit sitemap + rich-results check, (3) LinkedIn/GitHub/Instagram bio me site link + verify `rel="me"` wali socials, (4) og-image.me photo in OG image — user khud dekh ke confirm kare. `.playwright-mcp/` artifacts commit nahi kiye.
@@ -650,6 +697,7 @@
 - [x] **`index.html` se `Archivo` + `Space Grotesk` hata diya** (`v23`) — ab font link me sirf Inter + Instrument Serif; `--font-archivo`/`--font-grotesk` tokens bhi dead the, delete.
 - [x] **`v25` commit + push `main`** — `dc87312` "Consistent subtle animation system + Lenis scroll fixes" (Vercel auto-deploy). [v25 entry me ye section poora revert-type volume thi; chahe short entry bhi]
 - [x] **SEO + a11y phase (`v26`)** — seo-config/prerender head/robots/sitemap/JSON-LD, nav anchors, skip link, 404, client title sync, Lighthouse 100/100/100; push `main`.
+- [ ] **`v27` LIVE SETUP baaki hai (user ke env ke bina nahi ho sakta):** Supabase SQL Editor me `supabase/schema.sql` + `supabase/seed.sql` chalao → admin user banao → Vercel me 7 env vars set karo → Supabase Database Webhook (`blog_posts` INSERT/UPDATE/DELETE → `SITE_REBUILD_HOOK` POST) banao → push. Tab tak `/admin` static content dikhayega (auth kuch nahi kar paayega), naye posts live nahi honge. `npm run verify` se pehle hi sab verify ho chuka hai.
 - [ ] **`v22` restyle ka visual QA user ne khud nahi dekha** — screenshots `.playwright-mcp/restyle-*.png`; koi section pasand na aaye to batana.
 - [ ] **`v24` projects rebuild ka visual QA user dekhe** — screenshots `.playwright-mcp/v24-*.png` (top / stack-mid / stack-end / mobile). Numbers sab verify hue hain par **model image support nahi karta**, isliye aankhon se final confirm user ka hai. Mobile card 80.1% vh hai (content preserve karne ki wajah se) — chhota lagta hai to batao.
 - [x] **`prerender-seo` ka kaam `main` me merge ho chuka** — pre-rendering + SEO head ab `v26` me LIVE (`main`, auto-deploy).

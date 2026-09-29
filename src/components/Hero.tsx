@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import Magnetic from './Magnetic'
 import { HERO_IMAGES, HERO_INTRO } from '../data'
+import { useSiteContent } from '../lib/content'
 import { scrollToSection } from '../lib/lenis'
 
 const REVEAL_RADIUS = 140
@@ -13,6 +14,7 @@ interface HeroProps {
 }
 
 export default function Hero({ ready = true }: HeroProps) {
+  const { settings } = useSiteContent()
   const sectionRef = useRef<HTMLElement>(null)
   const figureRef = useRef<HTMLDivElement>(null)
 
@@ -181,7 +183,7 @@ export default function Hero({ ready = true }: HeroProps) {
       >
         <div className="hero-photo absolute inset-0">
           <img
-            src={HERO_IMAGES.base}
+            src={settings.heroBaseUrl || HERO_IMAGES.base}
             alt="Rachit Sharma, Digital Marketer"
             width={1086}
             height={1448}
@@ -189,7 +191,7 @@ export default function Hero({ ready = true }: HeroProps) {
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
           />
           <img
-            src={HERO_IMAGES.reveal}
+            src={settings.heroRevealUrl || HERO_IMAGES.reveal}
             alt=""
             aria-hidden="true"
             width={1086}

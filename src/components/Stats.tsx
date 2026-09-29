@@ -3,9 +3,12 @@ import { STATS } from '../data'
 
 export default function Stats() {
   return (
-    <section id="stats" className="section bg-bg">
+    <section id="stats" className="section bg-bg" aria-labelledby="stats-heading">
       <div className="shell">
         <div className="shell-inner">
+          <h2 id="stats-heading" className="sr-only">
+            Quick stats
+          </h2>
           <RevealGroup
             className="grid grid-cols-1 gap-10 border-y border-stroke py-14 sm:grid-cols-3 sm:gap-6 md:py-16"
             stagger={0.1}

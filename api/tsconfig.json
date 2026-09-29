@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    /* These functions run on Vercel's Node runtime, so they need process.env.
+       Without a tsconfig next to them, Vercel's own check fails the deploy with
+       TS2591 "Cannot find name 'process'" — and the local Vite build never sees
+       this directory, so `npm run build` stays green right up until deploy. */
+    "types": ["node"],
+    "strict": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}

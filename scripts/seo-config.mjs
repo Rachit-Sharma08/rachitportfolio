@@ -19,6 +19,11 @@ export const PAGES = {
   },
 }
 
+// Individual posts get their title/description from the database at build time,
+// so only the index page needs a fixed description here.
+export const BLOG_DESCRIPTION =
+  "Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a self-taught digital marketer learning in public."
+
 export function personSchema(url) {
   return {
     '@context': 'https://schema.org',
@@ -56,7 +61,7 @@ export function websiteSchema(url) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: SITE_NAME,
+    name: PAGES['/'].title,
     url,
   }
 }

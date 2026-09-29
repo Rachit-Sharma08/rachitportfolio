@@ -2,6 +2,8 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/resume", "destination": "/resume/index.html" },
+    { "source": "/blog", "destination": "/blog/index.html" },
+    { "source": "/blog/:slug", "destination": "/blog/:slug/index.html" },
     { "source": "/((?!api|assets/).*)", "destination": "/index.html" }
   ]
 }

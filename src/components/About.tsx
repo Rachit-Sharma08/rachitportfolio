@@ -4,6 +4,8 @@ import SectionHeader from './SectionHeader'
 import { Reveal, RevealGroup, RevealItem } from './Reveal'
 import { useStoryReveal } from '../lib/useStoryReveal'
 import { easeExpo } from '../lib/motion'
+import { renderInline, splitParagraphs } from '../lib/markdown'
+import { useSiteContent } from '../lib/content'
 import { SOCIALS } from '../data'
 
 const STAT_CHIPS = [
@@ -32,8 +34,18 @@ const JOURNEY = [
 ]
 
 export default function About() {
+  const { storyCard, storyBody } = useSiteContent()
   const storyRef = useRef<HTMLDivElement>(null)
   useStoryReveal(storyRef)
+
+  // The body is authored as blank-line separated paragraphs and laid out two per
+  // glass card, which is the shape the static version was hand-built in.
+  const cards: string[][] = []
+  for (const paragraph of splitParagraphs(storyBody)) {
+    const last = cards[cards.length - 1]
+    if (last && last.length < 2) last.push(paragraph)
+    else cards.push([paragraph])
+  }
 
   return (
     <section id="about" className="section section-glow bg-bg" aria-labelledby="about-heading">
@@ -78,97 +90,29 @@ export default function About() {
                 <p
                   data-story-line
                   className="text-base leading-relaxed text-muted"
-                >
-                  I'm not from a big city or a coding background — I'm a self-taught
-                  builder who chose to follow what actually interests me, even when
-                  the easier path was right there. I got into AI in 2025, and once I
-                  started, I didn't stop. Today I work with 25+ AI tools, I'm doing
-                  Digital Marketing with AI, and I'm building my own AI products on
-                  the side.
-                </p>
+                  dangerouslySetInnerHTML={{ __html: renderInline(storyCard) }}
+                />
               </div>
             </Reveal>
           </div>
 
           <div className="flex flex-col gap-5" ref={storyRef}>
-            <Reveal delay={0.05}>
-              <div className="glass lift p-6 md:p-7">
-                <p
-                  data-story-line
-                  className="text-base leading-relaxed text-muted"
-                >
-                  I got interested in AI in 2025, and that's when I started exploring
-                  it seriously.
-                </p>
-                <p
-                  data-story-line
-                  className="mt-4 text-base leading-relaxed text-muted"
-                >
-                  I wanted to do a "Digital Marketing with AI" course early on, but I
-                  couldn't start right away — I had my 12th CBSE boards going on, and
-                  some family situations made it hard to begin. After I finished 12th,
-                  my family wanted me to take a different course. But I decided to
-                  follow what I was actually interested in, so I went ahead and
-                  completed the Digital Marketing with AI course anyway.
-                </p>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.12}>
-              <div className="glass lift p-6 md:p-7">
-                <p
-                  data-story-line
-                  className="text-base leading-relaxed text-muted"
-                >
-                  Now I'm working on real projects — you can check them out on my{' '}
-                  <a
-                    href={SOCIALS.github}
-                    target="_blank"
-                    rel="me noopener noreferrer"
-                    className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
-                  >
-                    GitHub
-                  </a>{' '}
-                  and{' '}
-                  <a
-                    href={SOCIALS.linkedin}
-                    target="_blank"
-                    rel="me noopener noreferrer"
-                    className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
-                  >
-                    LinkedIn
-                  </a>
-                  .
-                </p>
-                <p
-                  data-story-line
-                  className="mt-4 text-base leading-relaxed text-muted"
-                >
-                  I currently know how to use 25+ AI tools. The ones I use the most
-                  are OpenCode (a coding agent), OpenAI's GPT, ElevenLabs, Cartesia
-                  AI, and Claude.
-                </p>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.19}>
-              <div className="glass lift p-6 md:p-7">
-                <p
-                  data-story-line
-                  className="text-base leading-relaxed text-muted"
-                >
-                  I'm also starting to build my own AI products. One of them is called{' '}
-                  <strong className="text-text-primary">VoiceMemories AI</strong> —
-                  the idea is that someone can clone a loved one's voice (if they
-                  have a voice sample) and have a real, emotionally supportive
-                  conversation with that voice — even live calls, not just text. It's
-                  meant for people who've lost someone and want a way to feel close
-                  to them again. The project isn't finished yet — I've paused it for
-                  now because of funding — but it's something I really care about and
-                  plan to come back to.
-                </p>
-              </div>
-            </Reveal>
+            {cards.map((group, index) => (
+              <Reveal key={index} delay={0.05 + index * 0.07}>
+                <div className="glass lift p-6 md:p-7">
+                  {group.map((paragraph, i) => (
+                    <p
+                      key={i}
+                      data-story-line
+                      className={`text-base leading-relaxed text-muted ${
+                        i === 0 ? '' : 'mt-4'
+                      }`}
+                      dangerouslySetInnerHTML={{ __html: renderInline(paragraph) }}
+                    />
+                  ))}
+                </div>
+              </Reveal>
+            ))}
 
             <RevealGroup
               className="flex flex-wrap items-center gap-3"

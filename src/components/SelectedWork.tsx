@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { PROJECTS, SOCIALS } from '../data'
+import { SOCIALS } from '../data'
+import { useSiteContent } from '../lib/content'
 import RevealHeading from './RevealHeading'
 import WorkViewCursor from './work/WorkViewCursor'
 import { useWorkStackAnim } from './work/useWorkStackAnim'
@@ -9,10 +10,11 @@ function pad(value: number) {
 }
 
 export default function SelectedWork() {
+  const { projects } = useSiteContent()
   const rootRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLElement | null)[]>([])
   const [active, setActive] = useState(0)
-  const total = PROJECTS.length
+  const total = projects.length
 
   useWorkStackAnim(rootRef)
 
@@ -82,13 +84,13 @@ export default function SelectedWork() {
           </div>
         </div>
 
-        {PROJECTS.map((project, i) => {
+        {projects.map((project, i) => {
           const imageRight = i % 2 === 1
           const accent = project.accent ?? '#d62e4a'
 
           return (
             <article
-              key={project.title}
+              key={project.id}
               className="glass work-card flex min-h-[70vh] flex-col overflow-hidden lg:min-h-[75vh] lg:flex-row"
               data-work-card={i}
               ref={(el) => {
@@ -101,9 +103,9 @@ export default function SelectedWork() {
                 }`}
                 data-reveal="media"
               >
-                {project.image ? (
+                {project.imageUrl ? (
                   <img
-                    src={project.image}
+                    src={project.imageUrl}
                     alt={`${project.title} project preview`}
                     loading="lazy"
                     width={1280}
@@ -131,7 +133,7 @@ export default function SelectedWork() {
                   data-reveal="line"
                 >
                   <span className="text-xs uppercase tracking-[0.3em] text-muted">
-                    {project.tag}
+                    {project.category}
                   </span>
                   <span className="font-display text-4xl italic leading-none text-accent-ink">
                     {pad(i + 1)}
@@ -162,9 +164,9 @@ export default function SelectedWork() {
                     ))}
                   </div>
 
-                  {project.href ? (
+                  {project.projectUrl ? (
                     <a
-                      href={project.href}
+                      href={project.projectUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`View ${project.title} project on GitHub`}
