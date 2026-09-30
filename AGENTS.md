@@ -120,6 +120,8 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 
 ⚠️ **Abhi commit/push nahi kiya — user rule.** Deploy karne ke liye `main` push chahiye, phir live form bhar ke confirm.
 
+**Live verify (deploy ke baad):** bundle `index-BLqXUvNT.js` me `${base}/api/send-email` inline confirm. Puppeteer CDP, live site se form submit → **"Message sent ✓"**, `POST https://rachit-api.onrender.com/api/send-email` → **200 `{"ok":true}`** (preflight 204), keepalive `/health` 200, `/api/content` 200. Commit `1d6e616` push → Vercel auto-deploy ~45 s me live.
+
 ### [v29 — Performance pass: self-hosted fonts, responsive images, admin-only SDK, /llms.txt] — 29 Sep 2026
 **User ka brief:** Lighthouse performance badhao — non-blocking/self-hosted fonts, optimized responsive images, sirf admin tak wala JS, AI catalog paths (`/.well-known/ai-catalog.json`, `/.well-known/ard.json`) ke liye real 404, aur `/llms.txt`. Design/layout/typography/hero cursor-reveal **bilkul unchanged**; SEO + Accessibility (jo 100 par hain) **touch nahi**.
 
@@ -807,8 +809,8 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - [ ] **Admin password yaad kar lo / rotate karo** — abhi `admin-credentials.txt` me hai, wo file delete karke Supabase → Authentication → Users → Reset password se strong naya password set kar lo.
 - [ ] **Custom domain par `SITE_URL` update** — abhi `https://rachitportfolio-fawn.vercel.app` set hai. Domain change karoge to Vercel env me `SITE_URL` bhi badalna (canonical/sitemap usi se bante hain).
 - [ ] **Supabase storage me images migrate** — abhi `site_settings` me local paths (`/assets/hero-base.webp`) hain. Admin → Images se upload karne par Supabase Storage URLs set ho jayenge.
-- [ ] **`v30` commit + push `main`** — contact form fix local hai (`EnquiryForm.tsx`). Push ke baad live form bhar ke confirm. Files: `src/components/EnquiryForm.tsx`, `.env` (gitignored), `AGENTS.md`.
-- [ ] **Contact form test (`v30` fix ke baad)** — live site par form bhej ke confirm: `https://rachit-api.onrender.com` pe POST `/api/send-email`, spam folder me mail.
+- [x] **`v30` commit + push `main` + live confirm** — commit `1d6e616`, Vercel auto-deploy ~45 s, live CDP form test → "Message sent ✓" + `POST /api/send-email` 200. Mail me check kar (spam folder bhi): subject `New enquiry — ... (from OpenCode Test)` / `CDP Form Test`.
+- [x] **Contact form test (`v30` fix ke baad)** — live verify ho chuka (upar). Render me `POST /api/send-email` 200 `{"ok":true}`
 - [x] **Vercel deploy — **LIVE: `https://rachitportfolio-fawn.vercel.app`**
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)
