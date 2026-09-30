@@ -159,6 +159,8 @@
 
 **Verify:** `npm run lint` **0 errors** (6 pre-existing warnings) · `npm run build` pass (`/` 57,260 B, `/resume` 17,792, `/blog` 18,273) · `npm run verify` **All checks passed** · live sweep upar.
 
+**🚀 LIVE (commit `2c7b147`, push `main` → auto-deploy):** `/assets/hero-base-600.webp` 200 **49,860 B** `image/webp`, `/assets/hero-reveal-600.webp` 200 **90,418 B**. Live HTML me 600 dono `imagesrcset` me present, 720 bhi intact. **Production tier sweep (9 viewport×DPR, no cache) local ke exactly same result** — teeno impacted class 600 par, baaki chhe rungs byte-identical, mask 9/9 ok, 0 errors, 0 double-fetch. Regressions check: `/sitemap.xml` **7 URLs** (4 posts intact), `/llms.txt` 200, `/api/content` 200. 💡 Live HTML me hero-base ke **2 preload links** hote hain — index.html wala + React 19 ka hoisted (`imageSrcSet` camelCase, HTML parsing case-insensitive hone ki wajah se sahi chalta hai). Ye **pre-existing** hai v29/v32 se, dono same candidate resolve karte hain, isliye double download nahi hota (sweep me confirmed).
+
 **Files/sizes:** base 600 = 49,860 B · reveal 600 = 90,418 B · pair **140,278 B**. Regeneration deterministic — 10 purane assets SHA-256 se byte-identical.
 
 ### [v32 — P2: image delivery (square-cropped portrait q85 +320 tier, hero 896 tier)] — 30 Sep 2026
