@@ -100,6 +100,26 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v30 — CONTACT FORM BUG FIX (email bilkul nahi bhejta tha)] — 30 Sep 2026
+**User ka report:** form submit karne par hamesha "Something went wrong. Try again or email me directly." aata tha.
+
+**Root cause (live CDP teee se pakda, guess nahi):** v12 split commit `10de4f3` me `fetch('/api/send-email')` → `fetch(VITE_API_URL)` ho gaya tha. `VITE_API_URL` = base URL (`https://rachit-api.onrender.com`) — `/api/send-email` path gayab. Vercel env me base set hai isliye `|| '/api/send-email'` fallback kisi kaam ka nahi tha → browser har submit par **root `/`** par POST karta tha → Render ka **404 `Cannot POST /`** × 3 attempts → error state. Backend/Resend/subject sab theek the (maine seedha `POST /api/send-email` se 200 `{"ok":true}` verify kiya tha) — sirf frontend galat URL maarta tha.
+- Proof from live site (`formtest.mjs`, puppeteer CDP): `POST https://rachit-api.onrender.com/` → 404 (×3). Preflight 204 / CORS theek tha.
+- Bundled live JS me `$S='https://rachit-api.onrender.com'` (base) confirm kiya.
+
+**Fix (`src/components/EnquiryForm.tsx:6-7`):**
+```ts
+const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_URL = API_BASE ? `${API_BASE.replace(/\/$/, '')}/api/send-email` : '/api/send-email'
+```
+Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana `/api/send-email` fallback (dev). `keepalive.ts` (`base + /health`) pehle se sahi tha, chhua nahi.
+
+**Local `.env` banaya (gitignored) → `VITE_API_URL=https://rachit-api.onrender.com`** — dev ab prod backend se baat karta hai (pehle No .env tha). Deploy par Vercel env se aaega, same value.
+
+**Verify:** `npm run lint` 0 errors (same 6 pre-existing warnings) · `npm run build` pass (52079/12929/13410 B prerendered) · `npm run preview` + puppeteer form submit → **"Message sent ✓"**, `sent:true`, `failed:false`, POST `/api/send-email` → 200 (preflight 204), keepalive `/health` 200. (`/api/content` 404 on preview = expected, Vercel functions nahi chalti.)
+
+⚠️ **Abhi commit/push nahi kiya — user rule.** Deploy karne ke liye `main` push chahiye, phir live form bhar ke confirm.
+
 ### [v29 — Performance pass: self-hosted fonts, responsive images, admin-only SDK, /llms.txt] — 29 Sep 2026
 **User ka brief:** Lighthouse performance badhao — non-blocking/self-hosted fonts, optimized responsive images, sirf admin tak wala JS, AI catalog paths (`/.well-known/ai-catalog.json`, `/.well-known/ard.json`) ke liye real 404, aur `/llms.txt`. Design/layout/typography/hero cursor-reveal **bilkul unchanged**; SEO + Accessibility (jo 100 par hain) **touch nahi**.
 
@@ -772,6 +792,8 @@
 
 ## 📌 Todo / Pending
 
+- [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge.
+- [ ] ~~**Hermes CLI install karo**~~ — **DONE (30 Sep 2026)**: `D:\hermes` par install, `D:\hermes\bin` user PATH me, `HERMES_HOME=D:\hermes` User env, gateway + watchdog restart-proof. Detail: global `C:\Users\fvcvv\.config\opencode\AGENTS.md` me poora reference + status block. Research tab tak `websearch` se, jab tak `hermes setup` na ho.
 - [ ] **`v29` commit + push `main`** — saara perf kaam local hai. User ke aadesh par hi commit/push karna (files list changelog `v29` me hai).
 - [ ] **Deploy ke baad live verify karna** — local `vite preview` Vercel functions nahi chalata, isliye `/api/content` ka naya `{settings, story, projects, posts}` shape aur `/.well-known/*` ke real 404 sirf production par confirm ho sakte hain. Push ke baad: `https://rachitportfolio-fawn.vercel.app/api/content` + `/.well-known/ai-catalog.json` (404) + `/llms.txt` (200).
 - [ ] **Hero tiers ka boundary decision** — 412@1.75 ko 497 device px chahiye par 480w tier sirf 480 hai → 720w pick hota hai (96 KiB ka responsive-images miss). `hero-{480,720}` ko `{497,720}` ya 3-tier me badalna is possible win, par hero cursor-reveal alignment is source sizes par **control-test se verify hua hai** — dobara scale karne se pehle `heroreveal.mjs` se re-verify karna.
@@ -785,7 +807,8 @@
 - [ ] **Admin password yaad kar lo / rotate karo** — abhi `admin-credentials.txt` me hai, wo file delete karke Supabase → Authentication → Users → Reset password se strong naya password set kar lo.
 - [ ] **Custom domain par `SITE_URL` update** — abhi `https://rachitportfolio-fawn.vercel.app` set hai. Domain change karoge to Vercel env me `SITE_URL` bhi badalna (canonical/sitemap usi se bante hain).
 - [ ] **Supabase storage me images migrate** — abhi `site_settings` me local paths (`/assets/hero-base.webp`) hain. Admin → Images se upload karne par Supabase Storage URLs set ho jayenge.
-- [ ] **Contact form test** — Render backend abhi tak theek chal raha hai ya nahi, ek baar `/` se enquiry bhej ke confirm kar lena (`VITE_API_URL` still set hai).
+- [ ] **`v30` commit + push `main`** — contact form fix local hai (`EnquiryForm.tsx`). Push ke baad live form bhar ke confirm. Files: `src/components/EnquiryForm.tsx`, `.env` (gitignored), `AGENTS.md`.
+- [ ] **Contact form test (`v30` fix ke baad)** — live site par form bhej ke confirm: `https://rachit-api.onrender.com` pe POST `/api/send-email`, spam folder me mail.
 - [x] **Vercel deploy — **LIVE: `https://rachitportfolio-fawn.vercel.app`**
 - [x] **Render deploy (backend):** service LIVE via REST API — **API: `https://rachit-api.onrender.com`** (dashboard: `https://dashboard.render.com/web/srv-dal9dd5g1s2s73em6lig`)
 - [x] **Vercel env `VITE_API_URL`** = `https://rachit-api.onrender.com` set + `vercel --prod` redeploy (form ab Render se mail bhejta hai)

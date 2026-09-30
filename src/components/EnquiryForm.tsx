@@ -3,7 +3,8 @@ import RevealHeading from './RevealHeading'
 import { Reveal } from './Reveal'
 import Magnetic from './Magnetic'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/send-email'
+const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_URL = API_BASE ? `${API_BASE.replace(/\/$/, '')}/api/send-email` : '/api/send-email'
 
 const REASONS = ['Hire me', 'Collaborate', 'Just say hi', 'Other'] as const
 type Reason = (typeof REASONS)[number]
