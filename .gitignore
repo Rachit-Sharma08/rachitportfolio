@@ -32,3 +32,6 @@ dist-ssr
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Python bytecode from the tools/ image scripts
+__pycache__/

@@ -35,6 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v33`) — hero 600 tier + PERFORMANCE WORK CLOSED OUT (user ka explicit instruction):** DPR-2 phone pe hero 720 ki jagah 600 tier lagti hai → **189,504 → 140,278 B (-26%)** hero pair par, teeno impacted device classes (412×823@2, 390×844@2, 1440×900@1) me. Yehi image LCP element hai. `Hero.tsx` ka entrance **byte-for-byte untouched** — koi animation/LCP experiment nahi. Thin-margin ka rationale (base 0.9804 vs 0.98 bar) + region split + alignment proof Changelog `v33` me. ⚠️ **Ab koi naya image/animation optimization pass mat chalao** jab tak user kuch naya na bolе. Detail: Changelog `v33`.
 - **NEW (`v29`) — Performance pass LIVE (production Lighthouse 41 → 83 median, BP 100):** self-hosted fonts (`public/fonts/`, `font-display: swap`, Google Fonts link gone), hero `{480,512,720,1086}` responsive tiers (+ `hasBundledVariants()` srcset guard), **Supabase SDK code-split out of the public bundle** (ab sirf `/admin*` me; `index-*.js` me 0 references), `/api/content` ab projects+posts+settings+story serve karta hai (client ek hi fetch), `dist/llms.txt`, `/.well-known/*` real 404, portrait 92 KiB JPEG → 4 WebP tiers. `npm run verify` **54/54**. Commit `fe1e145` push ho chuka. ⚠️ Lighthouse VM-noisy hai — stray `chrome.exe` kill karke **median** lo. Detail: Changelog `v29`.
 - **NEW (`v28`) — CMS + blog ab LIVE (Supabase wired, 7 Vercel envs set, deploy hook bana):** `/admin` login karta hai, 4 posts publish hain, sab kuch live. Ek **serious pre-render bug** pakda jo v27 ke QA se chhut gaya tha: `prerender.mjs` `site_story` ko galat column (`key` vs `section_key`) se padhta tha → poora build snapshot discard → sitemap me sirf 3 URLs, `/blog` khali, post pages homepage HTML serve kar rahe the. Fix + **test fixture bhi theek kiya** (wahi galat shape use kar raha tha, isliye 38/38 pass the tab bhi jab production toota hua tha). Ab: sitemap **7 URLs**, 4 post pages static HTML me render. Live verify: `/api/content` 200, `/api/rebuild` 401/403/405 (forged JWT bhi 403), `/admin` runtime pe `noindex` + login. Detail: Changelog `v28`.
 - **NEW (`v27`) — Supabase CMS + blog + deploy-hook re-render (sab poora, verified):** Supabase-backed single-admin CMS (`/admin`) + public blog (`/blog`, `/blog/:slug`), saara editable content (projects, posts, story, hero/OG images). RLS + `public.is_admin()` + browser UX gate teenon layers. 2 Vercel functions: `/api/content` (anon settings+story) + `/api/rebuild` (auth-guarded Deploy Hook). Publish karte hi deploy khud trigger hota hai (admin panel → `/api/rebuild` → deploy hook), isliye naye posts turant crawlable hain. **11 real bugs pakde + fix kiye QA me** (sabse serious: lazy `BlogPost` SSR me sirf Suspense fallback render hota tha — har post page crawler ko "Loading…" dikhata; `vercel.json` catch-all me `admin` exclude karne se poora panel 404; `api/` type-check hi nahi hota tha). `npm run verify` (NEW, 38 assertions) pre-render pipeline + XSS + empty-state cover karta hai. ⚠️ **v27 ka pre-render bug `v28` me pakda + fix hua** — zyada detail upar. Detail: Changelog `v27`.
@@ -99,6 +100,66 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v33 — hero 600 tier: DPR-2 phone stops paying for 720 (+ performance work closed out)] — 30 Sep 2026
+**User ka brief:** hero ke 720 assets ke bytes kam karo, **entrance animation bilkul same** — `Hero.tsx` ka opacity tween, GSAP, mask, kuch nahi. Saath me ye confirm karo ki **silver-blazer/sunglasses detail** safe rehta hai. Uske baad **performance work band** — user ne explicitly kaha "no further image/animation optimization passes unless something new comes up".
+
+**STEP 0 — pehle transform-only experiment, phir uska REJECT.** Maine pehle hypothesis banaya ki hero ka opacity tween LCP rok raha hai, aur isko hata kar LCP ~500ms sudhrega. User ne **reject** kiya ("keep the entrance"). Wo experiment revert ho chuka tha — `src/components/Hero.tsx` is poore changelog me **byte-for-byte untouched** hai.
+
+**Live measurement (production, 4× CPU throttle + Slow 4G, 5 runs, no cache):** LCP **median 2048 ms** (range 1824–2616), hero tween median **1742 ms** (range 1490–3734). Tween LCP se **4/5 runs me pehle** complete ho raha tha. Transform-only ceiling ≈ **250–300 ms**.
+- ⚠️ **Superseded claim:** pehle "LCP 5188 ms, fade cause karta hai" bola gaya tha — wo **reproduce nahi hua**. Wo number ab dead hai. Asli ceiling 250–300 ms.
+
+**Root cause (sizing, not compression):** ladder me 512 aur 720 ke beech **koi rung hi nahi** tha. 412×823 @DPR2 par figure 284 CSS px wide render hota hai (46vh of 823 × 3:4) → browser ko **568 device px** chahiye → 720 lega, **27% zyada pixels** — aur yehi image LCP element hai.
+
+**Measurement methodology fix (sabse important lesson):** pehle har candidate ko **apne hi same-width resize** ke against score kiya jaata tha. Wo galat hai — 600 aur 720 ko alag-alag reference se compare karna unke beech comparison banata hi nahi, aur browser dono ko phir se scale karta hai. Ab `tools/probe-hero-720.py` `score_at_display()` use karta hai: dono ko **same device-pixel box (568×757)** me scale karke source-resize ke against score. Isi wajah se pehle ka native-reference number galat conclusion de raha tha.
+
+**Region split (naya tool `tools/compare-hero-600-vs-720.py`, 568 device px, composited):**
+| region | base 600 | reveal 600 | base 720 | reveal 720 |
+|---|---|---|---|---|
+| head + sunglasses | 0.9863 / 41.65dB | 0.9883 / 41.24dB | 0.9925 / 43.67dB | 0.9933 / 43.20dB |
+| upper torso | 0.9851 / 40.83dB | 0.9865 / 40.79dB | 0.9898 / 42.34dB | 0.9909 / 42.32dB |
+| **silver blazer** | 0.9890 / 43.20dB | 0.9908 / 42.23dB | 0.9914 / 44.46dB | 0.9937 / 43.88dB |
+| lower dark mass | 0.9705 / 43.48dB | **0.9743 / 39.25dB** | 0.9731 / 44.05dB | 0.9851 / 41.59dB |
+
+💡 **User ka specifically poocha hua detail (sunglasses + silver blazer) 600 par BEST regions hai**, worst nahi — silver smooth hai, easily compress hota hai. Sirf ek region soft hai: reveal ka **near-black lower mass 39.25dB** (40dB secondary se 0.75dB neeche).
+
+**Thin-margin ka honest rationale (base 0.9804 vs 0.98 bar):**
+1. Ye project **hamesha whole-image bar** lagata hai (v29, v32). Whole-image par 600 dono pass karta hai: base **0.9804 / 42.35dB**, reveal **0.9830 / 40.44dB**.
+2. **Per-region ≥0.98 rule lagaya jaaye to already-shipped `hero-base-720` bhi fail hota** usi region me (0.9731). Yaani per-region is project ka kabhi use nahi hua standard hai, aur 720 ko reject karega — isliye 600 ko bhi reject karna inconsistent hoga.
+3. **600 hi pehla rung hai jo 568px par bar clear karta hai.** Neeche wale dono fail hote hain wahan: 480 → base 0.9718 / reveal 0.9625; 512 → base 0.9736 / reveal 0.9704. Yaani ladder isse neeche nahi ja sakta tha, 600 hi **narrowest passing rung** hai.
+4. User ne jaan-boojh kar **ship karne ka faisla diya** thin margin ke baawajood.
+
+**Compression par koi headroom nahi (q88 retain):** 720 @q82 → base **0.9784 FAIL**; 600 @q85 → base 0.9765, reveal 0.9774 **dono FAIL**. Display-size scoring ke saath pehle ka "720 q85 theek hai" wala impression galat tha.
+
+**640 measured + skip:** koi bhi tested device class `(600, 640]` me nahi padta, isliye 600 ki jagah kabhi select hota hi nahi — extra bytes ka zero faida.
+
+**Alignment check (naya `tools/check-hero-tier-alignment.py`):** base/reveal dono layers ek hi pixel grid par land karein, warna reveal ki edge base silhouette se nikal sakti hai (v19 ka sunglasses-bleed bug). 600 pair: mean scanline alpha drift **2.56px (width ka 0.427%)**, worst 17px. 720 pair: **3.67px (0.509%)**, worst 21px → **600 proportionally 720 jitna hi safe hai**, koi nayi misalignment nahi. Top bbox me wahi 1px farak (3 vs 2) jo 720 par bhi hai (4 vs 3). Script ka `master` arg handling fix kiya (master ka suffix `""` hai, `-master` nahi).
+
+**Live tier sweep (9 viewport×DPR, `vite preview` :4195, CDP, cache off) — sab sahi:**
+
+| device | need | tier | overshoot | hero bytes |
+|---|---|---|---|---|
+| 412×823 @2 | 568 | **600** (was 720) | 6% | **137.0 KB** (was 185.1) |
+| 390×844 @2 | 582 | **600** (was 720) | 3% | **137.0 KB** (was 185.1) |
+| 1440×900 @1 | 540 | **600** (was 720) | 11% | **137.0 KB** (was 185.1) |
+| 412×823 @1.75 | 497 | 512 | 3% | 103.9 KB (unchanged) |
+| 375×667 @2 | 460 | 480 | 4% | 91.9 KB (unchanged) |
+| 390×844 @3 | 873 | 896 | 3% | 265.5 KB (unchanged) |
+| 768×1024 @2 | 830 | 896 | 8% | 265.5 KB (unchanged) |
+| 1440×900 @2 | 1080 | 1086 | 1% | 335.2 KB (unchanged) |
+| 1920×1080 @1 | 648 | 720 | 11% | 185.1 KB (unchanged) |
+
+- **-49,226 B / -26.0%** hero pair par, teeno impacted device classes me. Slow 4G (1.6 Mbps) par ≈ **-246 ms** off the critical path. Baaki chhe rungs **byte-identical**.
+- Cursor-reveal mask **9/9 cases present**, **0** runtime errors, **0** double-fetch (preload vs `<img>` mismatch nahi).
+- ⚠️ **Corrected:** 1440×900 @1 ka need **540** hai (≥1280 px par `xl:h-[80vh]` lagta hai, `lg:h-[74vh]` nahi) — pehle 500 estimate kiya tha, isliye wo case bhi 600 par land karta hai (pehle 720).
+- ⚠️ **Corrected v32 ka mislabel:** v32 entry me 94,218 / 177,676 ko "720" likha tha — wo actually **896** tier hai. Asli 720 = **65,494 / 124,010 B**.
+
+**Files:** `src/data.ts` (`HERO_SRCSET` me `600w` entry) + `index.html` (dono `imagesrcset` — preload/img mismatch se bachne ke liye dono zaroori) + `tools/generate-hero-assets.py` (WIDTHS + measurement comments) + `.gitignore` (`__pycache__/`) + NEW `public/assets/hero-{base,reveal}-600.webp` + NEW `tools/{probe-hero-720,check-hero-tier-alignment,compare-hero-600-vs-720}.py`.
+**`src/components/Hero.tsx` — 0 changes.**
+
+**Verify:** `npm run lint` **0 errors** (6 pre-existing warnings) · `npm run build` pass (`/` 57,260 B, `/resume` 17,792, `/blog` 18,273) · `npm run verify` **All checks passed** · live sweep upar.
+
+**Files/sizes:** base 600 = 49,860 B · reveal 600 = 90,418 B · pair **140,278 B**. Regeneration deterministic — 10 purane assets SHA-256 se byte-identical.
 
 ### [v32 — P2: image delivery (square-cropped portrait q85 +320 tier, hero 896 tier)] — 30 Sep 2026
 **User ka brief:** P2 sirf images — (1) portrait: displayed 236px box par kareebi tier + tighter WebP compression, (2) hero: srcset tighter fit + quality re-check, (3) P3/P4 mat chhua, (4) `/health` ki necessity confirm karo. After: estimated savings + "nothing else visually changed" confirm.
@@ -848,15 +909,12 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 
 - [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge.
 - [ ] ~~**Hermes CLI install karo**~~ — **DONE (30 Sep 2026)**: `D:\hermes` par install, `D:\hermes\bin` user PATH me, `HERMES_HOME=D:\hermes` User env, gateway + watchdog restart-proof. Detail: global `C:\Users\fvcvv\.config\opencode\AGENTS.md` me poora reference + status block. Research tab tak `websearch` se, jab tak `hermes setup` na ho.
-- [x] **Perf pass (v31) P2 — image delivery: square-crop + q85 + 320 tier (portrait) + 896 tier (hero)** — sab local done + measured (`v32` changelog). Push pending user (PageSpeed ke baad).
-- [ ] **Perf pass (v31) P3 — render-blocking CSS (~340 ms)** — hero critical CSS inline `<head>`, baaki non-blocking; sirf agar no-FOUC risk na ho. **HOLD — user ne performance work stop kar diya after P2.**
-- [ ] **Perf pass (v31) P4 (low) — unused JS (~87 KiB, `index-W4tMUX_G.js`)** — code-splitting deprioritized (SSR graph + admin split risky). **HOLD — same as P3.**
-- [ ] **`v31` P1 commit + push `main`** — saara P1 kaam local hai (lint/build/verify + CDP verify pass). Push (user aadesh par) → Vercel auto-deploy ~45s → production Lighthouse median + PageSpeed `element-render-delay` measure + `sitemap.xml` posts intact confirm.
-- [ ] **`v29` commit + push `main`** — saara perf kaam local hai. User ke aadesh par hi commit/push karna (files list changelog `v29` me hai).
-- [ ] **Deploy ke baad live verify karna** — local `vite preview` Vercel functions nahi chalata, isliye `/api/content` ka naya `{settings, story, projects, posts}` shape aur `/.well-known/*` ke real 404 sirf production par confirm ho sakte hain. Push ke baad: `https://rachitportfolio-fawn.vercel.app/api/content` + `/.well-known/ai-catalog.json` (404) + `/llms.txt` (200).
-- [ ] **Hero tiers ka boundary decision** — 412@1.75 ko 497 device px chahiye par 480w tier sirf 480 hai → 720w pick hota hai (96 KiB ka responsive-images miss). `hero-{480,720}` ko `{497,720}` ya 3-tier me badalna is possible win, par hero cursor-reveal alignment is source sizes par **control-test se verify hua hai** — dobara scale karne se pehle `heroreveal.mjs` se re-verify karna.
-- [ ] **Hero ~896px tier bacha hua hai** — 390×844@3 phone ko 874 chahiye par 1086 leta hai (31% extra pixels, 223 KB reveal). Ladder ab `{480, 512, 720, 1086}`; `hero-{base,reveal}-896.webp` add karega. Bade change ko chhoda isliye ki har nayi tier par `heroreveal.mjs` control-test dobara chalana padta hai (512 tier par chalaya gaya tha — `outsideCircle 0%`, figure device box 496.86 px = theek 497).
-- [ ] **`unused-javascript` 70 KiB (300 ms) — ab sabse bada bacha hua lever.** Production pe `index-W4tMUX_G.js` 148 kB me se 70 unused. Route-wise code-splitting se win hai, par yeh **risky** hai (prerender SSR graph + admin bundle split already carefully tuned hai) — user ne abhi explicitly **defer** kiya hai.
+- [x] **Perf pass (v31) P2 — image delivery: square-crop + q85 + 320 tier (portrait) + 896 tier (hero)** — DONE, commit `adc291d`. Changelog `v32`.
+- [x] **`v31` P1 — inline content snapshot, zero runtime API calls** — DONE, commit `eda1bda`, live verify ho chuka (`/api/content` 0 requests, `/health` idle-deferred). Changelog `v31`.
+- [x] **Hero ladder gaps closed** — 497px gap → 512 tier (v29); 874px gap → 896 tier (v32); 568/582px DPR-2 phone gap → **600 tier** (v33). Ladder ab `{480, 512, 600, 720, 896, 1086}`. Har nayi tier par `tools/check-hero-tier-alignment.py` se base/reveal alignment verify hua hai.
+- [x] **`v33` — hero 600 tier: -49,226 B / -26% hero pair, `Hero.tsx` untouched** — user ne thin margin ke baawajood ship karne ka faisla diya. Lint 0 errors, build pass, verify All checks passed, 9/9 tier sweep correct, reveal mask intact, 0 runtime errors, 0 double-fetch.
+- [x] **Perf pass P3 — render-blocking CSS (~340 ms)** — **CLOSED. User ne v33 ke baad performance work band kar diya.** Agar kabhi revive karna ho: `index.html` me hero critical CSS inline, baaki non-blocking, sirf no-FOUC risk check ke saath.
+- [x] **Perf pass P4 / unused JS (~87 KiB)** — **CLOSED, same reason.** Production pe `index-*.js` 148 kB me se ~70 kB unused; route-wise code-splitting se win hai par risky (prerender SSR graph + admin bundle split carefully tuned hai). Sirf tab jab production PageSpeed zoroorat maange.
 - [ ] **Lighthouse abhi bhi VM-noisy hai — median lo.** Stray `chrome.exe` processes TBT ko 131 → 816 ms tak le jaate hain. `Get-Process chrome | Stop-Process -Force` karo, phir 2-3 runs ka median.
 - [x] **`v29` performance pass done + LIVE** — fonts, hero tiers (incl. 512), admin-only SDK, llms.txt, well-known 404, portrait WebP. Lint 0 errors, build pass, verify 54/54, contenttest 21/21. Commit `fe1e145` push. **Production Lighthouse 80/83/86 → median 83 · A11Y 100 · BP 100 · SEO 100** (baseline 41).
 - [x] **`v29` commit + push `main` + deploy verify** — commit `fe1e145`, ~40 s me deploy live. `/llms.txt` 200 (1,910 B, 4 posts), `.well-known/*` 404, 512 tier live, `/api/content` 200.

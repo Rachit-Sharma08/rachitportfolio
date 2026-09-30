@@ -40,6 +40,7 @@ export const HERO_IMAGES = {
 const heroSrcset = (name: string) =>
   `/assets/hero-${name}-480.webp 480w, ` +
   `/assets/hero-${name}-512.webp 512w, ` +
+  `/assets/hero-${name}-600.webp 600w, ` +
   `/assets/hero-${name}-720.webp 720w, ` +
   `/assets/hero-${name}-896.webp 896w, ` +
   `/assets/hero-${name}.webp 1086w`
