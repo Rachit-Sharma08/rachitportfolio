@@ -120,6 +120,13 @@
 
 **Expected impact:** hero LCP ke liye required network stalls abhi bhi 0 API calls (`/api/content` poori tarah hat gaya). P1 ke baad Pagespeed element-render-delay ~2.5s se ~0 hona chahiye — production Lighthouse/PageSpeed measurement tab taken, twice ko result confirm + deploy ke baad `sitemap.xml` posts intact rehna chahiye (rebuild hook).
 
+**🚀 LIVE PRODUCTION VERIFY (commit `eda1bda`, push → auto-deploy ~60s):**
+- `#site-content` PRESENT in live HTML; parsed `{projects: 4, storyLen: 341}` (real Supabase content baked).
+- h1 `I'm Rachit Digital Marketer`, story text Supabase wala ("I'm not from a big city…"), 4 work cards — sab render. **Zero visual/behavioral difference.**
+- **Cursor-reveal intact:** `.hero-figure img` → base (no mask) + reveal (**mask present**), src settings se `/assets/hero-base.webp`.
+- **Network tree (CDP, 1440×900, no cache):** critical path = baked HTML → `index-*.css` → hero `hero-{base,reveal}-720.webp` → `index-CXPwHUox.js` (+ async ScrollTrigger). **`/api/content` = 0 requests** (poora chala gaya). `/health` → 1× fire-and-forget, **idle-deferred** (post-4s rAF idle), kisi cheez ko block nahi karta. SDK chunk (GoTrue) download nahi hota.
+- `/sitemap.xml` **7 URLs** (4 posts intact), `/blog` 4 post links, `/api/content` 200 `{settings, projects:4, posts:4}` (endpoint abhi bhi exist karta hai — dev/no-prerender fallback ke liye). 0 console errors / 0 page errors on live load.
+
 **Files changed (v31):** MOD `scripts/prerender.mjs` (+snapshot inject), `src/lib/content.tsx` (inline hydrate + staticRef), `src/lib/keepalive.ts` (idle defer), `src/pages/admin/AdminProjects.tsx`, `AdminStory.tsx`, `AdminImages.tsx` (rebuild hooks + copy), `AGENTS.md`. 
 
 ### [v30 — CONTACT FORM BUG FIX (email bilkul nahi bhejta tha)] — 30 Sep 2026
