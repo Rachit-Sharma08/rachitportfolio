@@ -100,6 +100,29 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v32 — P2: image delivery (square-cropped portrait q85 +320 tier, hero 896 tier)] — 30 Sep 2026
+**User ka brief:** P2 sirf images — (1) portrait: displayed 236px box par kareebi tier + tighter WebP compression, (2) hero: srcset tighter fit + quality re-check, (3) P3/P4 mat chhua, (4) `/health` ki necessity confirm karo. After: estimated savings + "nothing else visually changed" confirm.
+
+**Ground truth (live CDP tier sweep, production):** hero figure = 0.75 × {46/54/74/80}vh CSS px; portrait box = **236×236 square** (`object-cover` center-crop — user ka "236×315" actual box nahi hai, ye 3:4 intrinsic vs square frame ka difference hai). Served tiers the: lh-mobile 412@1.75 hero→512 (need 495, 5.8% overshoot = already optimal), pixel 390@3→1086 (need 873 — 24%), tablet 768@2→1086 (need 830 — 31%), portrait 720 tier = 137,376 B served on DPR3 mobile.
+
+**Probe (Pillow, composited-over-bg for hero):**
+- Hero: q88 zyada se zyada — SWAT reveal (silver blazer) q85 par SSIM 0.977 (< 0.98 bar), PSNR 39.1-40.0. Compression already bar par; win sizing se hai, compression se nahi. q88 retain.
+- Portrait: q85 tak SSIM ≥0.98 (0.984-0.987) — compression headroom hai; q82 = 0.980-0.983, q80 < 0.98. **q85.** Square center-crop = CSS object-cover ka exact visible area (= 25% kam pixels).
+
+**Changes:**
+1. **Portrait → square + q85 + 320 tier.** `tools/optimize-static-images.py`: `PORTRAIT_WIDTHS (240,320,420,480,720)`, `PORTRAIT_QUALITY 85`, naya `portrait_square()` center-crop (byte-identical on-screen — proof: live prod vs local CDP screenshot, rect 236×236 same coords, mean RGB diff 4.3/255). Files: 240 28,624→17,996 · 320 NEW 27,626 · 420 65,560→39,790 · 480 78,308→48,178 · 720 137,376→81,232. 320 tier DPR1.36-1.5 band (currently 420) serve karta hai. `About.tsx` srcSet + comment updated (`sizes="236px"` intact — box 236 px square hai).
+2. **Hero → 896 tier (purely additive), q88 retain.** `tools/generate-hero-assets.py` WIDTHS + `(896, ...)`. Existing 480/512/720/1086 **byte-identical** (hash-consistent, regeneration deterministic) → cursor-reveal pairs untouched. Files: base 94,218 B · reveal 177,676 B. `src/data.ts` heroSrcset + `index.html` dono imagesrcset me 896w entry (preload/img mismatch se bachne ke liye zaroori).
+3. **`/health` verdict — KEEP (not leftover):** ye monitoring ping nahi, client-side keep-alive hai — Render free tier 15-min idle spin-down se contact form ko cold-start (5-50s) se bachana iska kaam. GitHub Actions cron (deploy-side repo, har 10 min) pehle hi warm rakhta hai isliye client ping **largely redundant**, par ye repo me verify kiya ja sakta hai (cron wala repo private) aur ~0 cost (idle-deferred, fire-and-forget, 0 main-thread). Remove karne ka risk: cron khatam ho to form dobara cold-start fail. Isliye recommend: **rakho**.
+
+**Verify:** `npm run lint` 0 errors · build pass (`/` 57,056 B, +250 B = srcset strings) · `npm run verify` All checks passed · local tier sweep: pixel 390@3 → **hero-base-896.webp** (was 1086) · tablet 768@2 → **896** · lh-mobile → 512 (unchanged, correct) · portrait box 236×236 all viewports, tiers 240/320/420/480/720 served per DPR. **Not pushed** — user ke aadesh ka wait (PageSpeed ke baad).
+
+**Expected savings (per visit):**
+- High-DPR phone (pixel 390@3): hero -71.3 KB (base -25.7 + reveal -45.6) + portrait -56.1 KB = **~127 KB** (user ka approx match).
+- lh-mobile (412@1.75): hero unchanged (512 optimal) + portrait 420 tier **-25.8 KB**.
+- tablet 768@2: hero -71.3 KB + portrait 480 tier -30.1 KB.
+
+**Files changed (v32):** MOD `tools/optimize-static-images.py`, `tools/generate-hero-assets.py`, `src/components/About.tsx`, `src/data.ts`, `index.html`, `AGENTS.md`; NEW `public/rachit-320.webp`, `public/assets/hero-{base,reveal}-896.webp` (2); REGENERATED `public/rachit-{240,420,480,720}.webp` + hero 480/512/720/1086 (byte-identical).
+
 ### [v31 — P1: homepage renders with zero runtime API calls (inline content snapshot + rebuild hooks)] — 30 Sep 2026
 **User ka brief (perf pass):** PageSpeed hero LCP chained through `/health` → `/api/content` (2.59s "element render delay" of 3.6s LCP). P1 directive — homepage must render instantly from baked data, **koi required runtime API call first paint se pehle nahi**. Don't touch anything scoring 100 (SEO/A11y/BP/Agentic Browsing) ya hero cursor-reveal visual behavior. Rebuild-on-change pattern (jo blog ke liye tha) ab `site_settings`/`site_story`/`projects` par bhi.
 
@@ -825,9 +848,9 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 
 - [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge.
 - [ ] ~~**Hermes CLI install karo**~~ — **DONE (30 Sep 2026)**: `D:\hermes` par install, `D:\hermes\bin` user PATH me, `HERMES_HOME=D:\hermes` User env, gateway + watchdog restart-proof. Detail: global `C:\Users\fvcvv\.config\opencode\AGENTS.md` me poora reference + status block. Research tab tak `websearch` se, jab tak `hermes setup` na ho.
-- [ ] **Perf pass (v31) P2 — image delivery: portrait + hero tiers (~127 KiB savings)** — `rachit-{240,420,480,720}.webp` srcSet sirf `sizes="236px"` ke against (box 236px; DPR picks), hero `HERO_SRCSET` tiers (webp q88) review + `HERO_SIZES` sanity.
-- [ ] **Perf pass (v31) P3 — render-blocking CSS (~340 ms)** — hero critical CSS inline `<head>`, baaki non-blocking; sirf agar no-FOUC risk na ho.
-- [ ] **Perf pass (v31) P4 (low) — unused JS (~87 KiB, `index-W4tMUX_G.js`)** — code-splitting deprioritized (SSR graph + admin split risky).
+- [x] **Perf pass (v31) P2 — image delivery: square-crop + q85 + 320 tier (portrait) + 896 tier (hero)** — sab local done + measured (`v32` changelog). Push pending user (PageSpeed ke baad).
+- [ ] **Perf pass (v31) P3 — render-blocking CSS (~340 ms)** — hero critical CSS inline `<head>`, baaki non-blocking; sirf agar no-FOUC risk na ho. **HOLD — user ne performance work stop kar diya after P2.**
+- [ ] **Perf pass (v31) P4 (low) — unused JS (~87 KiB, `index-W4tMUX_G.js`)** — code-splitting deprioritized (SSR graph + admin split risky). **HOLD — same as P3.**
 - [ ] **`v31` P1 commit + push `main`** — saara P1 kaam local hai (lint/build/verify + CDP verify pass). Push (user aadesh par) → Vercel auto-deploy ~45s → production Lighthouse median + PageSpeed `element-render-delay` measure + `sitemap.xml` posts intact confirm.
 - [ ] **`v29` commit + push `main`** — saara perf kaam local hai. User ke aadesh par hi commit/push karna (files list changelog `v29` me hai).
 - [ ] **Deploy ke baad live verify karna** — local `vite preview` Vercel functions nahi chalata, isliye `/api/content` ka naya `{settings, story, projects, posts}` shape aur `/.well-known/*` ke real 404 sirf production par confirm ho sakte hain. Push ke baad: `https://rachitportfolio-fawn.vercel.app/api/content` + `/.well-known/ai-catalog.json` (404) + `/llms.txt` (200).

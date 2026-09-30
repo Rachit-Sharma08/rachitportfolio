@@ -44,8 +44,8 @@ DEST = os.path.join(os.path.dirname(__file__), "..", "public", "assets")
 #
 #   375x667  @2   -> 460px   480 tier
 #   412x823  @1.75 -> 497px  512 tier
-#   390x844  @3   -> 874px  1086 tier
-#   768x1024 @2   -> 829px  1086 tier
+#   390x844  @3   -> 874px   896 tier  (was 1086, 24% oversize)
+#   768x1024 @2   -> 830px   896 tier  (was 1086, 31% oversize)
 #   1440x900 @1   -> 540px   720 tier
 #   1440x900 @2   -> 1080px 1086 tier
 #   1920x1080 @1  -> 648px   720 tier
@@ -58,11 +58,23 @@ DEST = os.path.join(os.path.dirname(__file__), "..", "public", "assets")
 # 390x844 @3 phone still needs 874 and takes 1086. Fixing that needs an ~896
 # tier, which is a bigger, separately-verified change.
 #
+# 896 closes that gap (874 needs 896 = 2.6% and 830 = 8% overshoot), and it also
+# serves the high-DPR phone that used to pull the 1086 master down. Measured in
+# Aug: the previous top end (a 390x844 @3 phone) downloaded 223 KB of hero-reveal
+# for a 291x388 CSS box; with 896 it downloads 178 KB. 1086 stays as the cap for
+# 1440 @2x and upscaling, where the source cannot do better.
+#
+# Quality stays q88 at every width: probing q85/q82 on the composited reveal
+# drops SSIM below the 0.98 "visually identical" bar (q85 = 0.977 on the
+# silver blazer's high-contrast detail). The corner that wastes bytes is sizing,
+# not compression.
+#
 # A 1086px cap keeps the 1920 @2x case upscaling by exactly as much as it always
 # has — the source is not large enough to do better, and inventing a bigger
 # master would mean resampling from a file that is already fixed.
 WIDTHS = [(480, "hero-{}-480.webp"), (512, "hero-{}-512.webp"),
-          (720, "hero-{}-720.webp"), (1086, "hero-{}.webp")]
+          (720, "hero-{}-720.webp"), (896, "hero-{}-896.webp"),
+          (1086, "hero-{}.webp")]
 
 QUALITY = 88
 

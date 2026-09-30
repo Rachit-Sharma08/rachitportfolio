@@ -6,12 +6,17 @@ own output. That is why the portrait is read from tools/source/ rather than from
 public/ — at one point the file this script wrote was the only copy left, and
 feeding an encoder its own output compounds the resampling loss every run.
 
-  public/rachit-{240,420,480,720}.webp
+  public/rachit-{240,320,420,480,720}.webp
                        About-section portrait. The frame is a fixed 240px ring
                        with 2px of padding, so the image box is 236 CSS px at
-                       every viewport, and `sizes="236px"` maps the DPRs worth
-                       covering (1 / 1.75 / 2 / 3) onto exact device pixels —
-                       no viewport downloads more than it draws. The 1200px JPEG
+                       every viewport and gets center-cropped to a square by
+                       CSS object-cover. The sources are therefore pre-cropped
+                       to the same center square, which is byte-identical on
+                       screen to what object-cover shows and skips the 33% of
+                       vertical pixels a 3:4 file would carry for it.
+                       `sizes="236px"` then maps the DPRs worth covering
+                       (1 / 1.3 / 1.75 / 2 / 3) onto exact device pixels — no
+                       viewport downloads more than it draws. The 1200px JPEG
                        this replaced cost 92 KiB per visit into that box.
   public/og-image.png  Social share card. Never rendered on the page, so it is
                        not on any visitor's critical path — measured and
@@ -30,12 +35,16 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 PORTRAIT_SOURCE = os.path.join(ROOT, "tools", "source", "rachit.jpg")
 OG = os.path.join(ROOT, "public", "og-image.png")
 
-# The image box inside the About frame is a fixed 236 CSS px (a 240px ring with
-# 2px padding) at every viewport, so these are its exact device-pixel needs at
-# DPR 1, 1.75 (Lighthouse mobile), 2 and 3 — the multiples sizes="236px" hands
-# to the browser.
-PORTRAIT_WIDTHS = (240, 420, 480, 720)
-PORTRAIT_QUALITY = 88
+# The image box inside the About frame is a fixed 236 CSS px square (a 240px
+# ring with 2px padding) at every viewport, so these are its exact device-pixel
+# needs at DPR 1, 1.3, 1.75 (Lighthouse mobile), 2 and 3 — the multiples
+# sizes="236px" hands to the browser. The 320 tier exists because the 240->420
+# jump over-served a DPR ~1.3-1.5 display by up to two thirds.
+PORTRAIT_WIDTHS = (240, 320, 420, 480, 720)
+# q85 keeps PSNR 36-39 dB and SSIM >= 0.98 on the square-cropped source at
+# every tier (q82 already drops to 0.980-0.983 and q80 below that), which is
+# the same visually-identical bar the hero images are held to.
+PORTRAIT_QUALITY = 85
 
 
 def psnr(a, b):
@@ -79,17 +88,18 @@ def ssim(a, b):
 
 
 def probe_rachit(original):
+    square = portrait_square(original)
     print(f"\n=== portrait source  {original.size[0]}x{original.size[1]} "
-          f"{os.path.getsize(PORTRAIT_SOURCE):,} B ===")
+          f"{os.path.getsize(PORTRAIT_SOURCE):,} B "
+          f"-> center square {square.size[0]}x{square.size[1]} ===")
     tmp = os.path.join(ROOT, "dist", "probe.webp")
     os.makedirs(os.path.dirname(tmp), exist_ok=True)
     for width in PORTRAIT_WIDTHS:
-        height = round(original.size[1] * width / original.size[0])
-        resized = original.resize((width, height), Image.LANCZOS)
+        resized = square.resize((width, width), Image.LANCZOS)
         ref = resized.convert("RGB")
         resized.save(tmp, "WEBP", quality=PORTRAIT_QUALITY, method=6)
         got = Image.open(tmp).convert("RGB")
-        print(f"  {width}x{height}  {os.path.getsize(tmp):>8,} B"
+        print(f"  {width}x{width}  {os.path.getsize(tmp):>8,} B"
               f"   PSNR {psnr(got, ref):5.2f} dB   SSIM {ssim(got, ref):.4f}")
 
 
@@ -127,17 +137,29 @@ def probe_og(original):
           "on the share card would be a visible design change")
 
 
+def portrait_square(original):
+    """Pre-crop the 3:4 source to the center square object-cover shows.
+
+    CSS `object-cover` in the 236px square ring crops the same center square
+    (top-to-bottom), so encoding the square directly gives byte-identical on
+    screen pixels while carrying ~25% fewer bytes per file.
+    """
+    w, h = original.size
+    side = min(w, h)
+    return original.crop(((w - side) // 2, (h - side) // 2, (w + side) // 2, (h + side) // 2))
+
+
 def write_rachit(original):
+    original = portrait_square(original)
     total = 0
     for width in PORTRAIT_WIDTHS:
-        height = round(original.size[1] * width / original.size[0])
-        resized = original.resize((width, height), Image.LANCZOS)
+        resized = original.resize((width, width), Image.LANCZOS)
         out = os.path.join(ROOT, "public", f"rachit-{width}.webp")
         resized.save(out, "WEBP", quality=PORTRAIT_QUALITY, method=6)
         size = os.path.getsize(out)
         total += size
         print(f"wrote {os.path.relpath(out, ROOT).replace(os.sep, '/')}"
-              f"  {width}x{height}  {size:,} B")
+              f"  {width}x{width}  {size:,} B")
     print(f"  {len(PORTRAIT_WIDTHS)} tiers, {total:,} B on disk — "
           f"exactly one is fetched per visit")
 
