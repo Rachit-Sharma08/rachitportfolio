@@ -13,7 +13,24 @@ async function ping() {
 
 export function startKeepAlive() {
   if (typeof window === 'undefined') return
-  ping()
-  const id = window.setInterval(ping, INTERVAL)
-  return () => window.clearInterval(id)
+
+  let handle: number | undefined
+  const begin = () => {
+    ping()
+    handle = window.setInterval(ping, INTERVAL)
+  }
+
+  // The first ping is fire-and-forget but still opens a connection to the API
+  // origin; delaying it until the browser is idle keeps it from racing the
+  // hero's first paint. The interval itself still keeps the instance warm.
+  const idle = window.requestIdleCallback?.(
+    () => begin(),
+    { timeout: 4000 },
+  )
+  if (idle === undefined) handle = window.setTimeout(begin, 4000)
+
+  return () => {
+    if (idle !== undefined) window.cancelIdleCallback(idle)
+    if (handle !== undefined) window.clearInterval(handle)
+  }
 }

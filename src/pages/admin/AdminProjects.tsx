@@ -14,6 +14,7 @@ import {
 import {
   deleteProject,
   listProjects,
+  requestRebuild,
   saveProject,
   uploadImage,
 } from '../../lib/adminApi'
@@ -94,6 +95,7 @@ export default function AdminProjects() {
       await refresh()
       setState('ok')
       setMessage(draft.id ? 'Project updated.' : 'Project added.')
+      void requestRebuild()
       if (!draft.id) setOpen(false)
     } catch (error) {
       setState('error')
@@ -109,6 +111,7 @@ export default function AdminProjects() {
       await refresh()
       setState('ok')
       setMessage('Project deleted.')
+      void requestRebuild()
     } catch (error) {
       setState('error')
       setMessage(error instanceof Error ? error.message : 'Could not delete.')
@@ -135,7 +138,7 @@ export default function AdminProjects() {
   return (
     <AdminLayout
       title="Projects"
-      subtitle="These are the cards in the Selected Work section, in order. No redeploy needed — the site reads them on every load."
+      subtitle="These are the cards in the Selected Work section, in order. Saving triggers a rebuild so the change is baked into the static site."
     >
       <Status state={state} message={message} />
 

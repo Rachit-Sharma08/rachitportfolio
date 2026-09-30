@@ -144,7 +144,33 @@ export const FALLBACK: SiteContent = {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * The id of the JSON snapshot scripts/prerender.mjs embeds in every HTML page.
+ * When it is present the provider hydrates from it and makes no request at
+ * all — the homepage then renders entirely from baked data, with no `/api/content`
+ * call on the critical path. Freshness comes from the admin's rebuild hook
+ * (any save -> /api/rebuild -> deploy -> new baked snapshot), the same pattern
+ * the blog already used.
+ */
+const INLINE_ID = 'site-content'
+
+function readInlineContent(): SiteContent | null {
+  if (typeof document === 'undefined') return null
+  const el = document.getElementById(INLINE_ID)
+  if (!el) return null
+  try {
+    const parsed = JSON.parse(el.textContent ?? 'null')
+    return parsed && typeof parsed === 'object' ? (parsed as SiteContent) : null
+  } catch {
+    return null
+  }
+}
+
+/**
  * One request to `api/content.ts` for every table this page renders.
+ *
+ * This exists only for builds without an embedded snapshot — i.e. `npm run dev`,
+ * where scripts/prerender.mjs never ran. Production HTML always carries the
+ * baked JSON above, so a live visitor never fetches this.
  *
  * This used to be three queries run straight from the browser through
  * `@supabase/supabase-js`. Four requests can't justify ~214 kB of SDK on a
@@ -184,19 +210,24 @@ interface ProviderProps {
   /**
    * Build-time snapshot. When present the provider renders exactly this and
    * never fetches — that is what lets scripts/prerender.mjs bake real Supabase
-   * content into the static HTML. On the client this is omitted, so the app
-   * starts from the static fallback and swaps in live data once it arrives.
+   * content into the static HTML. On the client this is omitted and the provider
+   * reads the embedded `#site-content` JSON instead, which is the same snapshot;
+   * only a page with neither (vite dev) falls back to the live fetch.
    */
   initial?: SiteContent
   children: ReactNode
 }
 
 export function SiteContentProvider({ initial, children }: ProviderProps) {
-  const [content, setContent] = useState<SiteContent>(initial ?? FALLBACK)
-  const initialRef = useRef(initial)
+  const [content, setContent] = useState<SiteContent>(
+    initial ?? readInlineContent() ?? FALLBACK,
+  )
+  const staticRef = useRef<boolean>(
+    initial !== undefined || readInlineContent() !== null,
+  )
 
   useEffect(() => {
-    if (initialRef.current) return
+    if (staticRef.current) return
     let cancelled = false
 
     void (async () => {

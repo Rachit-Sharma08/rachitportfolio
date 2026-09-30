@@ -104,6 +104,13 @@ async function loadBuildContent() {
 
 const content = await loadBuildContent()
 
+// The exact SiteContent the pages above were rendered with. It is embedded as a
+// JSON script so the client hydrates from the same snapshot instead of making a
+// `GET /api/content` round trip — and a hard rebuild hook (admin -> /api/rebuild)
+// keeps this in step with every content edit, which is what lets the homepage
+// render with zero required runtime API calls and still never go stale.
+const snapshot = content ?? mapBuildContent({})
+
 /* -------------------------------------------------------------------------- */
 /*  Head generation                                                           */
 /* -------------------------------------------------------------------------- */
@@ -249,6 +256,14 @@ for (const route of routes) {
     .replace(/<meta[^>]*name="description"[^>]*\/>/, head.split('\n')[1])
   const extras = head.split('\n').slice(2).join('\n    ')
   html = html.replace('</head>', `    ${extras}\n  </head>`)
+
+  // Embed the snapshot every route shares. `safeJson` escapes "<" so no post
+  // body or project description can terminate this script tag early. The tag is
+  // type="application/json", so the browser never executes it as script.
+  html = html.replace(
+    '</body>',
+    `  <script id="site-content" type="application/json">${safeJson(snapshot)}</script>\n</body>`,
+  )
 
   const outPath =
     route === '/'

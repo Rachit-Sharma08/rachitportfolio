@@ -100,6 +100,28 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v31 — P1: homepage renders with zero runtime API calls (inline content snapshot + rebuild hooks)] — 30 Sep 2026
+**User ka brief (perf pass):** PageSpeed hero LCP chained through `/health` → `/api/content` (2.59s "element render delay" of 3.6s LCP). P1 directive — homepage must render instantly from baked data, **koi required runtime API call first paint se pehle nahi**. Don't touch anything scoring 100 (SEO/A11y/BP/Agentic Browsing) ya hero cursor-reveal visual behavior. Rebuild-on-change pattern (jo blog ke liye tha) ab `site_settings`/`site_story`/`projects` par bhi.
+
+**Root cause (confirmed in code):** client `SiteContentProvider` mount par hamesha `GET /api/content` fetch karta tha (FALLBACK se shuru ho kar), aur `startKeepAlive()` surf mount par turant Render `/health` ping karta tha — dono initial network burst me, hero first paint se pehle. Prerendered HTML me content baked to tha, par client use kabhi padhta hi nahi tha.
+
+**Fix — 3 layer (sab local verified):**
+1. `scripts/prerender.mjs` — ab har route (`. None for `/`, `/resume`, `/blog`, `/blog/:slug`, `/admin`) me `<script id="site-content" type="application/json">` inject karta hai — exactly wahi `snapshot` jismein pages render hue the (`boundary` via `safeJson` → `<` escape → `\u003c`, script break XSS-proof; tag non-executable). `mapBuildContent({})` fallback (content null hone par).
+2. `src/lib/content.tsx` — `readInlineContent()` (`#site-content` se hydrate; `typeof document === 'undefined'` guard na dev ke liye 2 safe gaps) → `initial ?? readInlineContent() ?? FALLBACK`; `staticRef` boolean — production me fetch **skip** (SIRF dev/no-prerender contexts me `/api/content`). SSR + client same snapshot se push → hydration drift impossible.
+3. `src/lib/keepalive.ts` — pehla ping ab `requestIdleCallback` (timeout 4000) se defer (fallback `setTimeout`), interval har 8 min abhi bhi. Render keep-alive warm rahega par initial burst me competition nahi.
+4. **Rebuild hooks wired** (`site_settings`/`site_story`/`projects`): `AdminProjects.tsx` (save+delete), `AdminStory.tsx` (save), `AdminImages.tsx` (upload, force-upload, restore, Save-value button) — har ek `void requestRebuild()` + copy updated ("rebuilding so it gets baked in"). Blog already had it. Koi bhi admin save → deploy → naya baked snapshot → SQL queries ab statically served.
+
+**Verify (local preview + Puppeteer CDP, `p1test.mjs`):**
+- `#site-content` JSON parsed: `{hasProjects: 4, hasSettings: true, storyLen: 341}` ✅ (FALLBACK build locally — Real Supabase on prod)
+- hero img `src="/assets/hero-base.webp"` (settings se) ✅
+- Requests log: **`/api/content` ZERO** ✅; `/health` sirf 1×, idle-par defer (non-blocking) ✅
+- `npm run lint` 0 errors (same pre-existing warnings) · `npm run build` pass (`/` 52,079 → **56,806 B**, `/resume` 17,656 B, `/blog` 18,137 B) · `npm run verify` **All checks passed** (XSS fixtures safe — safeJson `\u003c` JSON me raw `<` kabhi nahi)
+- ⚠️ `/health` **warm**: 4 hits 1155/1108/618/511 ms, sab 200 — ~500ms konstanta = TLS + Render proxy + region overhead, cold start nahi. Render free tier abhi bhi ~15 min idle par spin-down karta hai → keep-alive cron (every 10 min, deploy-side repo) hi instance warm rakhta hai.
+
+**Expected impact:** hero LCP ke liye required network stalls abhi bhi 0 API calls (`/api/content` poori tarah hat gaya). P1 ke baad Pagespeed element-render-delay ~2.5s se ~0 hona chahiye — production Lighthouse/PageSpeed measurement tab taken, twice ko result confirm + deploy ke baad `sitemap.xml` posts intact rehna chahiye (rebuild hook).
+
+**Files changed (v31):** MOD `scripts/prerender.mjs` (+snapshot inject), `src/lib/content.tsx` (inline hydrate + staticRef), `src/lib/keepalive.ts` (idle defer), `src/pages/admin/AdminProjects.tsx`, `AdminStory.tsx`, `AdminImages.tsx` (rebuild hooks + copy), `AGENTS.md`. 
+
 ### [v30 — CONTACT FORM BUG FIX (email bilkul nahi bhejta tha)] — 30 Sep 2026
 **User ka report:** form submit karne par hamesha "Something went wrong. Try again or email me directly." aata tha.
 
@@ -796,6 +818,10 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 
 - [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge.
 - [ ] ~~**Hermes CLI install karo**~~ — **DONE (30 Sep 2026)**: `D:\hermes` par install, `D:\hermes\bin` user PATH me, `HERMES_HOME=D:\hermes` User env, gateway + watchdog restart-proof. Detail: global `C:\Users\fvcvv\.config\opencode\AGENTS.md` me poora reference + status block. Research tab tak `websearch` se, jab tak `hermes setup` na ho.
+- [ ] **Perf pass (v31) P2 — image delivery: portrait + hero tiers (~127 KiB savings)** — `rachit-{240,420,480,720}.webp` srcSet sirf `sizes="236px"` ke against (box 236px; DPR picks), hero `HERO_SRCSET` tiers (webp q88) review + `HERO_SIZES` sanity.
+- [ ] **Perf pass (v31) P3 — render-blocking CSS (~340 ms)** — hero critical CSS inline `<head>`, baaki non-blocking; sirf agar no-FOUC risk na ho.
+- [ ] **Perf pass (v31) P4 (low) — unused JS (~87 KiB, `index-W4tMUX_G.js`)** — code-splitting deprioritized (SSR graph + admin split risky).
+- [ ] **`v31` P1 commit + push `main`** — saara P1 kaam local hai (lint/build/verify + CDP verify pass). Push (user aadesh par) → Vercel auto-deploy ~45s → production Lighthouse median + PageSpeed `element-render-delay` measure + `sitemap.xml` posts intact confirm.
 - [ ] **`v29` commit + push `main`** — saara perf kaam local hai. User ke aadesh par hi commit/push karna (files list changelog `v29` me hai).
 - [ ] **Deploy ke baad live verify karna** — local `vite preview` Vercel functions nahi chalata, isliye `/api/content` ka naya `{settings, story, projects, posts}` shape aur `/.well-known/*` ke real 404 sirf production par confirm ho sakte hain. Push ke baad: `https://rachitportfolio-fawn.vercel.app/api/content` + `/.well-known/ai-catalog.json` (404) + `/llms.txt` (200).
 - [ ] **Hero tiers ka boundary decision** — 412@1.75 ko 497 device px chahiye par 480w tier sirf 480 hai → 720w pick hota hai (96 KiB ka responsive-images miss). `hero-{480,720}` ko `{497,720}` ya 3-tier me badalna is possible win, par hero cursor-reveal alignment is source sizes par **control-test se verify hua hai** — dobara scale karne se pehle `heroreveal.mjs` se re-verify karna.

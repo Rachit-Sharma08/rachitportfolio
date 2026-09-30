@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { RotateCcw, Upload } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import { AdminPanel, Button, Status, TextField } from '../../components/admin/Fields'
-import { getSettings, saveSetting, uploadImage } from '../../lib/adminApi'
+import { getSettings, requestRebuild, saveSetting, uploadImage } from '../../lib/adminApi'
 import { describeSize, prepareImage, probeImage } from '../../lib/imagePrep'
 import type { MediaFolder } from '../../lib/adminApi'
 import { DEFAULT_SETTINGS, IMAGE_FIELDS } from './constants'
@@ -88,7 +88,8 @@ export default function AdminImages() {
             : null,
         }))
         setState('ok')
-        setMessage('Saved. The change goes live within about five minutes.')
+        setMessage('Saved. The site is rebuilding so the new image is baked in.')
+        void requestRebuild()
       } catch (error) {
         setState('error')
         setMessage(error instanceof Error ? error.message : 'Upload failed.')
@@ -123,7 +124,8 @@ export default function AdminImages() {
         [key]: { width: prepared.width, height: prepared.height },
       }))
       setState('ok')
-      setMessage('Saved anyway. Crop both hero photos to the same size to be safe.')
+      setMessage('Saved anyway. The site is rebuilding to bake in this image.')
+      void requestRebuild()
     } catch (error) {
       setState('error')
       setMessage(error instanceof Error ? error.message : 'Upload failed.')
@@ -143,7 +145,8 @@ export default function AdminImages() {
       setSettings((prev) => ({ ...prev, [key]: value }))
       setSizes((prev) => ({ ...prev, [key]: measured }))
       setState('ok')
-      setMessage('Restored the original file.')
+      setMessage('Restored the original file. The site is rebuilding to bake it in.')
+      void requestRebuild()
     } catch (error) {
       setState('error')
       setMessage(error instanceof Error ? error.message : 'Could not restore.')
@@ -248,7 +251,10 @@ export default function AdminImages() {
                       try {
                         await saveSetting(field.key, value)
                         setState('ok')
-                        setMessage('Saved.')
+                        setMessage(
+                          'Saved. The site is rebuilding so this value is baked in.',
+                        )
+                        void requestRebuild()
                       } catch (error) {
                         setState('error')
                         setMessage(

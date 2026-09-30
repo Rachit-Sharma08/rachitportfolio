@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import { AdminPanel, Button, Status, TextArea } from '../../components/admin/Fields'
-import { getStory, saveStory } from '../../lib/adminApi'
+import { getStory, requestRebuild, saveStory } from '../../lib/adminApi'
 import { renderInline, splitParagraphs } from '../../lib/markdown'
 import { STORY_FIELDS } from './constants'
 import { STORY } from '../../data'
@@ -38,7 +38,8 @@ export default function AdminStory() {
     try {
       await saveStory(key, drafts[key] ?? '')
       setState('ok')
-      setMessage('Story saved. It is on the live About section now.')
+      setMessage('Story saved. The About section is rebuilding so the new copy gets baked in.')
+      void requestRebuild()
     } catch (error) {
       setState('error')
       setMessage(error instanceof Error ? error.message : 'Could not save.')
