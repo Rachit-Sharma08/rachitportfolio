@@ -7,6 +7,7 @@ import {
   SITE_NAME,
   OG_IMAGE,
   PAGES,
+  NOT_FOUND,
   personSchema,
   websiteSchema,
   BLOG_DESCRIPTION,
@@ -236,6 +237,37 @@ function headFor(route) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Document assembly                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Splice a rendered route into the client build's index.html and swap in a
+ * per-route head.
+ *
+ * `head` is positional by design: line 1 replaces <title>, line 2 replaces the
+ * description meta, and everything after that is appended just before </head>.
+ * The template ships exactly one of each, and the replaces are unanchored to
+ * the first match only, so an appended canonical from a previous pass is never
+ * duplicated.
+ */
+function composeHtml(markup, head) {
+  const lines = head.split('\n')
+  let html = template.replace(rootMarker, `<div id="root">${markup}</div>`)
+  html = html
+    .replace(/<title>[\s\S]*?<\/title>/, lines[0])
+    .replace(/<meta[^>]*name="description"[^>]*\/>/, lines[1])
+  html = html.replace('</head>', `    ${lines.slice(2).join('\n    ')}\n  </head>`)
+
+  // Embed the snapshot every route shares. `safeJson` escapes "<" so no post
+  // body or project description can terminate this script tag early. The tag is
+  // type="application/json", so the browser never executes it as script.
+  return html.replace(
+    '</body>',
+    `  <script id="site-content" type="application/json">${safeJson(snapshot)}</script>\n</body>`,
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Prerender every route                                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -250,20 +282,7 @@ await rm(blogDir, { recursive: true, force: true })
 for (const route of routes) {
   const head = headFor(route)
   const markup = renderRoute(route, content ?? undefined)
-  let html = template.replace(rootMarker, `<div id="root">${markup}</div>`)
-  html = html
-    .replace(/<title>[\s\S]*?<\/title>/, head.split('\n')[0])
-    .replace(/<meta[^>]*name="description"[^>]*\/>/, head.split('\n')[1])
-  const extras = head.split('\n').slice(2).join('\n    ')
-  html = html.replace('</head>', `    ${extras}\n  </head>`)
-
-  // Embed the snapshot every route shares. `safeJson` escapes "<" so no post
-  // body or project description can terminate this script tag early. The tag is
-  // type="application/json", so the browser never executes it as script.
-  html = html.replace(
-    '</body>',
-    `  <script id="site-content" type="application/json">${safeJson(snapshot)}</script>\n</body>`,
-  )
+  const html = composeHtml(markup, head)
 
   const outPath =
     route === '/'
@@ -274,6 +293,56 @@ for (const route of routes) {
   await writeFile(file, html)
   console.log(`Prerendered ${route} -> dist/${outPath} (${html.length} bytes)`)
 }
+
+/* -------------------------------------------------------------------------- */
+/*  404.html                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The static 404 document.
+ *
+ * Vercel serves `404.html` from the output directory with a real 404 status for
+ * any path that matches no file and no rewrite. That status is the whole point:
+ * a deleted post used to be answered by the catch-all rewrite with the
+ * homepage's HTML and a 200, which is a soft-404 — the URL stays in the index
+ * and is treated as a duplicate of `/`. With this file in place the same URL
+ * gets 404 and `noindex` together.
+ *
+ * Two things are deliberately absent from the head: a canonical link (there is
+ * no single correct URL for "not found", and canonicalising a 404 invites
+ * Google to treat the nearest real page as its replacement) and the JSON-LD
+ * block (a Person schema on an error page is a mismatch signal, not a win).
+ *
+ * The markup comes from the same `*` route the client uses, so the page a
+ * crawler sees and the page React renders are the same component.
+ */
+const notFoundHead = [
+  `<title>${escapeAttr(NOT_FOUND.title)}</title>`,
+  `<meta name="description" content="${escapeAttr(NOT_FOUND.description)}" />`,
+  `<meta name="robots" content="noindex, nofollow" />`,
+].join('\n    ')
+
+let notFoundHtml = composeHtml(renderRoute('/404', content ?? undefined), notFoundHead)
+
+// index.html ships `index, follow` for the whole site. It has to be *removed*,
+// not overwritten: `noindex, nofollow` is already in the head from notFoundHead,
+// and two robots metas — even agreeing ones — is a shape crawlers are free to
+// resolve in ways nobody has tested.
+notFoundHtml = notFoundHtml.replace(/\s*<meta name="robots" content="index, follow" \/>/, '')
+
+const robotsMetas = notFoundHtml.match(/<meta name="robots"/g) ?? []
+if (robotsMetas.length !== 1) {
+  throw new Error(`404.html me ${robotsMetas.length} robots meta hain, 1 chahiye`)
+}
+if (notFoundHtml.includes('index, follow')) {
+  throw new Error('404.html me `index, follow` robots meta bacha gaya')
+}
+if (notFoundHtml.includes('rel="canonical"')) {
+  throw new Error('404.html me canonical link aa gayi')
+}
+
+await writeFile(path.join(distDir, '404.html'), notFoundHtml)
+console.log(`Wrote dist/404.html (${notFoundHtml.length} bytes)`)
 
 /* -------------------------------------------------------------------------- */
 /*  robots.txt + sitemap.xml                                                  */

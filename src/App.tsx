@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react'
+import { Suspense, lazy, useEffect, useRef } from 'react'
 import { BrowserRouter, useLocation, Routes, Route, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Lenis from 'lenis'
@@ -125,6 +125,10 @@ function PublicRoutes() {
 function Shell() {
   const location = useLocation()
   const admin = isAdminPath(location.pathname)
+  // Tracks whether the panel is the view we came from, so the effect below knows
+  // if it is leaving admin (and owes the head its indexability back) or simply
+  // sitting on a public route.
+  const wasAdmin = useRef(false)
 
   useEffect(() => {
     // The admin panel is an ordinary scrolling page — no smooth-scroll hijack,
@@ -159,9 +163,17 @@ function Shell() {
       // Leaving the panel is a client-side navigation, so the noindex tag we set
       // on the way in is still in the head. Put it back, or the whole site
       // inherits it for the rest of the session.
-      setIndexable()
+      //
+      // Only on the way out, though. This used to call setIndexable() on every
+      // public render, which included a cold load of the 404 document — where it
+      // overwrote that page's `noindex, nofollow` with `index, follow`, the exact
+      // soft-404 the tag exists to prevent. Child effects run before parent
+      // ones, so a page that sets noindex for itself cannot win a race with this.
+      if (wasAdmin.current) setIndexable()
+      wasAdmin.current = false
       return
     }
+    wasAdmin.current = true
     document.title = 'Admin — Rachit Sharma'
     setNoIndex()
   }, [admin])

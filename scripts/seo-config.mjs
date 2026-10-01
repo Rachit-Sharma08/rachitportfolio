@@ -33,6 +33,20 @@ export const PAGES = {
 export const BLOG_DESCRIPTION =
   "Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a self-taught digital marketer learning in public."
 
+// The 404 document. Kept out of PAGES on purpose: PAGES doubles as the list of
+// routes that get their own static HTML file (see the `Object.keys(PAGES)`
+// fallback in prerender.mjs), and `/404` is served for every unmatched path
+// rather than being a page anyone can navigate to.
+//
+// `title` must stay identical to PAGE_TITLES['*'] in src/lib/seo.ts, because
+// PublicRoutes rewrites document.title on client-side navigation and would
+// otherwise show one title to a crawler and another to a visitor.
+export const NOT_FOUND = {
+  title: 'Rachit Sharma — Page Not Found',
+  description:
+    "That page doesn't exist. It may have been a journal post that is no longer published — everything currently published is on the Journal page.",
+}
+
 export function personSchema(url) {
   return {
     '@context': 'https://schema.org',

@@ -4,7 +4,7 @@
 import { pathToFileURL } from 'node:url'
 import path from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
-import { SITE_URL } from './seo-config.mjs'
+import { SITE_URL, NOT_FOUND } from './seo-config.mjs'
 
 const ssr = await import(
   pathToFileURL(path.join(process.cwd(), 'dist-ssr', 'prerender.js')).href
@@ -197,6 +197,84 @@ check('emptied home still renders', emptiedHome.includes('hero-base.webp'), true
 
 const emptiedBlog = renderRoute('/blog', emptied)
 check('emptied blog shows the empty state', emptiedBlog.includes('No posts published yet'), true)
+
+/* -------------------------------------------------------------------------- */
+/*  404                                                                       */
+/* -------------------------------------------------------------------------- */
+
+// A deleted post used to be answered by the catch-all rewrite with the
+// homepage's HTML and a 200 status. Search engines read that as "still here,
+// duplicate of /", so the URL they had already indexed never dropped out.
+// dist/404.html plus a narrowed catch-all is what turns it into a real 404.
+const notFoundPath = path.join(process.cwd(), 'dist', '404.html')
+const notFound = await readFile(notFoundPath, 'utf8').catch(() => null)
+check('dist/404.html written', notFound !== null, true)
+
+if (notFound !== null) {
+  check('404 tells the visitor the page is gone', notFound.includes('Page not found'), true)
+  check('404 covers the unpublished-post case', notFound.includes('unpublished'), true)
+  check('404 is noindex', notFound.includes('content="noindex, nofollow"'), true)
+  // index.html ships `index, follow` site-wide, so a leftover copy would leave
+  // the error page indexable — the exact failure being fixed.
+  check('404 carries no leftover index, follow', notFound.includes('index, follow'), false)
+  check(
+    '404 has exactly one robots meta',
+    (notFound.match(/<meta name="robots"/g) || []).length,
+    1,
+  )
+  check('404 has no canonical to hand authority to another URL', notFound.includes('rel="canonical"'), false)
+  check('404 is not the homepage in disguise', notFound.includes('>Who is Rachit'), false)
+  check('404 is not a Suspense placeholder', notFound.includes('>Loading'), false)
+  // Same snapshot as every other route, so hydrating the error page does not
+  // fall back to a /api/content round trip.
+  check('404 embeds the content snapshot', notFound.includes('id="site-content"'), true)
+  check('404 ships a real 404 document title', notFound.includes(`<title>${NOT_FOUND.title}</title>`), true)
+  check('404 has no JSON-LD', notFound.includes('application/ld+json'), false)
+  // U+FFFD means a byte sequence was decoded as the wrong charset somewhere in
+  // the write path. The em dashes in this page's own copy are the canary.
+  check('404 has no mojibake', notFound.includes('\uFFFD'), false)
+
+  // There is exactly one 404 document, but two different routes reach it: an
+  // arbitrary unknown path (the `*` route) and a blog slug that is missing or
+  // still a draft (the `/blog/:slug` route). The first render shipped a 404 page
+  // for the first and let the second keep its own copy, so the pre-rendered HTML
+  // said one thing and the hydrated page said another — and the runtime copy never
+  // set noindex, because only the 404 page owns that. Compare both routes against
+  // the same document so the two can never quietly diverge again.
+  const missingPost = renderRoute('/blog/no-such-slug', content)
+  check(
+    'a missing blog post renders the same 404 page as any unknown URL',
+    missingPost.includes('Page not found'),
+    true,
+  )
+  check(
+    'a missing blog post left no rival not-found copy behind',
+    missingPost.includes('That post isn'),
+    false,
+  )
+}
+
+// The catch-all is the other half of the fix, and it is the half that silently
+// comes back: adding one line back to vercel.json restores the soft-404 with no
+// other file changing. Assert the shape of the config so that is caught here.
+const vercelConfig = JSON.parse(
+  await readFile(path.join(process.cwd(), 'vercel.json'), 'utf8'),
+)
+const rewrites = vercelConfig.rewrites ?? []
+const shellRewrites = rewrites.filter(
+  (r) => r.destination === '/index.html' && !r.source.startsWith('/admin'),
+)
+check(
+  'only /admin falls back to the SPA shell',
+  shellRewrites.map((r) => r.source),
+  [],
+)
+check(
+  'the admin panel still gets the shell',
+  rewrites.some((r) => r.source.startsWith('/admin') && r.destination === '/index.html'),
+  true,
+)
+check('a post route is not prerendered as /404', routesFor(content).includes('/404'), false)
 
 /* -------------------------------------------------------------------------- */
 /*  llms.txt                                                                  */

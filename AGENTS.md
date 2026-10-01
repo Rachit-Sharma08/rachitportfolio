@@ -35,6 +35,8 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v35`) — SOFT-404 FIXED: deleted post URLs ab real HTTP 404 + `noindex` page (LIVE):** v34 me observe kiya tha ki deleted post URL par catch-all **homepage HTML 200** serve karta hai. Fix 2 halves me hai, **dono zaroori hain** (sirf ek karna soft-404 chhod deta): (a) `scripts/prerender.mjs` ab `dist/404.html` likhta hai, (b) `vercel.json` ka catch-all hata kar sirf `/admin` + `/admin/:path*` SPA shell maana gaya. `NotFound.tsx` = single 404 component (ab `BlogPost` bhi missing slug par yahi render karta hai — warna prerender aur runtime alag page dikhate). `App.tsx` me `wasAdmin` ref guard: `Shell` har public render pe `setIndexable()` call karta tha, jo 404 document ke `noindex` ko `index, follow` se overwrite kar deta tha. `npm run verify` **71/71**. Live: `/blog/opencode-e2e-publish-test` **404** (19,552 B), 7 sitemap URLs intact, `/api/content` 200. Detail: Changelog `v35`.
+- **NEW (`v34`) — LIVE `/admin` end-to-end test done + REAL BUG FIXED:** publish par `/api/rebuild` **502** de raha tha (`hook_failed`, 415) → **root cause = stale `SITE_REBUILD_HOOK` env value** (Vercel ne deploy-hook URL format badal diya: 4-segment legacy `<32-char-id>` → 5-segment `<projectId>/<hookId>`). **Code me koi bug nahi tha — `api/rebuild.ts` me 0 line change.** Env var fix + ek CLI deploy → ab `/api/rebuild` **202 `{"triggered":true}`**. Ye matlab **"publish" button ka crawler-facing half pehle se kaam hi nahi karta tha** (naya post DB me chala gaya, par `/blog` + sitemap me nahi aata tha kyunki v31 `staticRef` baked HTML hi dikhata hai). Password file audit + secure delete bhi done. Detail: Changelog `v34`.
 - **NEW (`v33`) — hero 600 tier + PERFORMANCE WORK CLOSED OUT (user ka explicit instruction):** DPR-2 phone pe hero 720 ki jagah 600 tier lagti hai → **189,504 → 140,278 B (-26%)** hero pair par, teeno impacted device classes (412×823@2, 390×844@2, 1440×900@1) me. Yehi image LCP element hai. `Hero.tsx` ka entrance **byte-for-byte untouched** — koi animation/LCP experiment nahi. Thin-margin ka rationale (base 0.9804 vs 0.98 bar) + region split + alignment proof Changelog `v33` me. ⚠️ **Ab koi naya image/animation optimization pass mat chalao** jab tak user kuch naya na bolе. Detail: Changelog `v33`.
 - **NEW (`v29`) — Performance pass LIVE (production Lighthouse 41 → 83 median, BP 100):** self-hosted fonts (`public/fonts/`, `font-display: swap`, Google Fonts link gone), hero `{480,512,720,1086}` responsive tiers (+ `hasBundledVariants()` srcset guard), **Supabase SDK code-split out of the public bundle** (ab sirf `/admin*` me; `index-*.js` me 0 references), `/api/content` ab projects+posts+settings+story serve karta hai (client ek hi fetch), `dist/llms.txt`, `/.well-known/*` real 404, portrait 92 KiB JPEG → 4 WebP tiers. `npm run verify` **54/54**. Commit `fe1e145` push ho chuka. ⚠️ Lighthouse VM-noisy hai — stray `chrome.exe` kill karke **median** lo. Detail: Changelog `v29`.
 - **NEW (`v28`) — CMS + blog ab LIVE (Supabase wired, 7 Vercel envs set, deploy hook bana):** `/admin` login karta hai, 4 posts publish hain, sab kuch live. Ek **serious pre-render bug** pakda jo v27 ke QA se chhut gaya tha: `prerender.mjs` `site_story` ko galat column (`key` vs `section_key`) se padhta tha → poora build snapshot discard → sitemap me sirf 3 URLs, `/blog` khali, post pages homepage HTML serve kar rahe the. Fix + **test fixture bhi theek kiya** (wahi galat shape use kar raha tha, isliye 38/38 pass the tab bhi jab production toota hua tha). Ab: sitemap **7 URLs**, 4 post pages static HTML me render. Live verify: `/api/content` 200, `/api/rebuild` 401/403/405 (forged JWT bhi 403), `/admin` runtime pe `noindex` + login. Detail: Changelog `v28`.
@@ -85,7 +87,7 @@
 | `supabase/schema.sql` | Tables, RLS, `is_admin()`, storage bucket (v27) |
 | `api/content.ts` | Anon settings+story **+ projects + published posts** endpoint (v27, v29 me extend) |
 | `api/rebuild.ts` | Auth-guarded Vercel Deploy Hook (v27) |
-| `scripts/verify-prerender.mjs` | `npm run verify` — **54** pre-render/XSS/empty/llms/bundle assertions (v27, v29 me extend) |
+| `scripts/verify-prerender.mjs` | `npm run verify` — **71** pre-render/XSS/empty/llms/bundle/404 assertions (v27, v29, v35 me extend) |
 | `scripts/seo-config.mjs` | `SITE_URL`, `PAGES`, `SOCIALS`, `CONTACT_EMAIL` — SEO + `/llms.txt` ka single source (v26/v29) |
 | `src/data.ts` | Bundled static copy (fallback when Supabase unset) + `HERO_SRCSET`/`HERO_SIZES` (v29) |
 | `src/pages/Landing.tsx` | Home page |
@@ -100,6 +102,167 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v35 — Soft-404 fix: deleted blog URLs ab real HTTP 404 + `noindex`] — 1 Oct 2026
+**User ka brief:** v34 ke end me ek pre-existing observation note kiya tha — deleted post URL par catch-all **homepage HTML 200** serve karta hai → crawler ke liye soft-404. Ab isko fix karo, baaki sab kuch untouched rakhkar.
+
+**Diagnosis (code me confirm kiya, guess nahi):** `vercel.json` me `/((?!api|assets/|.well-known/).*)` → `/index.html` catch-all tha. Vercel rewrites ko filesystem ke BAAD check karta hai, to `/blog/<deleted-slug>` par koi file nahi milti → catch-all match hota hai → **homepage ka HTML + 200**. Ye `/blog/<unknown>` ke liye v27 se hi tha (tab "not-found" client-side dikhta tha), naya bug nahi.
+
+**Fix — 2 halves, DONO zaroori (sirf ek karna soft-404 chhod deta):**
+
+| half | kya karta hai | akele ka result |
+|---|---|---|
+| (a) `dist/404.html` | prerender me real 404 document | catch-all pehle jawab de deta hai → **still soft-404** |
+| (b) catch-all hata kar sirf `/admin*` | unknown URL ko Vercel 404 handler tak pahunche | 404 milta hai par Vercel ka **plain** body, hamara page nahi |
+
+Proof dono ki zaroori hai — **purane catch-all ke saath `vercel build` chalaya** → routes me `{"src":"^(?:/((?!api|assets/|.well-known/).*))$","dest":"/index.html"}` aaya, jo `/404.html` tak pahunchne se pehle `/blog/<deleted>` ko 200 de deta hai.
+
+**Generated routing (naya config, `vercel build` se):**
+```json
+{"handle":"filesystem"}
+{"src":"^/resume$","dest":"/resume/index.html","check":true}
+{"src":"^/blog$","dest":"/blog/index.html","check":true}
+{"src":"^/blog(?:/([^/]+?))$","dest":"/blog/$1/index.html","check":true}
+{"src":"^/admin$","dest":"/index.html","check":true}
+{"src":"^/admin(?:/...)$","dest":"/index.html?path=$1","check":true}
+{"src":"^/api(/.*)?$","status":404}      ← PRE-EXISTING, dono config me identical
+{"handle":"error"}
+{"status":404,"src":"^(?!/api).*$","dest":"/404.html"}
+```
+- `check: true` = rewrite tabhi lagega jab destination disk par ho → missing post `/404.html` tak girta hai. ✅
+- `/admin` rewrite me `?path=$1` Vercel khud add karta hai; static file serving par query bekaar hai, app `pathname` padhta hai → harmless.
+- ⚠️ **`^/api(/.*)?$ status 404` humhara change NAHI hai** — purane config ke build me bhi byte-identical tha. Live verify kiya: `/api/content` **200, 11,914 B**. Functions safe hain.
+
+**🐛 Runtime ne pakda — prerender vs hydration DRIFT (sirf browser test se hi mila):**
+Pehla pass me static HTML theek thi, par hydrated DOM bilkul alag tha:
+
+| | prerendered `404.html` | runtime at `/blog/<deleted>` |
+|---|---|---|
+| h1 | `Page not found` | **`That post isn't here`** |
+| eyebrow | `404` | **`Journal`** |
+| robots | `noindex, nofollow` | **`index, follow`** ❌ |
+
+Do wajah:
+1. `/blog/<slug>` route `BlogPost` ko match karta hai, `*` ko nahi → mera `NotFound` component render hi nahi hua, `BlogPost` ka apna not-found block render hua.
+2. Isiliye `setNoIndex()` chal hi nahi — aur `Shell` ka effect har public render pe `setIndexable()` call karta tha, jo **404 document ke `noindex` ko `index, follow` se overwrite** kar deta tha. (React child effects parent se PEHLE chalti hain, to page apna noindex khud par force nahi kar sakta tha.)
+
+**Do fixes:**
+- `BlogPost.tsx` — apna 28-line not-found block delete, ab `return <NotFound />`. **Ek hi 404 component** dono routes ke liye → drift structurally impossible. (Ye zaroori tha: sirf `404.html` banaane se static/rich dono alag page dikhate.)
+- `App.tsx` `Shell` — `wasAdmin` ref. `setIndexable()` ab **sirf admin se baahar aate waqt** chalta hai, har public render pe nahi. Comment bhi likha ki kyun. ⚠️ **Regression check kiya:** real UI me admin se bahar jaane ke dono links `href="/"` hain (`AdminLayout.tsx:121` `target="_blank"`, `AdminDashboard.tsx:113`) → hamesha fresh document load, isliye real user path pe koi farak nahi. Phir bhi 4 transitions browser me drive karke verify kiye.
+
+**Verification — local (Vercel ke exact route order ko mimic karne wala throwaway server):**
+| path | status | bytes |
+|---|---|---|
+| `/blog/does-not-exist` | **404** | 404 doc |
+| `/totally-made-up` | **404** | 404 doc |
+| `/`, `/resume`, `/blog`, `/admin`, `/admin/blog` | 200 | ✅ |
+| `/sitemap.xml`, `/robots.txt`, `/llms.txt`, assets | 200 | ✅ |
+
+Runtime (`/blog/does-not-exist`, Playwright): h1 `Page not found`, eyebrow `404`, robots `noindex, nofollow`, `indexable: false`, 0 JSON-LD, 0 `og:url`, homepage leak 0, CTAs `Back to home` + `Journal`. Static aur runtime ab **byte-consistent**.
+⚠️ Ek false alarm: 400 ms me robots read kiya tha aur stale `noindex` dikha — React commit hote hi 900 ms baad `index, follow` confirm hua. Measuring too early, bug nahi.
+
+**Verify:** `npm run lint` **0 errors** (same 6 pre-existing warnings: 4 `only-export-components` + 2 `set-state-in-effect`) · `npm run build` pass (`/` 57,260 B, `/resume` 17,792, `/blog` 18,273, `404.html` 12,629) · `npm run verify` **71/71** (54 → 71: +17 naye 404 assertions, ismein 2 **drift guards** — `renderRoute('/blog/no-such-slug')` ka output `Page not found` hona chahiye + rival copy `That post isn` absent) · `npx vercel@59.19.0 build --yes` pass.
+
+**🚀 LIVE (CLI deploy `rachitportfolio-hrmq2498f-rachit-09a3`, aliased to `rachitportfolio-fawn`, koi commit nahi):**
+
+| check | result |
+|---|---|
+| `/blog/opencode-e2e-publish-test` (deleted) | **404**, 19,552 B = `404.html` exactly ✅ (pehle 200 + 64 KB homepage) |
+| `/blog/does-not-exist`, `/totally-made-up` | **404**, 19,552 B ✅ |
+| `/` 64,742 B · `/resume` 24,726 · `/blog` 26,224 | 200 ✅ |
+| `/sitemap.xml` | **7 URLs**, sab 200, 4 post pages me `<article>`, `>Loading` **0** ✅ |
+| `/api/content` | **200, 11,914 B JSON** ✅ (functions intact) |
+| `/api/rebuild` | 405 (unchanged) ✅ |
+| `/admin`, `/admin/blog` | 200 shell, runtime `noindex, nofollow`, 1 h1, public nav leak 0 ✅ |
+| `/.well-known/ai-catalog.json` | 404 (ab branded 404 document, pehle bare 404) ✅ |
+| `/llms.txt` 1,910 B · `/robots.txt` · hero 480/240 webp | 200 ✅ |
+
+Homepage regression check (runtime): 9 sections correct order, hero **cursor-reveal intact** (base unmasked + reveal `masked: true`), 4 work cards, `overflowX 0`, canonical + JSON-LD Person/WebSite, snapshot present, **0 console errors**.
+
+**⚠️ PowerShell BOM gotcha (naya, important):** `Set-Content -Encoding utf8` (PS 5.1) `vercel.json` me **UTF-8 BOM** likh deta hai → Vercel deploy se pehle fail: `Couldn't parse JSON file ...\vercel.json`. Isiliye ek comparison build ka output **stale** `.vercel/output` se aaya aur galat conclusion diya. Fix: Node se `fs.writeFileSync(target, text, 'utf8')` (BOM nahi likhta). `write` tool bhi is file par BOM de chuka — **verify karna, assume nahi** (`[...buf.slice(0,4)]` → `[123,10,32,32]` = `{`, `\n`, ` `, ` `).
+
+**Files changed (v35):** MOD `scripts/seo-config.mjs` (+`NOT_FOUND`), `scripts/prerender.mjs` (`composeHtml()` + `dist/404.html`), `scripts/verify-prerender.mjs` (+17 assertions, incl. drift guards), `src/pages/NotFound.tsx`, `src/pages/BlogPost.tsx` (rival not-found block delete), `src/App.tsx` (`wasAdmin` ref + `useRef` import), `vercel.json` (catch-all → 2 admin rewrites), `AGENTS.md`. **7 code files, ~342 insertions.** Working tree intentionally **uncommitted** (user rule).
+
+### [v34 — LIVE `/admin` end-to-end test: real bug pakda + fix (`/api/rebuild` 502)] — 1 Oct 2026
+**User ka brief:** pichle session ke 4-item list ko complete karo — (1) password file ka exact path + kyun bani, (2) securely delete, (3) confirm kabhi commit nahi hua, (4) confirm password change kuch nahi tootega, phir **live production** par `/admin` login → test post → publish → `/blog` + `/blog/[slug]` verify → delete. Ye item v27 se pending tha (`Code path verify ho chuka hai, par ek live save abhi tak nahi kiya gaya`).
+
+**🐛 SAABSE IMPORTANT FINDING — `/api/rebuild` 502, deploy trigger PURI TARAH MARA HUA THA:**
+- Publish karte hi `/api/rebuild` → **502** `{"error":"hook_failed","status":415}`, console error.
+- **Root cause = stale Vercel env value, code me koi bug nahi.** Vercel ne deploy-hook URL format badal diya:
+
+  | | format | path segments |
+  |---|---|---|
+  | stored `SITE_REBUILD_HOOK` (v28 se) | `…/v1/integrations/deploy/<32-char-id>` | 4 (**legacy**) |
+  | actual live hook `cms-rebuild` | `…/v1/integrations/deploy/<projectId>/<hookId>` | 5 |
+
+- Probe matrix (hook URL kabhi print nahi kiya, redacted):
+  | variant | legacy URL | naya URL |
+  |---|---|---|
+  | no `Content-Type` (current code, `api/rebuild.ts:81`) | **415** Unsupported Media Type | **201 Created** |
+  | `Content-Type: application/json` + `{}` | 404 Not Found | **201 Created** |
+- 💡 **415 ek red herring tha.** Content-Type ki wajah se nahi, **URL format** ki wajah se 415 aata tha (legacy endpoint strict hai, naya lenient). Asli fix: sirf env var. `api/rebuild.ts` me **0 code change** kiya gaya.
+- **Fix:** `vercel env rm SITE_REBUILD_HOOK production --yes` → `vercel env add SITE_REBUILD_HOOK production --value <newUrl> --sensitive --yes`.
+  - ⚠️ **Vercel CLI 59.19.0 gotchas:** `--secret` flag **exist hi nahi karta** (`unknown or unexpected option`). Value **positional nahi**, `--value` se jaata hai — warna CLI URL ko "environment" samajh leta hai (`Invalid environment: https://…`). Ye v29 ke `--value` note ka hi dobara repeat hai.
+  - ⚠️ **Env change sirf NAYE deployment me apply hota hai** — env set karte hi kuch nahi hota, ek deploy chahiye. CLI deploy (`vercel --prod --yes`) use kiya (koi junk commit nahi). Naya deploy `rachitportfolio-lyare2cmo-rachit-09a3`, aliased to `rachitportfolio-fawn`.
+- **Verify:** `/api/rebuild` → **202 `{"triggered":true}`** (auth token ke saath). Delete action par bhi **202**.
+
+**Live end-to-end test (real browser, production, puri chain):**
+1. `/admin/login` → login **successful** (dashboard: 4 projects, 4 published posts).
+2. Naya post create kiya (title/slug/excerpt/content, markdown with heading + bold + link + list).
+3. ⚠️ **Post `Draft` bana, `Live` nahi.** Investigate kiya — **bug nahi hai**: toggle ka label *static* nahi, **state label** hai (`AdminBlog.tsx:240` → `label={draft.published ? 'Published' : 'Draft'}`, `checked={draft.published}`). `aria-checked="false"` + label "Draft" = **consistent** = `published:false`. `EMPTY` me `published: false` (line 43) → **naye posts default se draft hote hain**, publish karne ke liye toggle flip karna padta hai. Safe default. 💡 **Mera pehla read galat tha** (maine toggle ko "off = publish" samajh liya tha).
+4. Toggle flip (`aria-checked="true"`) → **Save changes** → row badge **LIVE**.
+5. **Rebuild trigger chala → 502** (bug yahan pakda).
+6. Diagnose + env fix + deploy (upar).
+7. **Post live verify (rebuild ke baad):**
+
+   | check | result |
+   |---|---|
+   | `sitemap.xml` | **8 URLs** (7 → 8, test post included) ✅ |
+   | `/blog` static HTML | 28,018 B, test post title present ✅ |
+   | `/blog/opencode-e2e-publish-test` | 200, 24,573 B, marker `E2E-PUBLISH-TEST-OK` present, **no "Loading"** ✅ |
+   | `/api/content` | 5 posts (live DB) ✅ |
+
+8. **Answer to "rebuild needed ya instant?" — REBUILD REQUIRED, instant nahi.** `/blog` production me `/api/content` fetch **karta hi nahi** (v31 `staticRef`) → sirf **baked** posts dikhte hain. Naya post tabhi dikhta hai jab deploy hook chal kar `dist/blog/<slug>/index.html` + `sitemap.xml` regenerate kare. DB turant update hota hai (`/api/content` 5 posts dikha deta tha), par public page/rebuild ke bina nahi. Isiliye `/api/rebuild` 502 hona = **"publish" button ka crawler-facing half kaam hi nahi karta tha**, jabki UI green dikh raha tha.
+9. Test post delete (two-tap `ConfirmButton`: `Delete` → `Tap again`, `AdminBlog.tsx:344` + `Fields.tsx`). Counter `5 posts · 5 published` → **`4 posts · 4 published`**. `/api/rebuild` → **202**.
+10. **Cleanup verified after the hook-triggered deploy:**
+
+    | check | result |
+    |---|---|
+    | `sitemap.xml` | back to **7 URLs**, test post gone ✅ |
+    | `/blog` | 26,133 B, test post title absent ✅ |
+    | `/api/content` | **4 posts** ✅ |
+    | `/blog/opencode-e2e-publish-test` | renders **"That post isn't here"** (h1) — homepage nahi ✅ |
+    | 4 original posts | 200, 24,821–25,520 B, `<article>` present, 0 `>Loading` ✅ |
+    | `/llms.txt` 200 · `/api/content` 200 | ✅ |
+
+**💡 Pre-existing observation (fix nahi kiya, out of scope):** deleted/nonexistent post URL par Vercel catch-all **homepage HTML (64 KB) 200** serve karta hai → SPA shell client par not-found render karti hai. Yaani **soft-404** (200 + homepage content). Ye `/blog/<unknown>` ke liye pehle se tha (v27 QA me "not-found" verify hua tha), naya bug nahi — par mtlb **delete kiye gaye post ki URL search engine me soft-404 reh sakti hai**. Sirf tab fix karna jab user bole.
+
+**Password file — audit + deletion (item 1-3):**
+- **Exact path:** `C:\Users\fvcvv\AppData\Local\Temp\opencode\setup\admin-credentials.txt` (544 B, 29 Sep 2026 08:43).
+- **Kyun bani:** v28 setup me `supabase-admin.mjs` ne admin user banaya tha aur **24-char random password generate kiya** (user ne chuna nahi, agent ne chuna). Value chat me nahi gayi thi → repo ke bahar, git se safe folder me dump ki gayi taaki user ko de sakoon. Ye **setup-time artifact** hai — logged ya derived kahin nahi.
+- **Git proof (poori history):**
+
+  | check | result |
+  |---|---|
+  | `git log --all -S"<password>"` | **empty** |
+  | every blob of every commit, **all refs** | **NO MATCH** |
+  | working tree (tracked + untracked) | **clean** |
+  | commit that ever added a `*credential*`/`*secret*`/`.env` file | **none** |
+  | tracked files matching `credential\|secret\|.env` | only `.env.example`, `server/.env.example` (no values) |
+
+  **Verdict: kabhi commit nahi hua. Git history saaf hai.**
+- **Deletion:** 2 random-byte overwrite passes + `Remove-Item`, phir verify `exists=False`. Saath me `secrets.txt`, `deploy-hook.txt`, `hooks.txt` + 3 probe scripts bhi delete. Residual password search (setup dir + repo, `node_modules`/`dist` excl) = **NONE**.
+
+**Password change safe hai (item 4 — confirm):**
+- `AdminLogin.tsx` password sirf React state (`useState('')`) → `useAdminAuth.ts:93` `supabase.auth.signInWithPassword()`. **Koi hardcode nahi, koi env var nahi.**
+- Repo-wide grep `password|localStorage|sessionStorage`: sirf ye 3 files. **`localStorage`/`sessionStorage` ka password ke liye koi use nahi** — live browser me confirm kiya: session key `rs-admin-session` me **sirf `access_token`** hai, password nahi.
+- Vercel env me **koi password var nahi** (`ADMIN_EMAIL` sirf email hai).
+- Server-side `/api/rebuild` **JWT verify** karta hai (Supabase auth server se), password ko chhoota hi nahi.
+- **Isliye Supabase dashboard se password rotate karna kuch nahi tootega.** ⚠️ Expected side-effect: purge/rotate se existing refresh sessions invalid ho sakte hain → `/admin` me dobara login karna padega (koi data nahi jayega).
+
+**⚠️ Secret exposure note (honest disclosure):** is session ke transcript me deploy-hook URL (Vercel CLI `deploy-hooks ls` output se) aur ek **short-lived (~1h) Supabase access token** aa gaya hai. Access token apne aap expire ho jayega. Deploy hook URL **rotate** karne ka best tareeka: `vercel deploy-hooks rm cms-rebuild` → naya banao → `SITE_REBUILD_HOOK` update. Recommend karta hoon kyunki hook URL jiska koi bhi haath ho wo spam deploys trigger kar sakta hai. **AGENTS.md me kabhi nahi likha gaya** (project rule).
+
+**Files changed (v34):** **0 code files** — sirf Vercel env var (`SITE_REBUILD_HOOK`) + ek CLI deploy. `AGENTS.md` documentation. Repo working tree saaf hai.
 
 ### [v33 — hero 600 tier: DPR-2 phone stops paying for 720 (+ performance work closed out)] — 30 Sep 2026
 **User ka brief:** hero ke 720 assets ke bytes kam karo, **entrance animation bilkul same** — `Hero.tsx` ka opacity tween, GSAP, mask, kuch nahi. Saath me ye confirm karo ki **silver-blazer/sunglasses detail** safe rehta hai. Uske baad **performance work band** — user ne explicitly kaha "no further image/animation optimization passes unless something new comes up".
@@ -921,8 +1084,12 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - [x] **`v29` performance pass done + LIVE** — fonts, hero tiers (incl. 512), admin-only SDK, llms.txt, well-known 404, portrait WebP. Lint 0 errors, build pass, verify 54/54, contenttest 21/21. Commit `fe1e145` push. **Production Lighthouse 80/83/86 → median 83 · A11Y 100 · BP 100 · SEO 100** (baseline 41).
 - [x] **`v29` commit + push `main` + deploy verify** — commit `fe1e145`, ~40 s me deploy live. `/llms.txt` 200 (1,910 B, 4 posts), `.well-known/*` 404, 512 tier live, `/api/content` 200.
 - [x] **Supabase LIVE (`v28`)** — schema + seed SQL chala diye, admin user bana + confirmed, 7 Vercel env vars set, `cms-rebuild` deploy hook bana, commit push + live verify. Login: `https://rachitportfolio-fawn.vercel.app/admin` (email `rachitsharma999088@gmail.com`, password `C:\Users\fvcvv\AppData\Local\Temp\opencode\setup\admin-credentials.txt`).
-- [ ] **`/admin` se ek real post publish karke end-to-end test** — save → deploy trigger → naya post sitemap me dikhe. (Code path verify ho chuka hai, par ek live save abhi tak nahi kiya gaya.)
-- [ ] **Admin password yaad kar lo / rotate karo** — abhi `admin-credentials.txt` me hai, wo file delete karke Supabase → Authentication → Users → Reset password se strong naya password set kar lo.
+- [x] **`/admin` se ek real post publish karke end-to-end test** — **DONE (`v34`)**. Live production par login → test post → publish → rebuild → `/blog` + `/blog/[slug]` + sitemap 8 URLs verify → delete → cleanup verify. **2 real bugs mile:** (a) `/api/rebuild` 502 (stale `SITE_REBUILD_HOOK` URL format — env fix, code untouched), (b) mera false alarm: naya post default se draft banta hai (`EMPTY.published = false`), toggle state-label hai — bug nahi. Password file bhi audit + securely delete ho chuki. Detail: Changelog `v34`.
+- [x] **Soft-404 on unknown `/blog/<slug>`** — **DONE (`v35`)**. Deleted/nonexistent post URL ab real **HTTP 404** + `noindex` branded page (`dist/404.html`), crawler ko homepage HTML 200 nahi milta. `vercel.json` catch-all hata kar sirf `/admin*` SPA shell. `npm run verify` **71/71**, live `/blog/opencode-e2e-publish-test` 404 (19,552 B), 7 sitemap URLs + `/api/content` intact. Detail: Changelog `v35`.
+- [ ] **`vercel.json` me BOM mat likhna (naya gotcha)** — PS 5.1 `Set-Content -Encoding utf8` aur kabhi kabhi `write` tool UTF-8 BOM prefix de dete hain → Vercel deploy se pehle `Couldn't parse JSON file` fail. Is file ko Node se `fs.writeFileSync(target, text, 'utf8')` se likho, aur har baar `[...buf.slice(0,4)]` se verify karo (`[123,...]` = `{`, BOM hoga to `[239,187,191,...]`). Changelog `v35`.
+- [ ] **Deploy-hook URL rotate karo (recommend)** — `SITE_REBUILD_HOOK` ka URL is session ke transcript me aa gaya hai. Hook URL jiska koi bhi haath ho wo spam deploys trigger kar sakta hai. `vercel deploy-hooks rm cms-rebuild` → naya banao → env update. Sirf tab karna hai jab user bole (env change + deploy chahiye).
+- [ ] **Admin password rotate karo (ab safe hai)** — `admin-credentials.txt` **delete ho chuki hai** (2-pass overwrite + remove, residual search clean). Supabase → Authentication → Users → `rachitsharma999088@gmail.com` → **Reset password** se strong naya password set karo. `v34` me confirm kiya: kuch nahi tootega (koi hardcode/env/localStorage me password nahi, `/api/rebuild` sirf JWT verify karta hai). Expected side-effect: purane refresh sessions invalid → dobara login.
+- [x] **Soft-404 on unknown `/blog/<slug>`** — **DONE (`v35`)**, upar wala entry dekho. (Ye purana duplicate note ab close hai.)
 - [ ] **Custom domain par `SITE_URL` update** — abhi `https://rachitportfolio-fawn.vercel.app` set hai. Domain change karoge to Vercel env me `SITE_URL` bhi badalna (canonical/sitemap usi se bante hain).
 - [ ] **Supabase storage me images migrate** — abhi `site_settings` me local paths (`/assets/hero-base.webp`) hain. Admin → Images se upload karne par Supabase Storage URLs set ho jayenge.
 - [x] **`v30` commit + push `main` + live confirm** — commit `1d6e616`, Vercel auto-deploy ~45 s, live CDP form test → "Message sent ✓" + `POST /api/send-email` 200. Mail me check kar (spam folder bhi): subject `New enquiry — ... (from OpenCode Test)` / `CDP Form Test`.

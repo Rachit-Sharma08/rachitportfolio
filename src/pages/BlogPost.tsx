@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import RichText from '../components/RichText'
 import { Reveal } from '../components/Reveal'
+import NotFound from './NotFound'
 import { useSiteContent } from '../lib/content'
 import { renderMarkdown } from '../lib/markdown'
 import { applyArticleSchema, applyMeta, clearArticleSchema } from '../lib/seo'
@@ -58,30 +59,12 @@ export default function BlogPost() {
   }, [slug])
 
   if (!post) {
-    return (
-      <main id="main" tabIndex={-1} className="section section-glow pt-32 md:pt-40">
-        <div className="shell">
-          <div className="shell-inner">
-            <div className="eyebrow mb-5">Journal</div>
-            <h1 className="text-4xl font-extrabold tracking-[-0.03em] text-text-primary md:text-6xl">
-              That post isn&rsquo;t here
-            </h1>
-            <p className="mt-5 max-w-md text-base text-muted">
-              It may still be a draft, or the link could be out of date. Everything
-              that is published is on the Journal page.
-            </p>
-            <Link
-              to="/blog"
-              data-no-intercept
-              className="pill pill-primary mt-8 inline-flex items-center gap-2 px-5 py-2.5 text-sm"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back to the Journal
-            </Link>
-          </div>
-        </div>
-      </main>
-    )
+    // Not this component's own not-found block. A missing slug is the single
+    // most common 404 on this site — every post ever deleted leaves one behind —
+    // and there is only one 404.html, so a second copy of the same idea would
+    // guarantee the pre-rendered HTML and the hydrated DOM drift apart. The
+    // crawler would read one page and the visitor the other.
+    return <NotFound />
   }
 
   const date = formatDate(post.publishedAt)
