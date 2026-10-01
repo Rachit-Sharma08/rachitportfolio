@@ -35,6 +35,7 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v36`) — Hero `<h1>` ka accessible name fix (LOCAL, push nahi kiya):** v35 ke end me report hua tha — hero h1 ke 3 `.hero-rise` spans block-level hain, to JSX whitespace drop kar deta hai aur computed accessible name **run-on `"I'mRachitDigital Marketer"`** ban raha tha (dikhta nahi, sirf screen-reader/plain-text me sunai deta hai). Fix = h1 par **`aria-label="I'm Rachit Digital Marketer"`** (wahi pattern jo `RevealHeading.tsx:107` pehle se use karta hai). **Visible markup/class/animation ZERO change** — commit `3e7da23`, 1 file. Proof: CSS byte-identical (`index-B_mFEhA3.css`, SHA `8CB4AC9A975F`, 57,682 B), 12 hero webp byte-identical, homepage HTML ka **sole** delta `+46` chars = exactly the attribute, 3 hero-less routes (404/resume/blog) sirf 8-char chunk hash swap. Lint 0 errors (same 6 pre-existing warnings), `npm run verify` **71/71**. ⚠️ **Screenshot pixel-diff is USELESS on this page** — same build ke 2 loads ~17% pixels differ (Jaccard 0.923 vs treatment), isliye deterministic artifacts hi evidence maano. Detail: Changelog `v36`.
 - **NEW (`v35`) — SOFT-404 FIXED: deleted post URLs ab real HTTP 404 + `noindex` page (LIVE):** v34 me observe kiya tha ki deleted post URL par catch-all **homepage HTML 200** serve karta hai. Fix 2 halves me hai, **dono zaroori hain** (sirf ek karna soft-404 chhod deta): (a) `scripts/prerender.mjs` ab `dist/404.html` likhta hai, (b) `vercel.json` ka catch-all hata kar sirf `/admin` + `/admin/:path*` SPA shell maana gaya. `NotFound.tsx` = single 404 component (ab `BlogPost` bhi missing slug par yahi render karta hai — warna prerender aur runtime alag page dikhate). `App.tsx` me `wasAdmin` ref guard: `Shell` har public render pe `setIndexable()` call karta tha, jo 404 document ke `noindex` ko `index, follow` se overwrite kar deta tha. `npm run verify` **71/71**. Live: `/blog/opencode-e2e-publish-test` **404** (19,552 B), 7 sitemap URLs intact, `/api/content` 200. Commit **`7efbfff`** push + auto-deploy `rachitportfolio-2hesk0776` **● Ready**; live par 100 assertions + hydrated runtime + `noindex` leak test pass. Detail: Changelog `v35`.
 - **NEW (`v34`) — LIVE `/admin` end-to-end test done + REAL BUG FIXED:** publish par `/api/rebuild` **502** de raha tha (`hook_failed`, 415) → **root cause = stale `SITE_REBUILD_HOOK` env value** (Vercel ne deploy-hook URL format badal diya: 4-segment legacy `<32-char-id>` → 5-segment `<projectId>/<hookId>`). **Code me koi bug nahi tha — `api/rebuild.ts` me 0 line change.** Env var fix + ek CLI deploy → ab `/api/rebuild` **202 `{"triggered":true}`**. Ye matlab **"publish" button ka crawler-facing half pehle se kaam hi nahi karta tha** (naya post DB me chala gaya, par `/blog` + sitemap me nahi aata tha kyunki v31 `staticRef` baked HTML hi dikhata hai). Password file audit + secure delete bhi done. Detail: Changelog `v34`.
 - **NEW (`v33`) — hero 600 tier + PERFORMANCE WORK CLOSED OUT (user ka explicit instruction):** DPR-2 phone pe hero 720 ki jagah 600 tier lagti hai → **189,504 → 140,278 B (-26%)** hero pair par, teeno impacted device classes (412×823@2, 390×844@2, 1440×900@1) me. Yehi image LCP element hai. `Hero.tsx` ka entrance **byte-for-byte untouched** — koi animation/LCP experiment nahi. Thin-margin ka rationale (base 0.9804 vs 0.98 bar) + region split + alignment proof Changelog `v33` me. ⚠️ **Ab koi naya image/animation optimization pass mat chalao** jab tak user kuch naya na bolе. Detail: Changelog `v33`.
@@ -102,6 +103,49 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v36 — Hero h1 accessible name: run-on `"I'mRachitDigital Marketer"` fix] — 1 Oct 2026
+**User ka brief:** v35 ke "pre-existing, fix nahi kiya" list me ek item tha — hero `<h1>` ka accessible name words ko jode hua hai. Fix karo, **apne aap me isolated change**, visible markup/animation ko haath mat lagao, phir **sirf yahi ek change** report karo (baaki kuch mix nahi).
+
+**Root cause (code me confirm, guess nahi):** `Hero.tsx:233-243` — ek hi `<h1 id="home-heading">` ke andar 3 `.hero-rise` spans, teeno `block`. JSX block children ke beech whitespace drop kar deta hai, isliye live `textContent` = `"I'mRachitDigital Marketer"`. `innerText` theek hai (`"I'm\nRACHIT\nDigital Marketer"`, `uppercase` transform + block newlines) — isiliye **dikhata nahi**, sirf accessible-name computation me sunai deta hai. `RevealHeading` wale headings safe hain (wahan `aria-label` pehle se hai, `RevealHeading.tsx:107`).
+
+**Fix (1 file, `3e7da23`):** h1 par `aria-label="I'm Rachit Digital Marketer"`. Bas. Comment bhi expand kiya taaki agli baar koi spans reorder kare to na bhoolे ki label sync karna hai. Visible markup, 3 spans, unki classes, GSAP entrance — **sab byte-for-byte untouched** (`git diff -U0` me sirf attribute + comment dikha).
+
+**Deterministic proof (yehi primary evidence hai):**
+| artifact | result |
+|---|---|
+| `assets/index-B_mFEhA3.css` | **byte-identical**, SHA `8CB4AC9A975F`, 57,682 B → zero styling/animation change |
+| all 12 `hero-{base,reveal}-*.webp` | **byte-identical** |
+| `dist/index.html` | char-diff: common prefix 3303 / suffix 45139, delta = **+46 chars** = exactly ` aria-label="I&#x27;m Rachit Digital Marketer"` |
+| `404.html` / `resume` / `blog` | byte-length **identical**, sirf 8-char JS chunk hash swap (`jVy7vhIw`→`DbzRhCl1`) → label homepage ke alawa kahin nahi |
+| `sitemap` / `robots` / `llms.txt` | identical |
+| runtime computed styles | 3 spans ki `textContent`/`className`/`opacity`/`transform`, `hero-rise` count (5), figure rect (`530.7916870117188/180/540/720`), 600 tier, base unmasked + reveal masked, `overflowX 0` — **before ke saath exact same** |
+| `npm run lint` | **0 errors**, same 6 pre-existing warnings (4 `only-export-components` + 2 `set-state-in-effect`); `Hero.tsx` se 0 naye |
+| `npm run verify` | **71 PASS / 0 FAIL** |
+
+**🐢 Screenshot pixel-diff USELESS nikla — aur ye jaan-na zaroori hai:**
+Pehle 2 builds ke viewport screenshot ka diff **19.7% pixels, max Δ179** aaya — `aria-label` (non-rendered attribute) itna nahi kar sakta, to maine control experiment kiya: **same build ke 2 loads**. Result:
+
+| comparison | changed px | % |
+|---|---|---|
+| control a vs b (same build) | 226,212 | **17.45%** |
+| control c vs d (same build) | 221,103 | **17.06%** |
+| **treatment (before vs after)** | **225,154** | **17.37%** |
+| treatment − (union of both noise sets) | 1,090 | 0.084% |
+
+**Jaccard(treatment, noise) = 0.923** → treatment apne aap me control noise ka subset hai. Yaani **is page ka raster output hi ~17% nondeterministic hai** (candidate: WebP + mask + `backdrop-filter` compositing), isliye pixel diff 17% se chhoti koi cheez resolve hi nahi kar sakta — aur mera change uske andar hai. Isliye **screenshot ko proof mat maano, deterministic artifacts ko maano.**
+
+⚠️ **Do hypotheses maine test karke DISCARD kiye (guess maan kar nahi chala):** (a) "cursor-reveal mask ka `--r` lerp chal raha hai" — 8 samples me `--r` **0px aur stable** tha; (b) "image tier alag select ho rahi hai" — dono builds me `currentSrc` **`hero-base-600.webp`**, natural 540×720, rendered 540×720, DPR same. Dono galat. Asli noise source isolate nahi hua (sirf itna pata ki background/top-bar **0.00%** change hote hain jabki figure **57%** — matlab noise figure compositing me hai).
+
+**Do environment gotchas (naye):**
+1. **`Hero.tsx` ka entrance `prefers-reduced-motion` honor NAHI karta.** `Hero.tsx:38-44` me timeline plain `gsap.context()`/`gsap.timeline()` hai — `gsap.matchMedia()` se wrapped nahi. Line 66 ka `reduce` matchMedia **sirf cursor auto-sweep** chalata hai, entrance ko nahi. Isliye reduced-motion emulate karke bhi hero animate hota hai. Contrast: `useWorkStackAnim.ts:48` sahi tarah `mm.add('(prefers-reduced-motion: no-preference)')` use karta hai, `Reveal.tsx`/`RevealHeading.tsx` `useReducedMotion()` se gate karte hain. **Ye pre-existing hai aur maine chhua nahi** (user ne animation touch na karne ko kaha tha) — sirf report.
+2. **Deterministic screenshot ka gate "settled" hona chahiye, reduced-motion nahi.** `waitForFunction` se wait kiya: `.hero-rise` + `.hero-photo` ka `opacity === '1'` aur `transform` identity. Pehla measurement galti se "settled" lag raha tha sirf isliye ki kuch tool round-trips beech me animation khatam ho gayi thi.
+
+**Verification ke liye local preview setup (koi repo change nahi):** naya `dist` → `npx vite preview --port 4188`; saved baseline → `npx vite preview --outDir <dist-before> --port 4189`. ⚠️ `Start-Job` se start kiya to **tool call khatam hote hi process mar gaya** — `Start-Process cmd /c` use karo, warna `ERR_CONNECTION_REFUSED`. Element-screenshot bhi Lenis ki wajah se **"waiting for element to be stable" pe timeout** hota hai (`scrollIntoView` Lenis se fight karta hai) — plain `page.screenshot()` + `animations:'disabled'` use karo.
+
+**Console:** 2 errors, dono builds par identical — `rachit-api.onrender.com/health` CORS blocked from `localhost:4188/4189`. Ye ** mera nahi**: Render ka CORS allowlist sirf `localhost:5173/4173` + prod allow karta hai, maine 4188/4189 use kiye. `Hero.tsx` se koi error nahi.
+
+**Files changed (v36):** MOD `src/components/Hero.tsx` (attribute + comment). `AGENTS.md` alag docs commit me. **Commit `3e7da23`, 1 file, push NAHI kiya** (user ne push nahi kaha; v35 push ho chuka hai).
 
 ### [v35 — Soft-404 fix: deleted blog URLs ab real HTTP 404 + `noindex`] — 1 Oct 2026
 **User ka brief:** v34 ke end me ek pre-existing observation note kiya tha — deleted post URL par catch-all **homepage HTML 200** serve karta hai → crawler ke liye soft-404. Ab isko fix karo, baaki sab kuch untouched rakhkar.
