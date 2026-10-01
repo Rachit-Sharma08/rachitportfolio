@@ -229,8 +229,14 @@ export default function Hero({ ready = true }: HeroProps) {
           {/* One h1 for the whole hero statement. The three lines stay separate
               mask/rise targets so the GSAP stagger and typography are unchanged.
               Keeping a single h1 gives crawlers and screen readers the full
-              "I'm Rachit — Digital Marketer" headline instead of just the name. */}
-          <h1 id="home-heading">
+              "I'm Rachit — Digital Marketer" headline instead of just the name.
+
+              The aria-label is what actually delivers that. The three spans are
+              block-level, so JSX drops the whitespace between them and the h1's
+              computed name was "I'mRachitDigital Marketer" — one run-on string.
+              Nothing visible changes; the label only supplies the word breaks a
+              screen reader needs. Keep it in sync with the spans below. */}
+          <h1 id="home-heading" aria-label="I'm Rachit Digital Marketer">
             <span className="hero-rise block font-display text-lg italic text-muted sm:text-xl">
               I&apos;m
             </span>
