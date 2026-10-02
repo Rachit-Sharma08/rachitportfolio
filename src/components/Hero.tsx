@@ -34,27 +34,46 @@ export default function Hero({ ready = true }: HeroProps) {
   const baseSrc = settings.heroBaseUrl || HERO_IMAGES.base
   const revealSrc = settings.heroRevealUrl || HERO_IMAGES.reveal
 
+  /**
+   * Entrance timeline, gated on `no-preference` so the OS-level "reduce motion"
+   * setting leaves the hero fully painted instead of hiding content behind a
+   * tween it will never play — same reason the projects section gates its
+   * ScrollTrigger work the same way (see useWorkStackAnim).
+   *
+   * The branch is the timeline verbatim, so a default visitor's animation is
+   * unchanged. `gsap.matchMedia()` inherits the enclosing scoped context's
+   * selector, so the `'.hero-rise'` / `'.hero-photo'` lookups below still
+   * resolve inside `sectionRef`.
+   */
   useEffect(() => {
+    const mm = gsap.matchMedia()
+
     const ctx = gsap.context(() => {
-      if (!ready) {
-        gsap.set('.hero-rise', { opacity: 0, y: 40 })
-        gsap.set('.hero-photo', { opacity: 0, y: 70, scale: 0.98 })
-        return
-      }
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      tl.fromTo(
-        '.hero-photo',
-        { opacity: 0, y: 70, scale: 0.98 },
-        { opacity: 1, y: 0, scale: 1, duration: 1.4 },
-        0,
-      ).fromTo(
-        '.hero-rise',
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 1.1, stagger: 0.09 },
-        0.3,
-      )
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        if (!ready) {
+          gsap.set('.hero-rise', { opacity: 0, y: 40 })
+          gsap.set('.hero-photo', { opacity: 0, y: 70, scale: 0.98 })
+          return
+        }
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+        tl.fromTo(
+          '.hero-photo',
+          { opacity: 0, y: 70, scale: 0.98 },
+          { opacity: 1, y: 0, scale: 1, duration: 1.4 },
+          0,
+        ).fromTo(
+          '.hero-rise',
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 1.1, stagger: 0.09 },
+          0.3,
+        )
+      })
     }, sectionRef)
-    return () => ctx.revert()
+
+    return () => {
+      mm.revert()
+      ctx.revert()
+    }
   }, [ready])
 
   useEffect(() => {
