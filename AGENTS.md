@@ -145,6 +145,8 @@
 
 **Files changed (v38):** MOD `src/data.ts`, `supabase/seed.sql`, `scripts/verify-prerender.mjs`, `AGENTS.md`. **0 runtime component change** — naya project Supabase se aata hai, code path wahi hai jo pehle se hai.
 
+**🚀 LIVE (commit `8d455b0`, push `ddc0cb8..8d455b0` → Vercel auto-deploy):** entry chunk `BQJq128K` → **`DIo28R-V`** (deploy ~10 s me detect), `/` **63,761 B**, teeno baked cards + ordinals `01/02/03` intact, `Upcoming Game`/`Video Edit Reel`/`Coming soon` absent, inline snapshot `displayOrder 1/2/3` (Supabase se, zero-based nahi). Hydrated runtime same shape — 3 sticky cards `1272×602`, `transform matrix(1,0,0,1,0,0)`, counter `01 / 03`, `overflowX 0`. **Regression sweep:** `/resume` 24,718 · `/blog` 26,214 · `/admin` 200 shell · `/sitemap.xml` **7 URLs, sab 200** (4 post pages 24,807–25,495 B) · `/robots.txt` 117 · `/llms.txt` 1,904 · `/api/content` 11,895 · `/api/rebuild` **405** · 2 unknown paths **404** 19,555 B (v35 soft-404 fix still holds) · `hero-base-600.webp` **49,860 B** byte-identical to local. ⚠️ **Image bytes `res.text()` se mat naapo** — UTF-8 decode karke 47,177 dikhata hai, asli 49,860 hai (`arrayBuffer()` use karo).
+
 ### [v37 — Hero entrance ab `prefers-reduced-motion` honor karta hai (v36 + v37 ek saath push)] — 2 Oct 2026
 **User ka brief:** (1) v36 push karo + live verify karo, (2) v36 me flag kiya tha ki `Hero.tsx` ka entrance `prefers-reduced-motion` honor **nahi** karta — `useWorkStackAnim.ts` wale pattern se fix karo, **sirf** reduced-motion users ke liye behavior badle, baaki sab ka animation **pixel-identical** rahe, aur dono **ek saath push** karo.
 
