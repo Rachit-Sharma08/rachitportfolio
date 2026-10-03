@@ -1261,7 +1261,14 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 
 ## 📌 Todo / Pending
 
-- [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge.
+### 🔴 Agle session ke liye — sirf 3 cheezein (user 3 Oct 2026 ko so gaya, repo clean + pushed hai)
+
+1. **`/admin` se koi ek project save/publish karo → `/api/rebuild` par 202 `{"triggered":true}` confirm karo.** Ye **sirf user** kar sakta hai (login maangta hai), isliye kisi bhi agent ke liye verify nahi hua. v34 me isi step par 502 mila tha (stale hook URL) — ab hook rotate ho chuka hai + 5-segment format + env redeploy ho chuka hai, to **202 aana chahiye**. Agar 502/415 aaye to `SITE_REBUILD_HOOK` env stale hai (Vercel dashboard se value compare karne ke liye: naya hook URL **5-segment** hona chahiye `.../v1/integrations/deploy/<projectId>/<hookId>`, 4-segment legacy nahi).
+2. **Deploy-hook **dobara** rotate karna (optional, sirf agar active value ko git history se protect karna hai)** — v39 me HEAD se value hata di gayi, **par `92e37cd` commit me wo abhi bhi hai** aur HEAD clean karna history safe nahi karta. Purana hook already delete+rotate ho chuka tha (wo neutralized), nayi active value ke liye ek aur rotation chahiye. Agent kar sakta hai (`vercel deploy-hooks create` → `vercel env rm/add SITE_REBUILD_HOOK --value <new> --sensitive` → purana rm → `vercel --prod --yes`), **par value kahin file me likhi nahi jaani**. User ka faisla pending hai — pucho, khud mat karo.
+3. **Supabase admin password rotate** — sirf user dashboard se (Dashboard → Authentication → Users → `ADMIN_EMAIL` wala user → Reset password). Agent ke paas service-role key nahi, isliye **API se nahi ho sakta**. Safe hai: password React state me hi rehta hai, kahin hardcode nahi.
+
+### Baaki pending (lower priority)
+- [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge. ⚠️ **v38 ke session me user ne research ke liye Hermes use karne se mana kar diya** — tab tak `websearch`/`webfetch` use karo.
 - [ ] ~~**Hermes CLI install karo**~~ — **DONE (30 Sep 2026)**: `D:\hermes` par install, `D:\hermes\bin` user PATH me, `HERMES_HOME=D:\hermes` User env, gateway + watchdog restart-proof. Detail: global `C:\Users\fvcvv\.config\opencode\AGENTS.md` me poora reference + status block. Research tab tak `websearch` se, jab tak `hermes setup` na ho.
 - [x] **Perf pass (v31) P2 — image delivery: square-crop + q85 + 320 tier (portrait) + 896 tier (hero)** — DONE, commit `adc291d`. Changelog `v32`.
 - [x] **`v31` P1 — inline content snapshot, zero runtime API calls** — DONE, commit `eda1bda`, live verify ho chuka (`/api/content` 0 requests, `/health` idle-deferred). Changelog `v31`.
@@ -1300,7 +1307,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - [ ] Instagram real profile link lagana (`src/data.ts`)
 - [ ] `VIDEO_SRC` ko real video (HLS/MP4) se replace karna
 - [ ] Resend email `from` abhi `onboarding@resend.dev` hai — custom domain verify karne par apna domain use kar sakte ho (`server/index.js`)
-- [ ] "Coming soon" project cards ko real projects se replace karna
+- [x] ~~**"Coming soon" project cards ko real projects se replace karna**~~ — **DONE (`v38`)**: DB se dono placeholder projects (`Upcoming Game`, `Video Edit Reel`) delete ho chuke, ab **3 real projects** hain (Fitness Website → Neon Car Racing → AI Assistant Chatbot). Repo ki 3 static copies bhi sync (`src/data.ts`, `supabase/seed.sql`, `verify-prerender.mjs`). Detail: Changelog `v38`.
 - [ ] API keys (`RENDER_API_KEY`, `RESEND_API_KEY`) chat me share hue — **optional: rotate karna** (safe side)
 - [ ] 3 GitHub PATs chat me share hue — active wala hai (workflow file usi se bani). **Optional: abhi tokens zinda hain, koi action zaroori nahi; par agar chaho to GitHub → Settings → Tokens se rotate karo.**
 
