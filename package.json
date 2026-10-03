@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && vite build --ssr src/prerender.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "verify": "node scripts/verify-prerender.mjs",
+    "secrets:check": "node scripts/check-secrets.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

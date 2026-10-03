@@ -13,7 +13,7 @@
    - Log mein naya entry add karo (`## Changelog` section ke andar latest entry sabse UPAR).
    - Project state badli ho to `## Current State` update karo.
    - Koi pending/reh gaya kaam ho to `## Todo / Pending` me daal do.
-3. **Secrets NEVER yahan** — GitHub token, password, API keys is file me kabhi mat likhna. Secrets ko repo me kabhi commit nahi karna.
+3. **🔒 Secrets NEVER — kisi bhi file me (3 Oct 2026 user rule)** — GitHub PAT, password, API key, **deploy-hook URL, Vercel project ID (`prj_…`), hook ID, Supabase project URL** — ye **kisi bhi** file me (is file samet, koi bhi `.md`/`.ts`/`.tsx`/`.sql`/`.json`) **mat likhna**. Partial prefix bhi nahi (`ghp_b9Z…` jaisa). Value sirf Vercel/Supabase env me rehti hai; docs me bas itna likho: `"rotated on <date>, value only in Vercel env"`. **Commit se pehle `npm run secrets:check` chalao** (`scripts/check-secrets.mjs` — 12 patterns, tracked files, exit 1 on hit). ⚠️ **HEAD se hatane se git history me value safe nahi hoti** — agar koi secret commit ho gaya hai to **rotate** karo (purana value invalid karna = history redact karne jitna hi kaam karta hai). Is project me deploy-hook + `prj_…` ek baar commit ho chuke the; v39 me head se hata diye gaye, par tab bhi **dobaara rotate** karna padega.
 4. **Baat-cheet ka record** — User ke saath jo bhi important decision/correction hua, use Changelog me likho taaki next agent ko pata ho.
 5. **Code conventions follow karo** — React + TypeScript + Vite + Tailwind CSS v4 + Framer Motion + GSAP. Existing pattern/style copy karo, unwanted comments mat daalo.
 6. **Verification** — Har change ke baad `npm run lint` chalao. Build check ke liye `npm run build` chalao.
@@ -34,6 +34,8 @@
 ---
 
 ## 🧱 Current State (as of last update)
+
+- **NEW (`v39`) — secrets hygiene pass + enforceable check:** repo se **6 credential leaks** hataye (deploy-hook URL + Vercel project ID `prj_…` + hook ID + Supabase project URL + GitHub PAT partial prefix ×2 + Render key partial prefix). Rule #3 ab "**kisi bhi** file me" + partial prefix ban + `npm run secrets:check` commit se pehle mandatory. NEW `scripts/check-secrets.mjs` (12 patterns, tracked files, exit 1 on hit) — pattern list jaan-boojh kar `AGENTS.md` me nahi rakhi. **0 runtime change.** ⚠️ **History me ab bhi hai** — `92e37cd` me nayi (active) hook value, `24f3336` me purana project ID; HEAD clean karna history safe nahi karta. Purana hook already rotate+delete ho chuka hai (wo neutralized), nayi active value ke liye **ek aur rotation chahiye** (user ka faisla pending). Detail: Changelog `v39`.
 
 - **NEW (`v38`) — admin panel se add kiya gaya 3rd project ("AI Assistant Chatbot") repo + live dono me confirm, static copies sync:** user ne `/admin` → Projects se **AI Assistant Chatbot** add kiya (`display_order 3`, GitHub `rachithunyawrr/ai-assistant`, image Supabase Storage `site-media/projects/Cinematic Laptop AI Assistant Showcase.webp`). **Debounce deploy already ho chuka tha** — live `/` par 3 baked cards (63,917 B), runtime 3 sticky cards + counter `01 / 03`, teeno images decode (socialify ×2 1280×640 + naya webp 1586×992), GitHub CTA sahi, **0 console errors / 0 exceptions / 0 failed requests**, `overflowX 0`. Repo me 3 static copies ab DB se out of sync thi — teeno fix: (a) `src/data.ts` `PROJECTS` 4 → **3** entries + naya project 3rd, (b) `supabase/seed.sql` same 3 rows (`display_order 1-3`), (c) `scripts/verify-prerender.mjs:170` ka hardcoded `4` → `3`. Saath me 2 **dead fields** purge: `Project.aspect` + `Project.span` (v24 ke baad koi read nahi karta — repo-wide grep me sirf definition + 4 assignments). Lint 0 errors (same 6 pre-existing warnings), build pass, `npm run verify` **All checks passed** (71/71). Detail: Changelog `v38`.
 
@@ -106,6 +108,29 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v39 — Secrets hygiene: deploy-hook URL/project ID hataye + `npm run secrets:check`] — 3 Oct 2026
+**User ka brief:** "AGENTS.md line ~1254 me deploy hook ka poora URL likha hai. Wo URL aur ID hata do, bas 'rotated on <date>, value only in Vercel env' jaisa note rakho. Pure repo me git grep karke dekho ki project ID ya hook ID kahin aur to nahi. Aage se kisi bhi file me URL, token, password ya key mat likhna. Fix commit karke push karo."
+
+**Repo-wide audit — 6 leaks mile, sab hataye (HEAD se):**
+
+| file:line | kya tha | action |
+|---|---|---|
+| `AGENTS.md:1254` | poora deploy-hook URL + Vercel project ID + hook ID | 🔒 hata diya → "rotated 3 Oct 2026, value only in Vercel env" note. Naam `cms-rebuild-new` rakha (label hai, URL me nahi hota — dhoondhne ke liye useful) |
+| `AGENTS.md:975` | v18 entry me **Vercel project ID** | 🔒 hata diya → "dashboard / `.vercel/project.json` se dekho" |
+| `AGENTS.md:623` | Supabase project URL (bare) + admin email | 🔒 URL hata diya → Vercel env `VITE_SUPABASE_URL` ka reference. Email bhi hata diya (already env me hai) |
+| `AGENTS.md:1082`, `:1280` | GitHub PAT ka **partial prefix** (`ghp_b9Z…`, 2 baar) | 🔒 hata diya — partial prefix bhi nahi likhna |
+| `AGENTS.md:1100` | Render API key ka partial prefix | 🔒 hata diya |
+
+**Poora repo scan (12 pattern families, tracked files):** Vercel project ID, deploy-hook URL, GitHub PAT (`gh[porsu]_` + fine-grained), Supabase `sb_secret_`/`sb_publishable_`, Render `rnd_`, Resend `re_`, Google `AIza`, Slack `xox*`, JWT, private-key block. **Final: 0 real value.** Bache hue match sirf `.env.example:43` ka `"starts with sb_secret_..."` — wo **type ka documentation** hai, value nahi.
+
+**NEW `scripts/check-secrets.mjs` + `npm run secrets:check`** — rule #3 ka enforceable counterpart. 12 patterns, `git ls-files` over tracked files, binary + >2 MB skip, khud ko skip (patterns usi me hain warna self-match hoga), **exit 1 on hit**. Pattern list jaan-boojh kar `AGENTS.md` me nahi rakhi — warna rule line khud apne hi regex se match hoti. Output: `clean (112 tracked files, 12 patterns)`.
+
+**Rule #3 ko bhi harden kiya** — ab "is file me" → "**kisi bhi** file me", partial prefix explicit ban, `npm run secrets:check` commit se pehle mandatory, aur ye warning ki **HEAD se hatane se history safe nahi hoti** — rotate karna padta hai.
+
+**⚠️ HISTORY ME AB BHI HAI (ye is commit se fix nahi hota):** `git log --all -S` se confirm — naya hook ID `92e37cd` me, purana project ID `24f3336` (v18) + `92e37cd` me. HEAD clean karne se git history me value safe **nahi** hoti. **Purana hook to already delete + rotate ho chuka hai** (user ne kiya) → wo naya value invalid hai, isliye wo leak **neutralized** hai. **Nayi (active) hook ki value `92e37cd` me hai** — agar wo bhi protect karni hai to hook **ek baar aur rotate** karna padega (pending, user ka faisla).
+
+**Verify:** `npm run secrets:check` **clean (112 files, 12 patterns)** · `npm run lint` **0 errors** (same 6 pre-existing warnings) · `npm run verify` **All checks passed (71/71)** · 0 runtime change (sirf docs + ek docs-grade script + `package.json` me ek script entry). **0 code path badla.**
 
 ### [v38 — 3rd project (AI Assistant Chatbot) applied properly + repo sync] — 3 Oct 2026
 **User ka brief:** "maine ek project add kiya h admin panel ma usko sahi tarike se lagao 3rd no. par or changes github or vercel par push karo" — yaani naya project **3rd position** par chahiye, poori tarah applied hona chahiye, aur changes GitHub + Vercel par push.
@@ -620,7 +645,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - `vercel-setup.ps1` — deploy hook + env vars (`vercel CLI 59.19.0`, login `rachitsharma999088-2207`).
 - `admin-credentials.txt` — generated password (chat me nahi gaya).
 
-**Supabase (`https://rynizhsmvxmvwqvldwkt.supabase.co`):** ⚠️ **Naya API key format** — `sb_publishable_…` (anon) + `sb_secret_…` (service_role), purana `eyJ…` JWT nahi. supabase-js `^2.117.2` dono support karta hai. `schema.sql` + `seed.sql` SQL Editor me chala diye. Verified: anon key + RLS → 4 published posts; `site_story` pe anon → **0 rows** (no anon policy, by design); secret key → 2 story rows; bucket `site-media` public. **Admin user** `rachitsharma999088@gmail.com` banaya + `email_confirm: true` + 24-char random password (`admin-credentials.txt` me).
+**Supabase:** 🔒 project URL repo me nahi likha gaya — Vercel env `VITE_SUPABASE_URL` me hai (`src/data.ts` / `supabase/seed.sql` me jo storage image URLs hain wo **public-bucket assets** hain, anon key + RLS se protected, aur waise bhi client bundle me in rehte hain). ⚠️ **Naya API key format** — `sb_publishable_…` (anon) + `sb_secret_…` (service_role), purana `eyJ…` JWT nahi. supabase-js `^2.117.2` dono support karta hai. `schema.sql` + `seed.sql` SQL Editor me chala diye. Verified: anon key + RLS → 4 published posts; `site_story` pe anon → **0 rows** (no anon policy, by design); secret key → 2 story rows; bucket `site-media` public. **Admin user** email Vercel env `ADMIN_EMAIL` me hai; password 24-char random generate hua tha jo setup ke baad securely delete ho chuka hai.
 
 **Vercel — 7 env vars set:** `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` / `VITE_ADMIN_EMAIL` (`--type config`) + `SUPABASE_SERVICE_ROLE_KEY` / `ADMIN_EMAIL` / `SITE_REBUILD_HOOK` / `SITE_URL` (secret).
 - ⚠️ **`VITE_*` vars `--sensitive` se reject hote hain** — Vercel CLI jaanta hai `VITE_` client bundle me jata hai: *"cannot be a Secret"*. `--type config` chahiye. Ye **correct** hai (anon key RLS se protected hai, public hone layak hai).
@@ -972,7 +997,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - **Render par kuch deploy karne ki zaroorat nahi** — Render sirf API hold karta hai (`rootDir: server`), `/health` 200, `/` 404 (by design). Frontend sirf Vercel par hai.
 
 **Jo maine kiya (interim fix):**
-1. `.vercel/project.json` link folder **missing** tha → `vercel link --project rachitportfolio --yes` (directory me spaces hain isliye `--project` flag zaroori). Project `prj_GiCDhXYMTAsKnW3gFTQnMcMUbkai`.
+1. `.vercel/project.json` link folder **missing** tha → `vercel link --project rachitportfolio --yes` (directory me spaces hain isliye `--project` flag zaroori). 🔒 Project ID repo me **likhi nahi gayi** — Vercel dashboard / `.vercel/project.json` se dekho.
 2. `vercel --prod --yes` → deploy `rachitportfolio-e4m2o9mqc-rachit-09a3.vercel.app`, aliased to **`rachitportfolio-fawn.vercel.app`**.
 3. Verify: live HTML me `hero-base.webp` + `hero-reveal.webp` ✅, `hero-base.webp` 200 / 167,812 B / `image/webp` ✅, `hero-base.png` 404 ✅, live bundle me `https://rachit-api.onrender.com` inline ✅.
 
@@ -1079,7 +1104,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - **Why GitHub Actions, not Render/Vercel cron:** Render cron job type free plan par block (`invalid plan: free` + docs $1/cron/month minimum); Vercel cron Hobby par sirf daily (`Hobby accounts are limited to daily cron jobs`). → GitHub Actions hi ONLY free 10-min scheduler option hai.
 - **PAT `workflow` scope issue solved:** user ne naya PAT banaya (`workflow` scope included). Workflow file **git push se nahi, GitHub Contents API se** create hui — kyunki git push `.github/workflows/` ko `workflow` scope ke bina block karta hai, par Contents API chalti hai.
 - **PowerShell gotcha (important):** YAML here-string `@"..."@` me `$` variables interpolate ho jaate hain → `$i`/`$code` gayab. **Single-quoted `@'...'@` use karo.** Existing file UPDATE par `sha` field miss hota hai to 422 aata hai — pehle file ka current sha fetch karke pass karo.
-- **Token hygiene note:** user ne ab tak 3 `ghp_` PATs chat me share kiye (last wala `ghp_b9Z...` abhi active, workflow file usi se bani). Sab tokens only memory me — AGENTS me kabhi nahi likhe, repo me nahi. Safety: `ghp_b9Z...` rotate karne ke liye GitHub → Settings → Developer settings → PAT.
+- **Token hygiene note:** user ne ab tak 3 GitHub PATs chat me share kiye (last wala abhi active hai, workflow file usi se bani). 🔒 **Koi bhi token value (partial bhi) AGENTS.md me nahi likhi gayi.** Rotate karne ke liye GitHub → Settings → Developer settings → PAT.
 - `git push` ke andar `.github/workflows/` ab repo me committed hai (file Contents API se bani thi, merge ke baad local me aa gayi).
 
 ### [v14 — Fresh Render backend + client-side keep-alive] — 16 Sep 2026
@@ -1097,7 +1122,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - `npm run lint` + `npm run build` pass (same known R3F warnings + chunk-size warning).
 
 ### [v13 — Render backend LIVE via REST API] — 16 Sep 2026
-- **Render API key:** user ne `RENDER_API_KEY` diya (`rnd_MhRE8...`, full in `.env`) — **`.env` me saved (gitignored, repo nahi gayi)**. Safety note: ye key chat me bhi share hui hai — Rotate karne ke liye dashboard → Account Settings → API Keys.
+- **Render API key:** user ne `RENDER_API_KEY` diya — **`.env` me saved (gitignored, repo me nahi hai)**. 🔒 Key ki koi value yahan nahi likhi gayi. Safety note: ye key chat me bhi share hui hai — Rotate karne ke liye dashboard → Account Settings → API Keys.
 - **`brew install render` myth:** Render ka koi CLI/brew package hota hi nahi — user ne galat tutorial dekha tha. Deploy **official Render REST API** (`api.render.com/v1`) se kiya.
 - **Service created via API** `POST /v1/services`:
   - Name `rachit-portfolio-api`, owner `tea-dal7a1jm8hqs73f5i11g` (Rachit's workspace, from `GET /v1/owners`)
@@ -1251,7 +1276,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - [x] **`/admin` se ek real post publish karke end-to-end test** — **DONE (`v34`)**. Live production par login → test post → publish → rebuild → `/blog` + `/blog/[slug]` + sitemap 8 URLs verify → delete → cleanup verify. **2 real bugs mile:** (a) `/api/rebuild` 502 (stale `SITE_REBUILD_HOOK` URL format — env fix, code untouched), (b) mera false alarm: naya post default se draft banta hai (`EMPTY.published = false`), toggle state-label hai — bug nahi. Password file bhi audit + securely delete ho chuki. Detail: Changelog `v34`.
 - [x] **Soft-404 on unknown `/blog/<slug>`** — **DONE (`v35`)**. Deleted/nonexistent post URL ab real **HTTP 404** + `noindex` branded page (`dist/404.html`), crawler ko homepage HTML 200 nahi milta. `vercel.json` catch-all hata kar sirf `/admin*` SPA shell. `npm run verify` **71/71**, live `/blog/opencode-e2e-publish-test` 404 (19,552 B), 7 sitemap URLs + `/api/content` intact. Detail: Changelog `v35`.
 - [ ] **`vercel.json` me BOM mat likhna (naya gotcha)** — PS 5.1 `Set-Content -Encoding utf8` aur kabhi kabhi `write` tool UTF-8 BOM prefix de dete hain → Vercel deploy se pehle `Couldn't parse JSON file` fail. Is file ko Node se `fs.writeFileSync(target, text, 'utf8')` se likho, aur har baar `[...buf.slice(0,4)]` se verify karo (`[123,...]` = `{`, BOM hoga to `[239,187,191,...]`). Changelog `v35`.
-- [x] **Deploy-hook rotation (manual) — user ne kar diya (3 Oct 2026):** purana `cms-rebuild` hat gaya, naya **`cms-rebuild-new`** (id `FLJ16L5Sk2`) bana — URL **5-segment** format me hai (`.../v1/integrations/deploy/prj_GiCDhXYMTAsKnW3gFTQnMcMUbkai/FLJ16L5Sk2`), yaani v34 ka format fix permanent. `SITE_REBUILD_HOOK` (Secret, Production) update hua, aur user ne **khud redeploy** kiya — env change deploy ke baad hi apply hota hai, isliye wahi redefulploy us nayi value ko active karta hai. ⚠️ **Mera galti:** maine `env ls` me `created 18m ago` vs deploys `14m/11m ago` compare karke galat infer kiya ki env update deploy ke baad hua hai — **bada "ago" = purana** hota hai, ulta soch gaya tha. Isliye ek **redundant CLI deploy** (`rachitportfolio-9uuvj96nw`) maar diya — harmless (same HEAD `46c6892`, `/` 63,761 B byte-identical, saare routes verify), par zarurat nahi thi. **Sahi habit:** timestamps ko "bada = naya" mat samjho. Supabase password rotation abhi bhi pending (sirf user dashboard se).
+- [x] **Deploy-hook rotation (manual) — user ne kar diya (3 Oct 2026):** purana hook delete karke naya banaya (naam `cms-rebuild-new`, ref `main`) — Vercel ke **5-segment** URL format me, yaani v34 ka format fix permanent. 🔒 **Hook URL / project ID / hook ID repo me LIKHE NAHI GAYE — value sirf Vercel env me hai (`SITE_REBUILD_HOOK`, Secret/Production).** Wo nayi value tabhi active hui jab user ne **khud redeploy** kiya (env change sirf naye deployment me apply hota hai). ⚠️ **Mera galti:** maine `env ls` ke `created 18m ago` ko deploys ke `14m/11m ago` se compare karke ulta infer kiya — **bada "ago" = purana** hota hai. Isliye ek **redundant CLI deploy** maar diya — harmless (same HEAD, `/` byte-identical, saare routes verify), par zarurat nahi thi. **Sahi habit:** timestamps ko "bada = naya" mat samjho. ⚠️ **History me reh gaya:** nayi hook value ek docs commit (`92e37cd`) me chali gayi thi — HEAD se hatane se wo protect **nahi** hoti. Agar protect karna hai to hook **ek baar aur rotate** karna padega. Supabase password rotation bhi pending (sirf user dashboard se).
 - [x] **Soft-404 on unknown `/blog/<slug>`** — **DONE (`v35`)**, upar wala entry dekho. (Ye purana duplicate note ab close hai.)
 - [ ] **Custom domain par `SITE_URL` update** — abhi `https://rachitportfolio-fawn.vercel.app` set hai. Domain change karoge to Vercel env me `SITE_URL` bhi badalna (canonical/sitemap usi se bante hain).
 - [ ] **Supabase storage me images migrate** — abhi `site_settings` me local paths (`/assets/hero-base.webp`) hain. Admin → Images se upload karne par Supabase Storage URLs set ho jayenge.
@@ -1277,7 +1302,7 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 - [ ] Resend email `from` abhi `onboarding@resend.dev` hai — custom domain verify karne par apna domain use kar sakte ho (`server/index.js`)
 - [ ] "Coming soon" project cards ko real projects se replace karna
 - [ ] API keys (`RENDER_API_KEY`, `RESEND_API_KEY`) chat me share hue — **optional: rotate karna** (safe side)
-- [ ] 3 GitHub PATs (`ghp_`) chat me share hue — active wala `ghp_b9Z...` hai (workflow file usi se bani). **Optional: abhi tokens zinda hain, koi action zaroori nahi; par agar chaho to GitHub → Settings → Tokens se rotate karo.**
+- [ ] 3 GitHub PATs chat me share hue — active wala hai (workflow file usi se bani). **Optional: abhi tokens zinda hain, koi action zaroori nahi; par agar chaho to GitHub → Settings → Tokens se rotate karo.**
 
 ## ✅ Render Backend — DONE via REST API (no dashboard clicks)
 
