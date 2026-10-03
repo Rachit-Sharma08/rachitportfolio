@@ -78,8 +78,6 @@ export interface Project {
   tag: string
   href?: string
   image?: string
-  aspect: string
-  span: string
   comingSoon?: boolean
   accent?: string
   tagline?: string
@@ -87,6 +85,10 @@ export interface Project {
   tech?: string[]
 }
 
+// Mirror of the `projects` rows in Supabase, in display_order. This is only the
+// fallback for when the CMS is unreachable (and what the pre-renderer starts
+// from) — Admin -> Projects is the source of truth once Supabase answers.
+// Keep it in sync with supabase/seed.sql.
 export const PROJECTS: Project[] = [
   {
     title: 'Fitness Website',
@@ -94,8 +96,6 @@ export const PROJECTS: Project[] = [
     href: 'https://github.com/digitalguru99908-dev/Fitness-website',
     image:
       'https://socialify.git.ci/digitalguru99908-dev/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
-    aspect: 'aspect-[4/3] md:aspect-auto',
-    span: 'md:col-span-7',
     accent: '#d62e4a',
     tagline: 'A fitness-focused site built to practice clean UI and real brand messaging.',
     description:
@@ -108,8 +108,6 @@ export const PROJECTS: Project[] = [
     href: 'https://github.com/digitalguru99908-dev/neon-car-racing-game-',
     image:
       'https://socialify.git.ci/digitalguru99908-dev/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
-    aspect: 'aspect-[4/3] md:aspect-auto',
-    span: 'md:col-span-5',
     accent: '#a11f3c',
     tagline: 'A neon-soaked browser racer — built for fun, kept for the speed.',
     description:
@@ -117,28 +115,16 @@ export const PROJECTS: Project[] = [
     tech: ['JavaScript', 'Game Loops', 'Canvas'],
   },
   {
-    title: 'Upcoming Game',
-    tag: 'Work in progress',
-    aspect: 'aspect-[4/3] md:aspect-auto',
-    span: 'md:col-span-5',
-    comingSoon: true,
-    accent: '#7d6a70',
-    tagline: 'Currently in the workshop — shipping soon.',
+    title: 'AI Assistant Chatbot',
+    tag: 'AI · Chatbot',
+    href: 'https://github.com/rachithunyawrr/ai-assistant',
+    image:
+      'https://rynizhsmvxmvwqvldwkt.supabase.co/storage/v1/object/public/site-media/projects/Cinematic%20Laptop%20AI%20Assistant%20Showcase.webp',
+    accent: '#d62e4a',
+    tagline: 'A chatbot that answers questions and helps users get things done',
     description:
-      'A new project is in the works. Details coming soon.',
-    tech: ['Coming Soon'],
-  },
-  {
-    title: 'Video Edit Reel',
-    tag: 'Creative · Editing',
-    aspect: 'aspect-[4/3] md:aspect-auto',
-    span: 'md:col-span-7',
-    comingSoon: true,
-    accent: '#7d6a70',
-    tagline: 'A reel in progress — cut, graded, nearly ready.',
-    description:
-      'Creative editing work currently being crafted. More details soon.',
-    tech: ['Editing', 'Coming Soon'],
+      'An AI assistant chatbot designed to be added to any business website. It greets visitors, answers common questions about the business, and helps them find what they need without waiting for a human reply. I built it with OpenCode and Replit, handling the idea, prompts and testing myself.',
+    tech: ['OpenCode', 'replit'],
   },
 ]
 

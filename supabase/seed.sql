@@ -50,8 +50,8 @@ I''m also starting to build my own AI products. One of them is called **VoiceMem
 
 -- ---------------------------------------------------------------------------
 --  3.  PROJECTS
---  Migrated verbatim from src/data.ts so nothing on Selected Work changes.
---  display_order 1-4 = the order they stack in. No project_url = Coming soon.
+--  Mirrored from src/data.ts, which is itself the fallback for the CMS.
+--  display_order 1-3 = the order they stack in. No project_url = Coming soon.
 -- ---------------------------------------------------------------------------
 insert into public.projects
   (title, category, tagline, description, tech, image_url, project_url, accent, display_order)
@@ -79,26 +79,15 @@ values
   2
 ),
 (
-  'Upcoming Game',
-  'Work in progress',
-  'Currently in the workshop — shipping soon.',
-  'A new project is in the works. Details coming soon.',
-  array['Coming Soon'],
-  null,
-  null,
-  '#7d6a70',
+  'AI Assistant Chatbot',
+  'AI · Chatbot',
+  'A chatbot that answers questions and helps users get things done',
+  'An AI assistant chatbot designed to be added to any business website. It greets visitors, answers common questions about the business, and helps them find what they need without waiting for a human reply. I built it with OpenCode and Replit, handling the idea, prompts and testing myself.',
+  array['OpenCode', 'replit'],
+  'https://rynizhsmvxmvwqvldwkt.supabase.co/storage/v1/object/public/site-media/projects/Cinematic%20Laptop%20AI%20Assistant%20Showcase.webp',
+  'https://github.com/rachithunyawrr/ai-assistant',
+  '#d62e4a',
   3
-),
-(
-  'Video Edit Reel',
-  'Creative · Editing',
-  'A reel in progress — cut, graded, nearly ready.',
-  'Creative editing work currently being crafted. More details soon.',
-  array['Editing', 'Coming Soon'],
-  null,
-  null,
-  '#7d6a70',
-  4
 );
 
 

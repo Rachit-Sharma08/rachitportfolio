@@ -35,6 +35,8 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v38`) — admin panel se add kiya gaya 3rd project ("AI Assistant Chatbot") repo + live dono me confirm, static copies sync:** user ne `/admin` → Projects se **AI Assistant Chatbot** add kiya (`display_order 3`, GitHub `rachithunyawrr/ai-assistant`, image Supabase Storage `site-media/projects/Cinematic Laptop AI Assistant Showcase.webp`). **Debounce deploy already ho chuka tha** — live `/` par 3 baked cards (63,917 B), runtime 3 sticky cards + counter `01 / 03`, teeno images decode (socialify ×2 1280×640 + naya webp 1586×992), GitHub CTA sahi, **0 console errors / 0 exceptions / 0 failed requests**, `overflowX 0`. Repo me 3 static copies ab DB se out of sync thi — teeno fix: (a) `src/data.ts` `PROJECTS` 4 → **3** entries + naya project 3rd, (b) `supabase/seed.sql` same 3 rows (`display_order 1-3`), (c) `scripts/verify-prerender.mjs:170` ka hardcoded `4` → `3`. Saath me 2 **dead fields** purge: `Project.aspect` + `Project.span` (v24 ke baad koi read nahi karta — repo-wide grep me sirf definition + 4 assignments). Lint 0 errors (same 6 pre-existing warnings), build pass, `npm run verify` **All checks passed** (71/71). Detail: Changelog `v38`.
+
 - **NEW (`v37`) — hero entrance ab `prefers-reduced-motion` honor karta hai (LIVE, commit `26fb824`):** v36 me ye gap sirf report hua tha (`Hero.tsx` ka timeline plain `gsap.context()`/`gsap.timeline()` tha, `gsap.matchMedia()` se wrapped nahi) — reduced-motion emulate karke bhi hero poora animate hota tha. Fix = wahi pattern jo `useWorkStackAnim.ts` use karta hai: timeline ko `mm.add('(prefers-reduced-motion: no-preference)', …)` ke andar daala. **Default visitor ka animation byte-for-byte same hai** — minified bundle me timeline body exactly same, sirf wrapper + cleanup badla. Proof: CSS byte-identical (`index-B_mFEhA3.css` SHA `8CB4AC9A975F`, 57,682 B), 12 hero webp byte-identical, 4 prerendered HTML ka sole delta = 8-char JS chunk hash (`DbzRhCl1`→`CKedda2S`), `deltaChars 0`. Runtime 2×2 matrix (before/after build × no-preference/reduce, Node-side polling) — **reduce + after = `opacity ["1"]` only, inline style `null` only, 1 transition** (tween kabhi bana hi nahi) jabki **reduce + before = 10 distinct opacity, 10 photo, `translate(0px,40px)→0`** (bug confirmed). Lint 0 errors, `npm run verify` **71/71**. Live: `/` 64,788 B (v35 ke 64,742 + **exactly +46** = the v36 `aria-label`), `/resume` 24,726 + `/blog` 26,224 + `404` 19,552 byte-identical, 7 sitemap URLs, 0 console errors. Detail: Changelog `v37`.
 - **NEW (`v36`) — Hero `<h1>` ka accessible name fix (LIVE, commit `3e7da23`, v37 ke saath push):** v35 ke end me report hua tha — hero h1 ke 3 `.hero-rise` spans block-level hain, to JSX whitespace drop kar deta hai aur computed accessible name **run-on `"I'mRachitDigital Marketer"`** ban raha tha (dikhta nahi, sirf screen-reader/plain-text me sunai deta hai). Fix = h1 par **`aria-label="I'm Rachit Digital Marketer"`** (wahi pattern jo `RevealHeading.tsx:107` pehle se use karta hai). **Visible markup/class/animation ZERO change** — commit `3e7da23`, 1 file. Proof: CSS byte-identical (`index-B_mFEhA3.css`, SHA `8CB4AC9A975F`, 57,682 B), 12 hero webp byte-identical, homepage HTML ka **sole** delta `+46` chars = exactly the attribute, 3 hero-less routes (404/resume/blog) sirf 8-char chunk hash swap. Lint 0 errors (same 6 pre-existing warnings), `npm run verify` **71/71**. ⚠️ **Screenshot pixel-diff is USELESS on this page** — same build ke 2 loads ~17% pixels differ (Jaccard 0.923 vs treatment), isliye deterministic artifacts hi evidence maano. **Live confirmed in v37's deploy**: prod HTML has `<h1 id="home-heading" aria-label="I'm Rachit Digital Marketer">` and the run-on `I'mRachitDigital Marketer` is absent from the served body. Detail: Changelog `v36`.
 - **NEW (`v35`) — SOFT-404 FIXED: deleted post URLs ab real HTTP 404 + `noindex` page (LIVE):** v34 me observe kiya tha ki deleted post URL par catch-all **homepage HTML 200** serve karta hai. Fix 2 halves me hai, **dono zaroori hain** (sirf ek karna soft-404 chhod deta): (a) `scripts/prerender.mjs` ab `dist/404.html` likhta hai, (b) `vercel.json` ka catch-all hata kar sirf `/admin` + `/admin/:path*` SPA shell maana gaya. `NotFound.tsx` = single 404 component (ab `BlogPost` bhi missing slug par yahi render karta hai — warna prerender aur runtime alag page dikhate). `App.tsx` me `wasAdmin` ref guard: `Shell` har public render pe `setIndexable()` call karta tha, jo 404 document ke `noindex` ko `index, follow` se overwrite kar deta tha. `npm run verify` **71/71**. Live: `/blog/opencode-e2e-publish-test` **404** (19,552 B), 7 sitemap URLs intact, `/api/content` 200. Commit **`7efbfff`** push + auto-deploy `rachitportfolio-2hesk0776` **● Ready**; live par 100 assertions + hydrated runtime + `noindex` leak test pass. Detail: Changelog `v35`.
@@ -104,6 +106,44 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v38 — 3rd project (AI Assistant Chatbot) applied properly + repo sync] — 3 Oct 2026
+**User ka brief:** "maine ek project add kiya h admin panel ma usko sahi tarike se lagao 3rd no. par or changes github or vercel par push karo" — yaani naya project **3rd position** par chahiye, poori tarah applied hona chahiye, aur changes GitHub + Vercel par push.
+
+**STEP 0 — pehle pata laga ki deploy ho chuka hai ya nahi (assume nahi kiya).** `/api/content` pull kiya → **3 projects** (DB me naya row present). Phir live `/` ka raw HTML dekha → **3 baked `data-work-card`**, teeno titles present, `"Coming soon"`/`"Video"` absent. Yaani admin panel ka `requestRebuild()` → `/api/rebuild` → deploy hook → Vercel deploy **sab kaam kar chuka tha** (v34 me fix hua hua `SITE_REBUILD_HOOK` 202 par). `/` ab **63,917 B** (v37 ke 64,788 se chhota — 4 → 3 cards).
+
+**Live runtime verify (system Chrome + Node 24 ka built-in `WebSocket`, CDP se — koi npm dep nahi):**
+| check | result |
+|---|---|
+| `data-work-card` count | **3**, order Fitness → Neon → AI Assistant |
+| per-card ordinal | `01` / `02` / **`03`** (`.font-display` counter, `pad()` dynamic) |
+| section counter | `01 / 03` |
+| CTA | teeno `"View project ↗"` → GitHub, naya wala `rachithunyawrr/ai-assistant` ✅ |
+| tech chips | `UI Design/Responsive/Branding`, `JavaScript/Game Loops/Canvas`, `OpenCode/replit` |
+| images | teeno `complete: true` — socialify ×2 **1280×640**, Supabase webp **1586×992** (92,312 B, HTTP 200 `image/webp`) |
+| `#site-content` snapshot | 3 projects, wahi order |
+| cards (settled, scrollY 0) | teeno **1272×602**, `position: sticky`, media `803×689`, sides LEFT/RIGHT/LEFT alternate ✅ |
+| console / exceptions / failed+4xx requests | **0 / 0 / 0** |
+| `overflowX`, `h1` count, sections | `0`, `1`, 9 sections correct order |
+
+**⚠️ Do measurement traps (harness, code nahi) — dobara mat phaso:**
+1. **Media `803×689` vs expected `698×602`?** Pehla walk-run me media `657` vs `699` dikha. Ye GSAP entrance ka **`scale 1.15`** hai — cards viewport se bahar hain to ScrollTrigger/whileInView fire nahi hua, isliye `.work-media` abhi bhi pre-entrance state me hai (rect 803/1.15 = 698 ✅, aur `left 22` = card left 73 − 51 = 805/2 ka center-offset ✅). Fresh load + scrollY 0 pe `transform: matrix(1,0,0,1,0,0)` mila. **Koi overflow bug nahi.**
+2. **Walk ke baad `657/565`?** Wo **covered-card scrub ka `scale 0.94`** hai (565/602 = 0.9385, 657/699 = 0.9399 — dono ek hi scale). Raw `window.scrollTo` Lenis se ladta hai, isliye page apni jagah nahi laut-pata — `.transform`/`.opacity` padh kar confirm kiya. **Screenshot/rect padhne se pehle transform clear hone ka wait karo.**
+
+**Asli kaam — repo ke 3 static copies DB se out of sync thi:**
+| file | kya badla |
+|---|---|
+| `src/data.ts` | `PROJECTS` 4 → **3** entries. `"Upcoming Game"` + `"Video Edit Reel"` (dono `comingSoon`) hataye, **"AI Assistant Chatbot"** 3rd position par add — DB ke saath **byte-identical** copy (tagline, full description, `['OpenCode','replit']`, accent `#d62e4a`, Supabase Storage image URL, GitHub href). Interface par comment bhi add kiya ki Admin → Projects hi source of truth hai. |
+| `supabase/seed.sql` | Projects block 4 → 3 rows, `display_order 1-3`, comment `1-4` → `1-3`. Taaki koi naya DB setup live DB ke saath match kare. |
+| `scripts/verify-prerender.mjs:170` | `failed query keeps bundled projects` ka hardcoded `4` → `3`. **Ye zaroori tha** — `FALLBACK` ab 3 hai, to purana number red ho jata. |
+
+**Saath me 2 dead fields purge:** `Project.aspect` + `Project.span`. Repo-wide grep me sirf **definition + 4 assignments** mila — koi `project.aspect` / `project.span` read nahi karta (v24 ke sticky-card rewrite ke baad orphan; `col-span`/`aspect-[4/3]` classes ab `SelectedWork.tsx` me hard-coded `lg:w-[55%]` hain). Hata diye taaki naye project ke liye **meaningless values invent** karne na pade. `tsc -b` + `oxlint` ne confirm kiya ki kuch use nahi ho raha.
+
+**Verify:** `npm run lint` **0 errors** (same 6 pre-existing warnings: 4 `only-export-components` + 2 `set-state-in-effect`) · `npm run build` pass — local me service-role key nahi hai to `FALLBACK` bake hua: `[prerender] No Supabase service-role key — using static content`, `/` **56,470 B**, `/resume` 17,902, `/blog` 18,383, `404.html` 12,739, sitemap 3 URLs, `llms.txt` 0 posts · local `dist/index.html` me **3 cards**, teeno titles, teeno `aria-label="View … project on GitHub"`, teeno images (naya Supabase webp bhi) · `npm run verify` **All checks passed (71/71)**.
+
+**Encoding safety:** teeno files verify kiye — `data.ts` first4 `[101,120,112,111]`, `seed.sql` first4 `[45,45,32,61]` (**koi BOM nahi**), U+FFFD **0**, `·` aur `—` sahi. ⚠️ `edit` tool `src/data.ts` ko poora **CRLF** me convert kar deta hai (HEAD LF) — `node fs.writeFileSync` se wapas LF kiya, warna diff poora file dikhta.
+
+**Files changed (v38):** MOD `src/data.ts`, `supabase/seed.sql`, `scripts/verify-prerender.mjs`, `AGENTS.md`. **0 runtime component change** — naya project Supabase se aata hai, code path wahi hai jo pehle se hai.
 
 ### [v37 — Hero entrance ab `prefers-reduced-motion` honor karta hai (v36 + v37 ek saath push)] — 2 Oct 2026
 **User ka brief:** (1) v36 push karo + live verify karo, (2) v36 me flag kiya tha ki `Hero.tsx` ka entrance `prefers-reduced-motion` honor **nahi** karta — `useWorkStackAnim.ts` wale pattern se fix karo, **sirf** reduced-motion users ke liye behavior badle, baaki sab ka animation **pixel-identical** rahe, aur dono **ek saath push** karo.
