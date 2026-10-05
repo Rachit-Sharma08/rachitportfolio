@@ -40,7 +40,7 @@ insert into public.site_story (section_key, content) values
 
 I wanted to do a "Digital Marketing with AI" course early on, but I couldn''t start right away — I had my 12th CBSE boards going on, and some family situations made it hard to begin. After I finished 12th, my family wanted me to take a different course. But I decided to follow what I was actually interested in, so I went ahead and completed the Digital Marketing with AI course anyway.
 
-Now I''m working on real projects — you can check them out on my [GitHub](https://github.com/digitalguru99908-dev) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma).
+Now I''m working on real projects — you can check them out on my [GitHub](https://github.com/rachithunyawrr) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/).
 
 I currently know how to use 25+ AI tools. The ones I use the most are OpenCode (a coding agent), OpenAI''s GPT, ElevenLabs, Cartesia AI, and Claude.
 
@@ -62,8 +62,8 @@ values
   'A fitness-focused site built to practice clean UI and real brand messaging.',
   'A fitness-focused website built to practice clean UI, responsive layout, and brand messaging. Designed to feel energetic, trustworthy, and conversion-friendly across every screen size.',
   array['UI Design', 'Responsive', 'Branding'],
-  'https://socialify.git.ci/digitalguru99908-dev/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
-  'https://github.com/digitalguru99908-dev/Fitness-website',
+  'https://socialify.git.ci/rachithunyawrr/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
+  'https://github.com/rachithunyawrr/Fitness-website',
   '#d62e4a',
   1
 ),
@@ -73,8 +73,8 @@ values
   'A neon-soaked browser racer — built for fun, kept for the speed.',
   'A browser racing game built for fun and practice with JavaScript game loops. Fast, flashy, and built to feel arcade-smooth under the hood.',
   array['JavaScript', 'Game Loops', 'Canvas'],
-  'https://socialify.git.ci/digitalguru99908-dev/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
-  'https://github.com/digitalguru99908-dev/neon-car-racing-game-',
+  'https://socialify.git.ci/rachithunyawrr/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
+  'https://github.com/rachithunyawrr/neon-car-racing-game-',
   '#a11f3c',
   2
 ),

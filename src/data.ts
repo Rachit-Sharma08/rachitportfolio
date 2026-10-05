@@ -5,10 +5,22 @@ export const PERSONAL = {
   phoneHref: 'tel:+918307151186',
 }
 
+/**
+ * The site's one-line answer to "who is this": what he does, in the words an
+ * answer engine can lift without editing. Repeated verbatim as the visible line
+ * at the top of About, as the Person schema description and as the llms.txt
+ * summary — if those three ever disagree, a generated answer is a contradiction.
+ *
+ * Mirrored by `DEFINITION` in scripts/seo-config.mjs (the build half); `npm run
+ * verify` asserts the two strings are byte-identical.
+ */
+export const DEFINITION =
+  'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects.'
+
 export const SOCIALS = {
-  github: 'https://github.com/digitalguru99908-dev',
-  linkedin: 'https://www.linkedin.com/in/rachit-sharma', // TODO: link your real LinkedIn profile
-  instagram: 'https://www.instagram.com/rachitsharma', // TODO: link your real Instagram profile
+  github: 'https://github.com/rachithunyawrr',
+  linkedin: 'https://www.linkedin.com/in/rachit-sharma-ab199443a/',
+  instagram: 'https://www.instagram.com/rachit.08_',
 }
 
 export const SOCIAL_LINKS = [
@@ -93,9 +105,9 @@ export const PROJECTS: Project[] = [
   {
     title: 'Fitness Website',
     tag: 'Web · Fitness',
-    href: 'https://github.com/digitalguru99908-dev/Fitness-website',
+    href: 'https://github.com/rachithunyawrr/Fitness-website',
     image:
-      'https://socialify.git.ci/digitalguru99908-dev/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
+      'https://socialify.git.ci/rachithunyawrr/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
     accent: '#d62e4a',
     tagline: 'A fitness-focused site built to practice clean UI and real brand messaging.',
     description:
@@ -105,9 +117,9 @@ export const PROJECTS: Project[] = [
   {
     title: 'Neon Car Racing',
     tag: 'Web · Game',
-    href: 'https://github.com/digitalguru99908-dev/neon-car-racing-game-',
+    href: 'https://github.com/rachithunyawrr/neon-car-racing-game-',
     image:
-      'https://socialify.git.ci/digitalguru99908-dev/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
+      'https://socialify.git.ci/rachithunyawrr/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
     accent: '#a11f3c',
     tagline: 'A neon-soaked browser racer — built for fun, kept for the speed.',
     description:
@@ -138,7 +150,7 @@ export const STORY = {
 
 I wanted to do a "Digital Marketing with AI" course early on, but I couldn't start right away — I had my 12th CBSE boards going on, and some family situations made it hard to begin. After I finished 12th, my family wanted me to take a different course. But I decided to follow what I was actually interested in, so I went ahead and completed the Digital Marketing with AI course anyway.
 
-Now I'm working on real projects — you can check them out on my [GitHub](https://github.com/digitalguru99908-dev) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma).
+Now I'm working on real projects — you can check them out on my [GitHub](https://github.com/rachithunyawrr) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/).
 
 I currently know how to use 25+ AI tools. The ones I use the most are OpenCode (a coding agent), OpenAI's GPT, ElevenLabs, Cartesia AI, and Claude.
 

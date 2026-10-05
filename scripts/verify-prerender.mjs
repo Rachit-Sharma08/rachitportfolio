@@ -4,7 +4,20 @@
 import { pathToFileURL } from 'node:url'
 import path from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
-import { SITE_URL, NOT_FOUND } from './seo-config.mjs'
+import {
+  SITE_URL,
+  PAGES,
+  NOT_FOUND,
+  DEFINITION,
+  HOME_DESCRIPTION,
+  SOCIALS,
+  TITLE_SEPARATOR,
+  TITLE_MAX,
+  UPDATE_THRESHOLD_MS,
+  postTitle,
+  isMeaningfullyUpdated,
+} from './seo-config.mjs'
+import { headFor } from './head.mjs'
 
 const ssr = await import(
   pathToFileURL(path.join(process.cwd(), 'dist-ssr', 'prerender.js')).href
@@ -129,6 +142,18 @@ check('markdown list rendered', post.includes('<li>Prompt it</li>'), true)
 check('markdown link scheme check drops javascript:', !post.includes('javascript:'), true)
 check('excerpt rendered', post.includes('How a single prompt'), true)
 
+// The byline is the one place a reader is told who wrote the post and given a
+// way to find out, and it has to be a real link with a real target in the HTML —
+// not something the client appends after hydration.
+check('post names its author', post.includes('Rachit Sharma'), true)
+check('post byline links to About', post.includes('href="/#about"'), true)
+check('post shows its publish date', post.includes('<time'), true)
+check('a month-later edit shows as Updated', post.includes('Updated <time'), true)
+
+const sameDatePost = renderRoute('/blog/seo-is-not-dead', content)
+check('a same-instant save shows no Updated line', sameDatePost.includes('Updated <time'), false)
+check('a same-instant save still shows the author', sameDatePost.includes('Rachit Sharma'), true)
+
 const home = renderRoute('/', content)
 check('home uses the uploaded hero image', home.includes('https://x.supabase.co/hero/new.webp'), true)
 check('home falls back for the unset hero layer', home.includes('/assets/hero-reveal.webp'), true)
@@ -197,6 +222,211 @@ check('emptied home still renders', emptiedHome.includes('hero-base.webp'), true
 
 const emptiedBlog = renderRoute('/blog', emptied)
 check('emptied blog shows the empty state', emptiedBlog.includes('No posts published yet'), true)
+
+/* -------------------------------------------------------------------------- */
+/*  Head: titles, canonical, social cards, structured data                   */
+/* -------------------------------------------------------------------------- */
+
+// The head used to be assembled inside prerender.mjs, where the only way to
+// check it was to build the site and read dist/. headFor() is now a pure
+// function, so every tag below is asserted directly — including the cases that
+// are easy to regress and impossible to spot in a screenshot: a post title that
+// overflows, a social card that disagrees with the <title>, a dateModified that
+// appears for a post that was never really edited.
+
+function metaContent(head, key, value) {
+  const match = head.match(new RegExp(`<meta ${key}="${value}" content="([^"]*)" \\/>`))
+  return match ? match[1] : null
+}
+
+function jsonLd(head) {
+  return [
+    ...head.matchAll(/<script type="application\/ld\+json"[^>]*>(.*?)<\/script>/g),
+  ].map((m) => JSON.parse(m[1]))
+}
+
+function types(head) {
+  return jsonLd(head).map((s) => s['@type'])
+}
+
+const homeHead = headFor('/', content)
+const resumeHead = headFor('/resume', content)
+const blogHead = headFor('/blog', content)
+const postHead = headFor('/blog/one-brief-one-campaign-sprint', content)
+const sameDateHead = headFor('/blog/seo-is-not-dead', content)
+
+// --- one definition, stated the same way everywhere -------------------------
+
+const homePerson = jsonLd(homeHead).find((s) => s['@type'] === 'Person')
+check('home Person schema carries the definition', homePerson?.description, DEFINITION)
+check('home Person schema is absolute-URLed', homePerson?.url, `${SITE_URL}/`)
+check('home Person schema has @context', homePerson?.['@context'], 'https://schema.org')
+// The social card is the og card; schema:image is "what does this person look
+// like", so it points at the cut-out rather than the 1200x630 banner.
+check('home Person schema image is the portrait, not the og card', homePerson?.image, `${SITE_URL}/assets/hero-base.webp`)
+check('home Person schema keeps the postal address', homePerson?.address?.addressCountry, 'IN')
+check(
+  'home Person schema sameAs is the current profiles',
+  homePerson?.sameAs,
+  [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram],
+)
+check('home meta description leads with the definition', metaContent(homeHead, 'name', 'description')?.startsWith(DEFINITION), true)
+check('llms summary is the definition, not a second wording', HOME_DESCRIPTION.startsWith(DEFINITION), true)
+check('home page itself states the definition', home.includes(DEFINITION), true)
+
+// --- Person everywhere, WebSite only on the home page -----------------------
+
+check('home emits Person + WebSite', types(homeHead), ['Person', 'WebSite'])
+check('resume emits Person only', types(resumeHead), ['Person'])
+check('blog index emits Person only', types(blogHead), ['Person'])
+check('post emits Person + BlogPosting', types(postHead), ['Person', 'BlogPosting'])
+check(
+  'Person url follows the page it is emitted on',
+  jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.url,
+  `${SITE_URL}/resume`,
+)
+check(
+  'WebSite url is the site root',
+  jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.url,
+  `${SITE_URL}/`,
+)
+
+// --- titles: one string, reused by every tag that repeats it ----------------
+
+check('home <title>', homeHead.includes(`<title>${PAGES['/'].title}</title>`), true)
+check('blog index <title>', blogHead.includes(`<title>${PAGES['/blog'].title}</title>`), true)
+check('post <title> carries the brand', postHead.includes(`<title>${postTitle('One Brief, One Campaign Sprint')}</title>`), true)
+check(
+  'post og:title matches the post <title>',
+  metaContent(postHead, 'property', 'og:title'),
+  postTitle('One Brief, One Campaign Sprint'),
+)
+check(
+  'post twitter:title matches the post <title>',
+  metaContent(postHead, 'name', 'twitter:title'),
+  postTitle('One Brief, One Campaign Sprint'),
+)
+check(
+  'home og:title matches the home <title>',
+  metaContent(homeHead, 'property', 'og:title'),
+  PAGES['/'].title,
+)
+check('post canonical is its own URL', postHead.includes(`<link rel="canonical" href="${SITE_URL}/blog/one-brief-one-campaign-sprint" />`), true)
+check('post og:type is article', metaContent(postHead, 'property', 'og:type'), 'article')
+check('home og:type is website', metaContent(homeHead, 'property', 'og:type'), 'website')
+check(
+  'post og:url matches the canonical',
+  metaContent(postHead, 'property', 'og:url'),
+  `${SITE_URL}/blog/one-brief-one-campaign-sprint`,
+)
+
+// A suffix that pushes the title past the result line is dropped rather than
+// truncated, so the post title is never cut mid-word.
+const LONG_TITLE =
+  "SEO isn't dead — it's just learning to speak AI to search engines"
+check('long post title is not truncated', postTitle(LONG_TITLE), LONG_TITLE)
+check('short post title keeps the brand', postTitle('One Brief'), `One Brief${TITLE_SEPARATOR}Rachit Sharma`)
+check('the branded title stays inside the budget', postTitle('One Brief').length <= TITLE_MAX, true)
+
+// --- dateModified only when the edit is real --------------------------------
+
+const blogPost = (head) => jsonLd(head).find((s) => s['@type'] === 'BlogPosting')
+check('a month-later edit is claimed', blogPost(postHead)?.dateModified, '2026-02-02T10:00:00Z')
+check('a same-instant save is not claimed', blogPost(sameDateHead)?.dateModified, undefined)
+check('dateModified still absent for a same-instant save', JSON.stringify(blogPost(sameDateHead)).includes('dateModified'), false)
+check('datePublished is always claimed', blogPost(sameDateHead)?.datePublished, '2025-12-01T10:00:00Z')
+
+// The gate is Supabase stamping updated_at on every save, so the boundary is the
+// whole feature: a minute-old edit must read as "never edited".
+const edited = (ms) => isMeaningfullyUpdated('2026-01-05T10:00:00Z', new Date(Date.parse('2026-01-05T10:00:00Z') + ms).toISOString())
+check('an edit under the threshold is ignored', edited(60 * 1000), false)
+check('an edit past the threshold counts', edited(UPDATE_THRESHOLD_MS + 1000), true)
+check('an edit exactly on the threshold counts', edited(UPDATE_THRESHOLD_MS), true)
+check('a missing update date is ignored', isMeaningfullyUpdated('2026-01-05T10:00:00Z', null), false)
+check('a missing publish date is ignored', isMeaningfullyUpdated(null, '2026-02-02T10:00:00Z'), false)
+check('an unparseable update date is ignored', isMeaningfullyUpdated('2026-01-05T10:00:00Z', 'soon'), false)
+
+// Exactly one BlogPosting per post: hydration removes the pre-rendered node
+// before appending its own, and the tag it looks for is what keeps that true.
+check('post head tags its single BlogPosting script', (postHead.match(/data-seo="blog-post"/g) || []).length, 1)
+
+// --- client-side copy of the same rules cannot drift ------------------------
+//
+// src/lib/seo.ts is TypeScript, so it cannot be imported here. Reading the
+// literals out of the source is the next best thing: the behaviour is covered by
+// the app's own tests, and what matters here is that the numbers and the strings
+// are literally the same on both sides of the build.
+const seoTs = await readFile(path.join(process.cwd(), 'src', 'lib', 'seo.ts'), 'utf8')
+for (const [route, page] of Object.entries(PAGES)) {
+  check(
+    `client title for ${route} matches the build`,
+    seoTs.includes(`'${route}': '${page.title}'`),
+    true,
+  )
+}
+check('client not-found title matches the build', seoTs.includes(`'*': '${NOT_FOUND.title}'`), true)
+check('client title separator matches the build', seoTs.includes(`const TITLE_SEPARATOR = '${TITLE_SEPARATOR}'`), true)
+check('client title budget matches the build', seoTs.includes(`const TITLE_MAX = ${TITLE_MAX}`), true)
+
+// The threshold is written as `24 * 60 * 60 * 1000` on both sides, so compare the
+// evaluated numbers rather than the text — a different spelling of the same
+// duration is not a drift, a different duration is.
+const clientThreshold = Number(
+  (seoTs.match(/UPDATE_THRESHOLD_MS = ([\d_]+(?:\s*\*\s*[\d_]+)*)/)?.[1] ?? '')
+    .replace(/\s/g, '')
+    .split('*')
+    .reduce((total, factor) => total * Number(factor), 1),
+)
+check('client update threshold matches the build', clientThreshold, UPDATE_THRESHOLD_MS)
+
+const dataTs = await readFile(path.join(process.cwd(), 'src', 'data.ts'), 'utf8')
+const indexHtml = await readFile(path.join(process.cwd(), 'index.html'), 'utf8')
+const aboutTsx = await readFile(path.join(process.cwd(), 'src', 'components', 'About.tsx'), 'utf8')
+const blogPostTsx = await readFile(path.join(process.cwd(), 'src', 'pages', 'BlogPost.tsx'), 'utf8')
+
+check('the visible definition is DEFINITION, not a retyped copy', dataTs.includes(DEFINITION), true)
+check('About renders DEFINITION itself', aboutTsx.includes('{DEFINITION}'), true)
+check('index.html states the home description the build writes', indexHtml.includes(HOME_DESCRIPTION), true)
+check('BlogPost builds its title through postTitle()', !blogPostTsx.includes('`${post.title} — Rachit Sharma`'), true)
+check('BlogPost gates the visible Updated line on the same rule', blogPostTsx.includes('isMeaningfullyUpdated'), true)
+check('BlogPost byline points at the About section', blogPostTsx.includes('href="/#about"'), true)
+
+// --- profile links are the current ones, everywhere they are written ---------
+
+const LINK_SOURCES = [
+  'src/data.ts',
+  'scripts/seo-config.mjs',
+  'scripts/head.mjs',
+  'supabase/seed.sql',
+  'src/pages/BlogPost.tsx',
+  'index.html',
+  'public/site.webmanifest',
+]
+const linkSources = Object.fromEntries(
+  await Promise.all(
+    LINK_SOURCES.map(async (file) => [file, await readFile(path.join(process.cwd(), file), 'utf8')]),
+  ),
+)
+
+const OLD_OWNER = /digitalguru99908-dev/
+const OLD_LINKEDIN = /linkedin\.com\/in\/rachit-sharma(?!-ab199443a)/
+const OLD_INSTAGRAM = /instagram\.com\/rachitsharma/
+for (const [file, src] of Object.entries(linkSources)) {
+  check(`${file} has no stale GitHub owner`, OLD_OWNER.test(src), false)
+  check(`${file} has no stale LinkedIn handle`, OLD_LINKEDIN.test(src), false)
+  check(`${file} has no stale Instagram handle`, OLD_INSTAGRAM.test(src), false)
+}
+check('GitHub profile is written down', dataTs.includes(SOCIALS.github) && Object.values(linkSources).some((s) => s.includes(SOCIALS.github)), true)
+check('LinkedIn profile is written down', dataTs.includes(SOCIALS.linkedin), true)
+check('Instagram profile is written down', dataTs.includes(SOCIALS.instagram), true)
+
+// The story body is authored once in the admin panel and mirrored in two files
+// for builds that run without the database. All three have to agree, or the
+// fallback advertises someone else's GitHub.
+check('story fallback links the current GitHub', dataTs.includes(`[GitHub](${SOCIALS.github})`), true)
+check('seed story links the current GitHub', linkSources['supabase/seed.sql'].includes(`[GitHub](${SOCIALS.github})`), true)
+check('seed story links the current LinkedIn', linkSources['supabase/seed.sql'].includes(`[LinkedIn](${SOCIALS.linkedin})`), true)
+check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/rachithunyawrr\//g) || []).length, 3)
 
 /* -------------------------------------------------------------------------- */
 /*  404                                                                       */
@@ -296,8 +526,11 @@ if (llms !== null) {
     true,
   )
   check('llms.txt links Journal', llms.includes(`[Journal](${SITE_URL}/blog)`), true)
-  check('llms.txt lists GitHub', llms.includes('github.com/digitalguru99908-dev'), true)
-  check('llms.txt lists LinkedIn', llms.includes('linkedin.com/in/rachit-sharma'), true)
+  // The summary is the answer an agent lifts first, so it is the same sentence
+  // the page and the Person schema use rather than a third wording of it.
+  check('llms.txt leads with the definition', llms.includes(`> ${DEFINITION}\n`), true)
+  check('llms.txt lists GitHub', llms.includes(SOCIALS.github), true)
+  check('llms.txt lists LinkedIn', llms.includes(SOCIALS.linkedin), true)
   check('llms.txt lists the contact address', llms.includes('rachitsharma999088@gmail.com'), true)
   check(
     'llms.txt points at the sitemap',

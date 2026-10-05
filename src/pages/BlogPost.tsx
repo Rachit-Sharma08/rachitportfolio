@@ -1,12 +1,19 @@
 import { useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import type { MouseEvent } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import RichText from '../components/RichText'
 import { Reveal } from '../components/Reveal'
 import NotFound from './NotFound'
 import { useSiteContent } from '../lib/content'
 import { renderMarkdown } from '../lib/markdown'
-import { applyArticleSchema, applyMeta, clearArticleSchema } from '../lib/seo'
+import {
+  applyArticleSchema,
+  applyMeta,
+  clearArticleSchema,
+  isMeaningfullyUpdated,
+  postTitle,
+} from '../lib/seo'
 import { scrollToTop } from '../lib/lenis'
 import { PERSONAL } from '../data'
 
@@ -23,6 +30,7 @@ function formatDate(value: string | null): string {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const { posts } = useSiteContent()
   const post = posts.find((entry) => entry.slug === slug)
 
@@ -31,7 +39,7 @@ export default function BlogPost() {
       clearArticleSchema()
       return
     }
-    const title = `${post.title} — Rachit Sharma`
+    const title = postTitle(post.title)
     const description =
       post.excerpt || `${post.title}. Notes on digital marketing and AI by Rachit Sharma.`
     applyMeta({
@@ -47,6 +55,7 @@ export default function BlogPost() {
       description,
       slug: post.slug,
       publishedAt: post.publishedAt,
+      updatedAt: post.updatedAt,
       image: post.coverImageUrl,
     })
     return () => clearArticleSchema()
@@ -68,6 +77,27 @@ export default function BlogPost() {
   }
 
   const date = formatDate(post.publishedAt)
+  // Shown only when the edit is real. Supabase stamps updated_at on every save,
+  // so printing it unconditionally would claim a revision ninety seconds after
+  // publishing — and a blog that looks routinely revised is what structured-data
+  // spam looks like. Same gate as dateModified, so the line and the schema agree.
+  const updatedDate = isMeaningfullyUpdated(post.publishedAt, post.updatedAt)
+    ? formatDate(post.updatedAt)
+    : ''
+  const minutes = Math.max(1, Math.round(post.content.trim().split(/\s+/).length / 220))
+
+  /**
+   * Byline → About, over to the homepage rather than jumping by hash.
+   *
+   * Landing defers its scroll until fonts are ready and the route transition has
+   * settled, so the section doesn't move under a stale measurement — which is the
+   * whole reason `#about` is not scrolled from here directly. The href stays as
+   * the real target so the link is a link without JS.
+   */
+  function goAbout(event: MouseEvent<HTMLAnchorElement>): void {
+    event.preventDefault()
+    navigate('/', { state: { scrollTo: 'about' } })
+  }
 
   return (
     <main id="main" tabIndex={-1} className="section section-glow pt-32 md:pt-40">
@@ -91,14 +121,33 @@ export default function BlogPost() {
             <h1 className="text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-text-primary md:text-5xl lg:text-6xl">
               {post.title}
             </h1>
-            {date ? (
-              <p className="mt-5 text-sm text-muted">
-                <time dateTime={post.publishedAt ?? undefined}>{date}</time>
-                <span aria-hidden="true"> · </span>
-                {Math.max(1, Math.round(post.content.trim().split(/\s+/).length / 220))}{' '}
-                min read
-              </p>
-            ) : null}
+            <p className="mt-5 text-sm text-muted">
+              <span>
+                By{' '}
+                <a
+                  href="/#about"
+                  data-no-intercept
+                  onClick={goAbout}
+                  className="text-text-primary transition-colors duration-300 hover:text-accent-ink"
+                >
+                  Rachit Sharma
+                </a>
+              </span>
+              {date ? (
+                <>
+                  <span aria-hidden="true"> · </span>
+                  <time dateTime={post.publishedAt ?? undefined}>{date}</time>
+                </>
+              ) : null}
+              {updatedDate ? (
+                <>
+                  <span aria-hidden="true"> · </span>
+                  Updated <time dateTime={post.updatedAt ?? undefined}>{updatedDate}</time>
+                </>
+              ) : null}
+              <span aria-hidden="true"> · </span>
+              {minutes} min read
+            </p>
           </Reveal>
 
           {/* Standfirst: the same line that appears on the card and in the meta

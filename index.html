@@ -9,11 +9,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0407" />
     <meta name="robots" content="index, follow" />
+    <!-- The dev-server and no-prerender home description. Kept in step with
+         HOME_DESCRIPTION in scripts/seo-config.mjs, which is what a real build
+         writes over it: an agent that reads the source would otherwise be told a
+         different thing than one that reads the built page. -->
     <meta
       name="description"
-      content="Rachit Sharma is a self-taught marketer pairing campaign strategy with 25+ AI tools to build brands and AI products. See his story, projects and notes."
+      content="Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects. Explore his work, story and blog."
     />
-    <title>Rachit Sharma — Digital Marketer Building With AI</title>
+    <title>Rachit Sharma — AI-Powered Digital Marketer</title>
     <!-- Fonts are self-hosted (see the @font-face block in src/index.css), so
          they preload from the same origin as the app instead of blocking first
          paint behind a third-party stylesheet. `crossorigin` is required: font

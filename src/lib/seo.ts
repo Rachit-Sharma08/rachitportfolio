@@ -6,11 +6,56 @@
 //
 // Everything here is additive: tags that already exist in the pre-rendered head
 // are reused and rewritten, so the initial tags are never duplicated.
+// Mirrors PAGES in scripts/seo-config.mjs. `npm run verify` asserts every value
+// here matches that table, because a crawler reading the pre-rendered HTML and a
+// visitor reading document.title after a client-side navigation must not be told
+// two different things about the same page.
 export const PAGE_TITLES: Record<string, string> = {
-  '/': 'Rachit Sharma — Digital Marketer Building With AI',
-  '/resume': 'Rachit Sharma — Resume',
-  '/blog': 'Journal — Rachit Sharma',
+  '/': 'Rachit Sharma — AI-Powered Digital Marketer',
+  '/resume': 'Resume | Rachit Sharma, Digital Marketer',
+  '/blog': 'Blog | Rachit Sharma',
   '*': 'Rachit Sharma — Page Not Found',
+}
+
+/** Mirrors TITLE_SEPARATOR in scripts/seo-config.mjs. */
+export const TITLE_SEPARATOR = ' | '
+
+/** Mirrors TITLE_MAX in scripts/seo-config.mjs. */
+export const TITLE_MAX = 60
+
+/**
+ * `<title>` for a post: `<post title> | Rachit Sharma`.
+ *
+ * The suffix is dropped when it would push the title past what a result shows,
+ * because a title truncated mid-suffix reads worse than one with no suffix at
+ * all. Mirrors `postTitle` in scripts/seo-config.mjs — the verifier asserts the
+ * two agree on the same inputs.
+ */
+export function postTitle(title: string): string {
+  const withBrand = `${title}${TITLE_SEPARATOR}Rachit Sharma`
+  return withBrand.length <= TITLE_MAX ? withBrand : title
+}
+
+/** Mirrors UPDATE_THRESHOLD_MS in scripts/seo-config.mjs. */
+export const UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Whether an edit to a post is real enough to claim in metadata.
+ *
+ * Supabase stamps `updated_at` on every save, so without this gate a typo fixed
+ * ninety seconds after publishing still emits a `dateModified` — and a blog
+ * where every post looks routinely revised is the fingerprint of structured-data
+ * spam. Mirrors `isMeaningfullyUpdated` in scripts/seo-config.mjs.
+ */
+export function isMeaningfullyUpdated(
+  publishedAt: string | null | undefined,
+  updatedAt: string | null | undefined,
+): boolean {
+  if (!publishedAt || !updatedAt) return false
+  const published = Date.parse(publishedAt)
+  const updated = Date.parse(updatedAt)
+  if (Number.isNaN(published) || Number.isNaN(updated)) return false
+  return updated - published >= UPDATE_THRESHOLD_MS
 }
 
 export function titleForPath(pathname: string): string {
@@ -106,12 +151,19 @@ export function applyArticleSchema(post: {
   description: string
   slug: string
   publishedAt: string | null
+  updatedAt?: string | null
   image?: string | null
 }): void {
   const doc = document
+  // The pre-rendered head already carries this node — tagged by the pre-renderer
+  // for exactly this reason. Removing it here is what stops the hydrated DOM from
+  // holding two BlogPosting objects for one post.
   doc.querySelector('script[data-seo="blog-post"]')?.remove()
 
   const origin = doc.location.origin
+  const updated = isMeaningfullyUpdated(post.publishedAt, post.updatedAt)
+    ? post.updatedAt
+    : null
   const script = doc.createElement('script')
   script.type = 'application/ld+json'
   script.dataset.seo = 'blog-post'
@@ -122,6 +174,7 @@ export function applyArticleSchema(post: {
     description: post.description,
     mainEntityOfPage: `${origin}/blog/${post.slug}`,
     datePublished: post.publishedAt ?? undefined,
+    ...(updated ? { dateModified: updated } : {}),
     author: { '@type': 'Person', name: 'Rachit Sharma' },
     publisher: { '@type': 'Person', name: 'Rachit Sharma' },
     image: post.image

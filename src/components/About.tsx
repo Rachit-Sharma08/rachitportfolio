@@ -6,7 +6,7 @@ import { useStoryReveal } from '../lib/useStoryReveal'
 import { easeExpo } from '../lib/motion'
 import { renderInline, splitParagraphs } from '../lib/markdown'
 import { useSiteContent } from '../lib/content'
-import { SOCIALS } from '../data'
+import { SOCIALS, DEFINITION } from '../data'
 
 const STAT_CHIPS = [
   'AI Tools: 25+',
@@ -57,6 +57,17 @@ export default function About() {
           segments={[{ text: 'Who is ' }, { text: 'Rachit Sharma', italic: true }, { text: '?' }]}
           subtext="A bit about me, what I do, and why I do it."
         />
+
+        <Reveal className="mb-10 md:mb-14">
+          {/* The site's one-line answer to "who is Rachit Sharma?", in the same
+              words as the Person schema description and the llms.txt summary.
+              Real copy rather than a hidden attribute: an answer engine quotes
+              what it can read on the page, and a claim that exists only in markup
+              is one nobody can check. */}
+          <p className="max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
+            {DEFINITION}
+          </p>
+        </Reveal>
 
         <div className="grid gap-10 md:grid-cols-[320px_1fr] md:gap-14 lg:gap-20">
           <div className="flex flex-col items-center gap-8 md:items-start">

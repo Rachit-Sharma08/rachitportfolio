@@ -2,18 +2,8 @@ import { mkdir, readFile, writeFile, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'vite'
-import {
-  SITE_URL,
-  SITE_NAME,
-  OG_IMAGE,
-  PAGES,
-  NOT_FOUND,
-  personSchema,
-  websiteSchema,
-  BLOG_DESCRIPTION,
-  SOCIALS,
-  CONTACT_EMAIL,
-} from './seo-config.mjs'
+import { SITE_URL, PAGES, NOT_FOUND, DEFINITION, SOCIALS, CONTACT_EMAIL } from './seo-config.mjs'
+import { escapeAttr, headFor, safeJson } from './head.mjs'
 
 const root = process.cwd()
 const distDir = path.join(root, 'dist')
@@ -122,120 +112,6 @@ if (!template.includes(rootMarker)) {
   throw new Error('dist/index.html me <div id="root"> nahi mila')
 }
 
-function escapeAttr(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-function pageFor(route) {
-  if (PAGES[route]) return PAGES[route]
-  if (route === '/blog') {
-    return { title: 'Journal — Rachit Sharma', description: BLOG_DESCRIPTION }
-  }
-  // /blog/:slug — resolved from the snapshot below.
-  return null
-}
-
-/**
- * Absolute URL for a stored media path. Covers uploaded images already being a
- * full Supabase URL — prefixing those with SITE_URL would produce nonsense like
- * "https://site.comhttps://…", which no crawler can fetch.
- */
-function absoluteUrl(value) {
-  if (!value) return ''
-  if (/^https?:\/\//i.test(value)) return value
-  return `${SITE_URL}${value.startsWith('/') ? '' : '/'}${value}`
-}
-
-/**
- * JSON-LD is embedded in a <script> element, and JSON.stringify does not escape
- * "<". A post title containing "</script>" would therefore close the tag early
- * and let anything after it run as script. Escaping "<" as "<" is valid JSON,
- * parses identically, and cannot terminate the element.
- */
-function safeJson(value) {
-  return JSON.stringify(value).replace(/</g, '\\u003c')
-}
-
-function headFor(route) {
-  const url = `${SITE_URL}${route}`
-  let page = pageFor(route)
-  // Person is emitted on every page: it is the author of a post and the owner
-  // of the site, and search engines use it to tie the two together.
-  const schemas = [personSchema(url)]
-
-  // Social preview image. A post with its own cover uses it, so the card that
-  // shows up in a feed matches the post; everything else uses the site image.
-  let socialImage = absoluteUrl(OG_IMAGE)
-  let socialImageAlt = 'Rachit Sharma — Digital Marketer'
-  let isArticle = false
-
-  if (!page && route.startsWith('/blog/')) {
-    const slug = route.slice('/blog/'.length)
-    const post = content?.posts.find((p) => p.slug === slug)
-    if (post) {
-      const title = `${post.title} — Rachit Sharma`
-      const description =
-        post.excerpt ||
-        `${post.title}. Notes on digital marketing and AI by Rachit Sharma.`
-      const image = post.coverImageUrl
-        ? absoluteUrl(post.coverImageUrl)
-        : socialImage
-      if (post.coverImageUrl) {
-        socialImage = image
-        socialImageAlt = post.title
-      }
-      isArticle = true
-      page = { title, description }
-      schemas.push({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: post.title,
-        description,
-        mainEntityOfPage: url,
-        datePublished: post.publishedAt ?? undefined,
-        dateModified: post.updatedAt ?? undefined,
-        author: { '@type': 'Person', name: 'Rachit Sharma' },
-        publisher: { '@type': 'Person', name: 'Rachit Sharma' },
-        image,
-      })
-    }
-  }
-
-  page = page ?? PAGES['/']
-  if (route === '/') schemas.push(websiteSchema(url))
-
-  const ld = schemas.map((s) => safeJson(s))
-  const t = escapeAttr(page.title)
-  const d = escapeAttr(page.description)
-  const social = escapeAttr(socialImage)
-  const socialAlt = escapeAttr(socialImageAlt)
-
-  return [
-    `<title>${t}</title>`,
-    `<meta name="description" content="${d}" />`,
-    `<link rel="canonical" href="${url}" />`,
-    `<meta property="og:type" content="${isArticle ? 'article' : 'website'}" />`,
-    `<meta property="og:site_name" content="${escapeAttr(SITE_NAME)}" />`,
-    `<meta property="og:locale" content="en_US" />`,
-    `<meta property="og:title" content="${t}" />`,
-    `<meta property="og:description" content="${d}" />`,
-    `<meta property="og:url" content="${url}" />`,
-    `<meta property="og:image" content="${social}" />`,
-    `<meta property="og:image:width" content="1200" />`,
-    `<meta property="og:image:height" content="630" />`,
-    `<meta property="og:image:alt" content="${socialAlt}" />`,
-    `<meta name="twitter:card" content="summary_large_image" />`,
-    `<meta name="twitter:title" content="${t}" />`,
-    `<meta name="twitter:description" content="${d}" />`,
-    `<meta name="twitter:image" content="${social}" />`,
-    ...ld.map((json) => `<script type="application/ld+json">${json}</script>`),
-  ].join('\n    ')
-}
-
 /* -------------------------------------------------------------------------- */
 /*  Document assembly                                                          */
 /* -------------------------------------------------------------------------- */
@@ -271,16 +147,16 @@ function composeHtml(markup, head) {
 /*  Prerender every route                                                     */
 /* -------------------------------------------------------------------------- */
 
-const routes = content
-  ? routesFor(content)
-  : Object.keys(PAGES).concat(['/blog'])
+// PAGES is the list of routes that get their own static file, so the fallback
+// is its keys verbatim — no extra entries, or a route would be baked twice.
+const routes = content ? routesFor(content) : Object.keys(PAGES)
 
 // A redeploy after an unpublish must not leave the old post's HTML behind.
 const blogDir = path.join(distDir, 'blog')
 await rm(blogDir, { recursive: true, force: true })
 
 for (const route of routes) {
-  const head = headFor(route)
+  const head = headFor(route, content ?? undefined)
   const markup = renderRoute(route, content ?? undefined)
   const html = composeHtml(markup, head)
 
@@ -402,7 +278,7 @@ console.log(`Wrote dist/sitemap.xml (${routes.length} urls)`)
 const llms = [
   '# Rachit Sharma',
   '',
-  `> ${PAGES['/'].description}`,
+  `> ${DEFINITION}`,
   '',
   '## Key pages',
   '',
