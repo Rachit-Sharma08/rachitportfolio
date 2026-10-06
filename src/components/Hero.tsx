@@ -250,18 +250,26 @@ export default function Hero({ ready = true }: HeroProps) {
               Keeping a single h1 gives crawlers and screen readers the full
               "I'm Rachit — Digital Marketer" headline instead of just the name.
 
-              The aria-label is what actually delivers that. The three spans are
-              block-level, so JSX drops the whitespace between them and the h1's
-              computed name was "I'mRachitDigital Marketer" — one run-on string.
-              Nothing visible changes; the label only supplies the word breaks a
-              screen reader needs. Keep it in sync with the spans below. */}
+              The spans are block-level, so JSX drops the whitespace between them
+              and the h1's text content came out as the run-on
+              "I'mRachitDigital Marketer". The explicit {' '} text nodes below put
+              the word breaks back. They are collapsible plain spaces between
+              block-level boxes in a block container, so no anonymous line box is
+              generated and the layout is untouched.
+
+              Keep the aria-label too: it is what guarantees the accessible name
+              regardless of how the spans are reordered or split, since the
+              spaces above only help when they survive in the markup. Keep it in
+              sync with the spans. */}
           <h1 id="home-heading" aria-label="I'm Rachit Digital Marketer">
             <span className="hero-rise block font-display text-lg italic text-muted sm:text-xl">
               I&apos;m
             </span>
+            {' '}
             <span className="hero-rise mt-1 block font-body text-[clamp(3rem,min(9vw,15vh),8.5rem)] font-extrabold uppercase leading-[0.85] tracking-[-0.03em] text-text-primary">
               Rachit
             </span>
+            {' '}
             <span className="hero-rise mt-3 block font-display text-2xl italic text-text-primary/90 sm:text-3xl xl:text-4xl">
               Digital Marketer
             </span>

@@ -54,11 +54,16 @@ export default function SelectedWork() {
         <div className="flex flex-col items-start justify-between gap-8 pb-14 pt-24 md:flex-row md:items-end md:pb-16 md:pt-32">
           <div>
             <div className="eyebrow mb-5">Selected Work</div>
+            {/* Deliberately not "N builds". The heading used to hardcode "Four"
+                while the counter beside it derived from projects.length, so
+                deleting a project in Admin silently made the two contradict
+                each other. Count-free wording cannot rot that way. The live
+                count is still on screen, in `01 / 03`. */}
             <RevealHeading
               as="h2"
               id="work-heading"
               segments={[
-                { text: 'Four builds, zero' },
+                { text: 'Real builds, zero' },
                 { text: 'templates', italic: true },
               ]}
               className="max-w-2xl text-4xl font-extrabold leading-[0.95] tracking-[-0.03em] text-text-primary sm:text-5xl md:text-6xl lg:text-7xl"

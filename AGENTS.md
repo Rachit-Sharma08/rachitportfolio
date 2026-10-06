@@ -35,6 +35,8 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v42`) — h1 run-on text fix + work-heading count removed + `"in training"` meta hataya (2 commits: `2a9d4ae` meta, B commit pending):** (a) **`"in training"` meta copy hataya** — `/blog` description ab `a digital marketer, learning in public.`, `/resume` ab `a digital marketer pairing campaign strategy…`, `public/site.webmanifest` ab `a digital marketer, pairing…`. Claim consistent ho gayi (meta "in training" bolta tha jabki visible site nahi bolti). (b) **Hero h1 ka run-on text** — 3 `.hero-rise` block spans ke beech JSX whitespace drop kar deta tha → text extraction `"I'mRachitDigital Marketer"` (v36 ne `aria-label` se sirf screen-reader cover kiya tha, crawler/copy-paste ko nahi). Ab 2 explicit `{' '}` text nodes. (c) **`Four builds, zero templates` → `Real builds, zero templates`** — heading hardcoded thi jabki saath ka counter `projects.length` se aata hai, to Admin se project delete karne par dono contradict karte. Verify **262 → 269**. Lint 0 errors, build pass, secrets clean. `/resume` visible label **byte-identical**. Detail: Changelog `v42`.
+- **NEW (`v41`) — title-tag audit + `"self-taught"` claim hataya (repo me poora, live DB me ek user step baaki):** (a) **Title drift** — `/blog` client-side nav ke baad `Journal — Rachit Sharma` dikhata tha jabki served HTML `Blog | Rachit Sharma` tha (drift v27 se tha, v40 ne `PAGES` add kiya tha par client mirror nahi kiya tha). (b) **og:site_name** client par `Rachit Sharma` likhta tha, build par `Rachit Sharma — Digital Marketer`. (c) **`"self-taught"`** 5 shipped strings me tha — 2 route descriptions, `STORY.card` (About ka visible card + `#site-content` inline snapshot), aur `public/site.webmanifest`. Hata ke institute-study/hands-on-AI wording. Ab `SITE_NAME` + `PAGE_DESCRIPTIONS` mirror `src/lib/seo.ts` me, `Blog.tsx` mirror se padhta hai (koi literal nahi), `og:site_name` mirror se. `npm run verify` **158 → 262**. Lint 0 errors, build pass, `secrets:check` clean, `dist` me `"self-taught"` **0**. Home title text, hero markup, `/resume` ka `Digital Marketing Specialist (in training)` label — **byte-for-byte unchanged**. Detail: Changelog `v41`.
 - **NEW (`v40`) — AEO/GEO consistency pass (LIVE, commit `b729df8`):** site ab **ek hi definitional sentence** bolti hai, wahi **3 jagah** — visible About line, Person schema `description`, `llms.txt` summary — byte-identical (verify assert karta hai). Naya `scripts/head.mjs` (`headFor(route, content)`) `prerender.mjs` se extract kiya gaya taaki verify synthetic snapshot par head assert kar sake (pehle sirf DB-less build grep hota tha). Titles ek shape (brand-last, ≤60): `PAGES` me `/blog` bhi add (wohi list static files banati hai — route ka head aur document dono na ho sake), posts par `postTitle()`, client `titleForPath()` mirror. `dateModified` + visible "Updated" ab **sirf real edit par** (≥24h) — Supabase har save par `updated_at` stamp karta hai. Har post par ab **author byline** (`href="/#about"`). Person `image` ab cut-out (og card nahi), `knowsAbout` 7 site-supported topics, WebSite schema apne original fields par wapas. Profile URLs `digitalguru99908-dev` → `rachithunyawrr` (`src/data.ts`, `seo-config.mjs`, `seed.sql`). `npm run verify` **71 → 158**. Lint 0 errors, build pass, `secrets:check` clean. Live: 77/77 assertions. ⚠️ **Manual DB step baaki** (Admin → Story/Projects) + 2 report-only copy findings. Detail: Changelog `v40`.
 
 - **NEW (`v39`) — secrets hygiene pass + enforceable check:** repo se **6 credential leaks** hataye (deploy-hook URL + Vercel project ID `prj_…` + hook ID + Supabase project URL + GitHub PAT partial prefix ×2 + Render key partial prefix). Rule #3 ab "**kisi bhi** file me" + partial prefix ban + `npm run secrets:check` commit se pehle mandatory. NEW `scripts/check-secrets.mjs` (12 patterns, tracked files, exit 1 on hit) — pattern list jaan-boojh kar `AGENTS.md` me nahi rakhi. **0 runtime change.** ⚠️ **History me ab bhi hai** — `92e37cd` me nayi (active) hook value, `24f3336` me purana project ID; HEAD clean karna history safe nahi karta. Purana hook already rotate+delete ho chuka hai (wo neutralized), nayi active value ke liye **ek aur rotation chahiye** (user ka faisla pending). Detail: Changelog `v39`.
@@ -110,6 +112,141 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v42 — h1 run-on text fix + work-heading count removed + `"in training"` meta hataya] — 6 Oct 2026
+**User ka brief (2 parts):** (A) `"in training"` ko meta description aur `site.webmanifest` se hatao; verify → commit → push. (B) (i) hero h1 ka text run-on fix karo, (ii) work heading me hardcoded count hatao, (iii) resume visible label ka report-only proposal do (apply **mat** karo), (iv) har jagah purane profile links list karo — code, seed, aur Supabase Admin ke fields — phir commit + push.
+
+**(A) meta copy — commit `2a9d4ae` (pushed):**
+- `/blog` description: `…a digital marketer, learning in public.` (pehle `a digital marketer in training, learning in public`)
+- `/resume` description: `Rachit Sharma's resume — a digital marketer pairing campaign strategy with 25+ AI tools…`
+- `public/site.webmanifest`: `Rachit Sharma is a digital marketer, pairing campaign strategy…`
+- Dono `src/lib/seo.ts` mirrors (`PAGE_DESCRIPTIONS['/blog']`, `/resume`) byte-identical sync.
+- ❗**Visible resume label jaan-boojh kar chheda nahi** — `src/pages/Resume.tsx:24-25` ka `Digital Marketing Specialist (in training) · Digital Marketing with AI course, in progress.` **byte-for-byte unchanged**. Claim consistency isliye bani kyunki wo line khud status bolti hai; meta use mirror karta hai.
+- Ye commit v41 ke bundeled 7 changes bhi le gaya (`Blog.tsx` drift, mirrors, `STORY.card`, seed, manifest, verify, `seo-config`) — `AGENTS.md` intentionally alag reh gaya is commit se.
+- Gates: lint 0 errors (same 6 warnings) · build pass · `npm run verify` **262/262** · `secrets:check` clean (113 files).
+
+**(B) i+ii — code changes:**
+- **`Hero.tsx`** — 3 `.hero-rise` block spans ke beech 2 explicit `{' '}` text nodes. Root cause: JSX block-level children ke beech whitespace drop kar deta hai, isiliye live `textContent` = `I'mRachitDigital Marketer`. v36 ne `aria-label` se sirf screen-reader cover kiya tha — crawler / plain-text extraction / copy-paste ko nahi. Ab `aria-label` **bhi retained** (defence in depth).
+- **`SelectedWork.tsx`** — `Four builds, zero templates` → `Real builds, zero templates`. Heading source hardcoded thi; saath ka counter `projects.length` se aata hai, to Admin se ek project delete karte hi dono contradict karte. Source me **count zero** ho gaya (counter `projects.length` par chala hai — wahi re-encode karne par bhi theek rehta hai).
+
+**⚠️ Layout proof — `offsetTop`/`offsetHeight` use kiye, `getBoundingClientRect` nahi (harness lesson):**
+Pehli comparison me span `y` deltas 2.8px/3.4px alag aaye — wo **bug nahi, GSAP ka residual `translateY`** tha (`matrix(1,0,0,1,0,1.0617)`). `getBoundingClientRect` transform include karta hai. Dobara `transform === matrix(1,0,0,1,0,0)` + `scrollY === 0` par settle karke, phir **transform-independent** `offsetTop/offsetWidth/offsetHeight` se measure kiya:
+| metric | before (`dist-before`) | after |
+|---|---|---|
+| h1 offset | `64, 312, 458×194` | **identical** |
+| span offsets y | `312, 344, 466` | **identical** |
+| span heights | `28, 110, 40` | **identical** |
+| h1 `scrollHeight`/`clientHeight` | `219 / 194` | **identical** |
+| `docHeight` / `overflowX` | `10615 / 0` | `10615 / 0` |
+
+**CSS theory bhi verify hui:** collapsible whitespace-only text nodes between block-level children of a **block container** → no anonymous block box (CSS 2.1 §16.7.1). Isiliye `{' '}` se kuch shift nahi hota — sirf text-extraction badalta hai. Agar ye text nodes inline hote to ek extra anonymous line box banta aur layout 11px shift hota.
+
+**(B) iii — resume label proposal (REPORT-ONLY, apply nahi kiya):**
+- **Measured, user ke estimate se alag:** label **91 chars** hai (user ne ~155 bola), aur `Digital Marketing` **2×** hai (user ne 3× bola) — `Digital Marketing Specialist` + `Digital Marketing with AI`. `in training` + `in progress` dono same status point kar rahe hain, wo redundancy hai.
+- **Information duplicate confirmed:** Education section already prints `Digital Marketing with AI` (`Resume.tsx:50`) → subtitle se course name hatane par koi information loss nahi.
+- **Proposal:** `Digital marketing specialist (in training) · Course in progress.` (76 chars, keyword 1×, status honest rehta hai). Ya agar course naam chahiye: `Digital marketing specialist (in training). Currently in a Digital Marketing with AI course.` (91 chars, keyword 2×).
+- ❗**Koi change nahi kiya** — user ne "report-only, do not apply" bola.
+
+**(B) iv — purane profile links ka poora inventory:**
+**Repo me: 0 stale.** `git grep` (tracked files) par `digitalguru99908-dev` aur bare `linkedin.com/in/rachit-sharma` — sirf **2 hit, dono jaan-boojh kar rakhe hue**: (a) `AGENTS.md` ki changelog history (purane ka record hai, hatana galat hoga), (b) `verify-prerender.mjs` ka stale-owner **guard regex** (wahi to regression rokta hai). `src/data.ts:110,122` + `supabase/seed.sql:65,76` socialify URLs already `rachithunyawrr`.
+**Live DB me: 3 stale fields** (`/api/content` se confirm, `digitalguru99908-dev` **6×** + old LinkedIn **2×** live `/` HTML me):
+| # | Admin me kahan | Table.field | Badalne wali value |
+|---|---|---|---|
+| 1 | **Projects → Fitness Website → "image URL"** | `projects.image_url` | socialify path me `digitalguru99908-dev` → `rachithunyawrr` |
+| 2 | **Projects → Neon Car Racing → "image URL"** | `projects.image_url` | same swap |
+| 3 | **Story → "Story body"** | `site_story.content` (`section_key='my_story'`) | markdown me `[GitHub](…/digitalguru99908-dev)` → `rachithunyawrr`; `[LinkedIn](…/in/rachit-sharma)` → `in/rachit-sharma-ab199443a` |
+- ✅ `project_url` dono projects ka **already fixed** hai (`rachithunyawrr/Fitness-website`, `rachithunyawrr/neon-car-racing-game-`) — user ne pehle set kar diya tha. AI Assistant fully current.
+- ⚠️ **`site_story` `my_story_card` abhi bhi stale** — v41 ka text (`"self-taught"` → institute/hands-on wording) live DB row me **nahi gaya**. Live `/` par `"self-taught"` **2×** aa raha hai. Ye item #4 hai.
+- 💡 Ye **3 edits ek hi Admin visit** me ho jaate hain (Projects + Story), phir rebuild hook khud bake kar dega. Repo copies already correct — koi repo change kiye bina hi DB theek ho jaayegi.
+
+**Verify 262 → 269 (+7):**
+- h1: `aria-label` retained · `"I'mRachit"` run-on absent · extracted text **exactly** `I'm Rachit Digital Marketer` · source me exactly 2 `{' '}` aur built HTML me exactly 2 `</span> <span>` gap (label nahi, real text nodes).
+- work heading: `COUNT_WORDS` regex (one..ten, digits) source segments me **0** · `const total = projects.length` present.
+- ⚠️ **Harness bug ek** (code nahi): pehla regex `/\/\s*' ',\s*<span/` JSX ke `{' '}` me **`}` bhool gaya** → FAIL. Fix: `/\{\s*'\s'\s*\}\s*<span/g`. Dobara mat phaso.
+
+**Gates:** `npm run lint` **0 errors** (same 6 pre-existing warnings: 4 `only-export-components` + 2 `set-state-in-effect`) · `npm run build` pass (`/` **57,026 B** = 57,024 **+2**, exactly the 2 spaces; `/resume` **18,273** + `/blog` **18,691** byte-length unchanged → resume label proof; `404.html` 13,091, sitemap 3 URLs) · `npm run verify` **269/269** · `npm run secrets:check` **clean (113 files, 12 patterns)**.
+
+**Files changed (v42):** MOD `src/components/Hero.tsx`, `src/components/SelectedWork.tsx`, `scripts/verify-prerender.mjs` (+7), `AGENTS.md`. **0 dependency change. 0 animation change.** (Part A ka commit alag: `2a9d4ae`, 7 files.)
+
+### [v41 — Title-tag audit: `/blog` drift fix, og:site_name mirror, `"self-taught"` claim hataya] — 3 Oct 2026
+**User ka brief:** title tag SEO audit (har route ka title unique + ≤60, truncation report karo, home ka exact text mat badlo), `"self-taught"` word site ki **har shipped copy** se hatao, phir report karo ki kaunsi lines badli. Plus: agar meta description me bhi wo word ho to wahi. Live Supabase me jo text hai wahan agent nahi badal sakta — sirf batao kaunsa field, kya text daalna hai.
+
+**Diagnosis (code me confirm, guess nahi):**
+1. **`/blog` ka do alag title tha.** `scripts/seo-config.mjs` me `/blog` head `Blog | Rachit Sharma` likhta tha, par `src/pages/Blog.tsx` apna `title: 'Journal — Rachit Sharma'` khud set karta tha. Prerender v27 se har route ka static head banta hai, to **direct load** par `Blog | Rachit Sharma`, aur **kisi bhi link se SPA nav** par `Journal — Rachit Sharma` milta tha. Crawler ko direct load wala milta hai (sahi), visitor ko do alag — isliye bug chhupa.
+2. **og:site_name bhi do roop tha.** Build par `SITE_NAME`, client par `'Rachit Sharma'` ka literal.
+3. **`"self-taught"` 5 shipped strings me tha** (4 jagah, 5 occurrences):
+   | file | kahan |
+   |---|---|
+   | `scripts/seo-config.mjs` | `BLOG_DESCRIPTION` + `/resume` description |
+   | `src/data.ts` | `STORY.card` |
+   | `supabase/seed.sql` | `site_story` `my_story_card` row (same sentence, taaki DB-less build bhi real story dikhaye) |
+   | `public/site.webmanifest` | `description` |
+   
+   `src/data.ts` ki story **do** jagah pahunchti hai — visible About card (`About.tsx`) **aur** `#site-content` inline JSON snapshot (jo har prerendered document me embedded hota hai, taaki client fetch ke bina render kar sake). Isiliye grep me 4 files dikhe par live HTML occurrences zyada.
+
+**Jo badla:**
+- **`src/lib/seo.ts`** — naya `SITE_NAME` + `PAGE_DESCRIPTIONS` (har route ka description, byte-identical `seo-config.mjs` se) mirror. `og:site_name` ab mirror se. Literal hataye.
+- **`src/pages/Blog.tsx`** — `title: PAGE_TITLES['/blog']`, `description: PAGE_DESCRIPTIONS['/blog']`. Koi apna title/description literal nahi.
+- **Wording change (claim badli, keyword nahi):**
+  - `/blog`: `a self-taught digital marketer learning in public` → `a digital marketer in training, learning in public`
+  - `/resume`: `Rachit Sharma's resume — a self-taught digital marketer pairing…` → `… a digital marketer in training pairing…`
+  - `STORY.card` (About ka visible card): `I'm not from a big city or a coding background — I'm a self-taught builder who chose…` → `… I'm studying digital marketing at an institute and I learn by building with AI tools hands-on. I chose…`
+  - `site.webmanifest`: `Rachit Sharma is a self-taught marketer pairing…` → `Rachit Sharma is a digital marketer in training, pairing…`
+  
+  ❗ **`/resume` ka visible label `Digital Marketing Specialist (in training) · Digital Marketing with AI course, in progress.` byte-for-byte UNCHANGED** — wo abhi bhi 155 chars me 3 baar keyword repeat karta hai, par wo resume ka apna line hai aur user ne chhoda. Meta description ko usi line se grounded rakha gaya, isliye claim consistent hai.
+- **Visual/hero untouched** — `h1` (`aria-label="I'm Rachit Digital Marketer"`, v36) + `HERO_INTRO` me dono keywords pehle se hain. Hero edit **0 byte**.
+
+**⚠️ Repo-wide `"self-taught"` grep se mat pakadna — `AGENTS.md` me wo word jaan-boojh kar mojood hai** (changelog history me "uski copy hata di" likha hai, aur v41 entry bhi usse quote karti hai). Isiliye verify guard **source files** par hai, `AGENTS.md` ko chhodkar, aur comment-stripping ke saath — comments explanation rakhte hain, string nahi.
+
+**Verify 158 → 262 checks (+104):**
+- **Title budget + uniqueness:** har fixed route (`/`, `/resume`, `/blog`, `*`) ka title ≤60, trim-strip nahi ho, aur **sab distinct** (do pages ka same title = search engine unhe ek page samajhta hai).
+- **`/blog` drift guard:** `Blog.tsx` me `PAGE_TITLES['/blog']` + `PAGE_DESCRIPTIONS['/blog']` mirror read kare, aur apna koi title literal na ho (`'Journal — Rachit Sharma'` specifically absent).
+- **Client↔build mirror:** har route ka client description build ke **usi route ke entry** ke andar ho (`descBlock.indexOf("'/route':")` se 240-char window, taaki `/blog` ka text `/resume` ke saath match na kar sake). Build side single-quote likhta hai, client side jiska sentence apostrophe rakhta hai double-quote me — isliye comparison delimiter par nahi, sentence par hai.
+- **`og:site_name` = `SITE_NAME`**, aur `SITE_NAME !== home title` (site ka naam aur page ka title alag cheez hain).
+- **`Person.name` = `Rachit Sharma`** (person ka naam, page ka title nahi) + `WebSite.name` = home title.
+- **Keyword support:** h1 me `Digital Marketer` (aria-label se, `AI` repeat nahi), hero intro me `AI tools`, `DEFINITION` me dono.
+- **`"self-taught"` guard:** `DEFINITION`/`HOME_DESCRIPTION`/`BLOG_DESCRIPTION`/`SITE_NAME`/har route description/not-found description + `scripts/seo-config.mjs`, `scripts/head.mjs`, `index.html`, `supabase/seed.sql`, `public/site.webmanifest` aur **poora `src/` tree** (`.ts`/`.tsx`) — comments strip karke.
+- **Story mirror:** `STORY.card` (`src/data.ts`) aur seed row (`supabase/seed.sql`, SQL `''` un-escape karke) **word-for-word** same, aur built `dist/index.html` me bhi wahi card hai.
+
+**⚠️ 4 harness bugs is pass me (dobara mat phaso — sab assertions galat thi, code sahi tha):**
+1. `seo.ts.includes(\`'${route}':\n    '${desc}'\`)` — `/resume` ka description apostrophe rakhta hai (`Sharma's`), isliye client me **double**-quoted hai. Fix: route entry locate karke sentence check karo, delimiter par nahi.
+2. `card:\s*"([^"]+)"$` — `data.ts` me line ke end me **comma** hai (`",`), regex `$` se fail. Fix: `,?$`.
+3. `PAGES['/resume'].title.endsWith('Rachit Sharma')` — resume title hai `Resume | Rachit Sharma, Digital Marketer`, **ends** nahi, **includes** karta hai. Fix: `includes`.
+4. Story card ka "built page" check `renderRoute('/', syntheticContent)` use kar raha tha — jo **synthetic** `storyCard` render karta hai, real `STORY.card` nahi. Fix: `dist/index.html` read karke real card dhoondha.
+
+**Verify:** `npm run lint` **0 errors** (same 6 pre-existing warnings: 4 `only-export-components` + 2 `set-state-in-effect`) · `npm run build` pass (`/` 57,024 B, `/resume` 18,309, `/blog` 18,727, `404.html` 13,091, sitemap 3 URLs — no service key local) · `npm run verify` **262 PASS / 0 FAIL** · `npm run secrets:check` **clean (113 tracked files, 12 patterns)** · `dist/` ka `index.html`, `resume/`, `blog/`, `404.html`, `llms.txt`, `sitemap.xml`, `robots.txt`, `site.webmanifest` — **`self-taught` 0 occurrences**.
+
+**Built head (proof):**
+| route | title | len | og:title | twitter:title | og:site_name |
+|---|---|---|---|---|---|
+| `/` | `Rachit Sharma — AI-Powered Digital Marketer` | 43 | same | same | `Rachit Sharma — Digital Marketer` |
+| `/resume` | `Resume \| Rachit Sharma, Digital Marketer` | 40 | same | same | same |
+| `/blog` | `Blog \| Rachit Sharma` | 20 | same | same | same |
+| `404` | `Rachit Sharma — Page Not Found` | 30 | absent (v35 se lean 404 head, noindex) | absent | absent |
+
+**Title report (har route/post ka length):**
+| title | len | note |
+|---|---|---|
+| `Rachit Sharma — AI-Powered Digital Marketer` | 43 | ✅ exact text user ne fix kiya |
+| `Resume \| Rachit Sharma, Digital Marketer` | 40 | ✅ |
+| `Blog \| Rachit Sharma` | 20 | ✅ (client par pehle 21-char `Journal — …` tha) |
+| `Rachit Sharma — Page Not Found` | 30 | ✅ |
+| `SEO Isn't Dead. It's Learning to Speak AI \| Rachit Sharma` | 57 | ✅ suffix fit |
+| `Two Rebuilds Before It Felt Like a Brand \| Rachit Sharma` | 56 | ✅ suffix fit |
+| `The One-Hook Rule: Why Most Content Doesn't Convert` | 51 | ✅ raw 51, suffix (15) = 66 > 60 → **suffix drop** (mid-word truncate nahi) |
+| `One Brief, One Campaign Sprint: What Changed When I Started Prompting Instead of Planning` | **89** | ⚠️ **sirf ye ek 60 se upar hai** — raw title hi 89 hai, isiliye brand suffix drop. Gate sahi kaam kar raha hai (truncate nahi kiya), par SERP ise cut karega |
+
+**⚠️ 89-char post ke liye agent ne post ka content/title NAHI badla** — wo title `supabase/seed.sql` + **live DB** dono me hai, aur user ka brief "sirf inconsistency fix karo, title text khud mat badlo" tha. Rename karna ho to wahi Admin → Blog step hai (title field chhota karo, slug same rakho taaki URL na toote).
+
+**⚠️ Live DB step baaki (sirf user, `/admin`):** `site_story` table, `section_key = 'my_story_card'`, column `content`. Yahi text daalna hai (yaani naya visible About card):
+```
+I'm not from a big city or a coding background — I'm studying digital marketing at an institute and I learn by building with AI tools hands-on. I chose to follow what actually interests me, even when the easier path was right there. I got into AI in 2025, and once I started, I didn't stop. Today I work with 25+ AI tools, I'm doing Digital Marketing with AI, and I'm building my own AI products on the side.
+```
+Repo ki 2 static copies (`src/data.ts` fallback + `seed.sql`) **sync hain**, DB row nahi. `my_story` (long body) me `"self-taught"` kabhi tha hi nahi → wo chhedna nahi hai.
+
+**Files changed (v41):** MOD `scripts/seo-config.mjs` (2 descriptions + comments), `src/lib/seo.ts` (+`SITE_NAME`, +`PAGE_DESCRIPTIONS`), `src/pages/Blog.tsx`, `src/data.ts` (`STORY.card`), `supabase/seed.sql` (`my_story_card`), `public/site.webmanifest`, `scripts/verify-prerender.mjs` (+104), `AGENTS.md`. **8 files. 0 dependency change. 0 visual change.**
+
+**⚠️ Push nahi kiya** — user ne commit+push nahi kaha. Repo working tree ye 8 files modified hain.
 
 ### [v40 — AEO/GEO consistency: ek definitional sentence, brand-last titles, real "Updated", post byline] — 3 Oct 2026
 **User ka brief:** site ko "AI-friendly" banao — answer engines (ChatGPT/Perplexity/AI Overviews) ko ek **consistent, quotable** statement mile ki Rachit kaun hain. Titles/meta/schema ek jaisi shape, blog par author + date, purane profile links theek. Phir commit + push.
@@ -1296,11 +1433,13 @@ Trailing slash + env ke full-URL hone dono handle karta hai; unset ho to purana 
 
 ### 🔴 Agle session ke liye — sirf 3 cheezein (user 3 Oct 2026 ko so gaya, repo clean + pushed hai)
 
-1. **Admin → Projects + Story: live DB ke purane links theek karo (v40 ka baaki hua kaam).** Repo ki static copies sync hain, **DB nahi** — live `/` par abhi bhi `digitalguru99908-dev` ki 7 URL instances + 2 purane LinkedIn handle bache hain (details Changelog `v40`). Fix: Projects → Fitness + Neon (repo URL + image URL), Story → GitHub/LinkedIn links; save → rebuild hook khud bake kar dega. AI Assistant already current hai.
-2. **Deploy-hook **dobara** rotate karna (optional, sirf agar active value ko git history se protect karna hai)** — v39 me HEAD se value hata di gayi, **par `92e37cd` commit me wo abhi bhi hai** aur HEAD clean karna history safe nahi karta. Purana hook already delete+rotate ho chuka tha (wo neutralized), nayi active value ke liye ek aur rotation chahiye. Agent kar sakta hai (`vercel deploy-hooks create` → `vercel env rm/add SITE_REBUILD_HOOK --value <new> --sensitive` → purana rm → `vercel --prod --yes`), **par value kahin file me likhi nahi jaani**. User ka faisla pending hai — pucho, khud mat karo.
-3. **Supabase admin password rotate** — sirf user dashboard se (Dashboard → Authentication → Users → `ADMIN_EMAIL` wala user → Reset password). Agent ke paas service-role key nahi, isliye **API se nahi ho sakta**. Safe hai: password React state me hi rehta hai, kahin hardcode nahi.
+1. **Admin → Story: `my_story_card` me v41 ka naya text daalo.** Ye **sirf user** kar sakta hai (agent ke paas DB write nahi). Repo ki 2 static copies (`src/data.ts` fallback + `supabase/seed.sql`) sync hain — **DB row purana hai**, isiliye live abhi bhi `"self-taught"` dikhata hoga. Exact text Changelog `v41` me code-block me hai. `my_story` (long body) me wo word kabhi tha hi nahi.
+2. **Admin → Projects + Story links: live DB ke purane links theek karo (v40 ka baaki hua kaam).** Repo ki static copies sync hain, **DB nahi** — live `/` par abhi bhi `digitalguru99908-dev` ki 7 URL instances + 2 purane LinkedIn handle bache hain (details Changelog `v40`). Fix: Projects → Fitness + Neon (repo URL + image URL), Story → GitHub/LinkedIn links; save → rebuild hook khud bake kar dega. AI Assistant already current hai.
+3. **Deploy-hook **dobara** rotate karna (optional, sirf agar active value ko git history se protect karna hai)** — v39 me HEAD se value hata di gayi, **par `92e37cd` commit me wo abhi bhi hai** aur HEAD clean karna history safe nahi karta. Purana hook already delete+rotate ho chuka tha (wo neutralized), nayi active value ke liye ek aur rotation chahiye. Agent kar sakta hai (`vercel deploy-hooks create` → `vercel env rm/add SITE_REBUILD_HOOK --value <new> --sensitive` → purana rm → `vercel --prod --yes`), **par value kahin file me likhi nahi jaani**. User ka faisla pending hai — pucho, khud mat karo.
 
-💡 **Item 1 sejudane me:** pehle wali baat (`/api/rebuild` 202 wala test) is baar **merg ho gaya** — v40 me real Supabase content se ek build deploy hua (4 posts bake hue, `/api/content` 200), matlab hook chain kaam kar raha hai. Wo test ab optional hai.
+💡 **Item 1 + 2 ek hi Admin visit me ho jaate hain** — dono ke baad save karo, rebuild hook khud bake kar dega. Supabase admin password rotate bhi pending hai (dashboard → Authentication → Users → `ADMIN_EMAIL` wala user); wo **item 2/3 se alag** hai.
+
+💡 **`/api/rebuild` 202 wala test ab optional hai** — v40 me real Supabase content se ek build deploy hua (4 posts bake hue, `/api/content` 200), matlab hook chain kaam kar raha hai.
 
 ### Baaki pending (lower priority)
 - [ ] **`hermes setup` chala ke provider/auth set karo** — Hermes **installed hai** (`D:\hermes`, v0.21.5) par koi LLM provider key nahi hai, isliye `hermes chat` abhi "Hermes isn't configured yet" dekar exit karta hai. User ko apne terminal me ek baar `hermes setup` chalana hai (interactive OAuth ya API key). Uske baad se research tasks `hermes chat --query-file` par jayenge. ⚠️ **v38 ke session me user ne research ke liye Hermes use karne se mana kar diya** — tab tak `websearch`/`webfetch` use karo.

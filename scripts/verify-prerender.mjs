@@ -465,6 +465,53 @@ check('the hero intro carries the AI keyword', /AI tools/i.test(dataTs), true)
 check('the visible definition carries both keywords', /digital marketer/i.test(DEFINITION) && /AI tools/i.test(DEFINITION), true)
 check('BlogPost byline points at the About section', blogPostTsx.includes('href="/#about"'), true)
 
+// --- the h1's words survive text extraction ----------------------------------
+//
+// The three hero spans are block-level, so JSX drops the whitespace between
+// them and the rendered text came out as "I'mRachitDigital Marketer". The
+// aria-label papered over it for screen readers, but anything that reads the
+// text of the page — a crawler, a reader-mode extension, `innerText` on a
+// `<title>`-less extraction, a human hitting "select all" and copying — got
+// the run-on. Explicit {' '} text nodes fix it, and because they are
+// collapsible spaces between block-level boxes in a block container they
+// generate no anonymous line box, so nothing moves.
+//
+// Checked against the built HTML rather than the JSX: this is about what a
+// crawler receives, so the assertion belongs on the artefact.
+const builtHomeHtml = await readFile(path.join(process.cwd(), 'dist', 'index.html'), 'utf8').catch(() => '')
+const builtH1 = builtHomeHtml.match(/<h1[\s\S]*?<\/h1>/)?.[0] ?? ''
+const h1Text = builtH1
+  .replace(/<[^>]+>/g, '')
+  .replace(/&#x27;/g, "'")
+  .replace(/&amp;/g, '&')
+check('the h1 keeps its aria-label', builtH1.includes('aria-label="I&#x27;m Rachit Digital Marketer"'), true)
+check('the h1 text is not run together', !h1Text.includes("I'mRachit"), true)
+check('the h1 text reads with real spaces', h1Text === "I'm Rachit Digital Marketer", true)
+check(
+  'the h1 word breaks are real text nodes, not the label',
+  (heroTsx.match(/\{\s*'\s'\s*\}\s*<span/g) || []).length === 2 &&
+    (builtH1.match(/<\/span>\s+<span/g) || []).length === 2,
+  true,
+)
+
+// --- no section heading hardcodes a count the database can contradict ---------
+//
+// The Work heading read "Four builds, zero templates" while the counter next to
+// it derives from projects.length, so deleting a project in Admin made the two
+// disagree. The heading is count-free now; this keeps it that way.
+const COUNT_WORDS = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b/i
+const selectedWorkTsx = await readFile(
+  path.join(process.cwd(), 'src', 'components', 'SelectedWork.tsx'),
+  'utf8',
+)
+const workHeadingSrc = selectedWorkTsx.match(/segments=\{\[([\s\S]*?)\]\}/)?.[1] ?? ''
+check('the work heading states no project count', COUNT_WORDS.test(workHeadingSrc), false)
+check(
+  'the work counter still reflects the real total',
+  /const total = projects\.length/.test(selectedWorkTsx),
+  true,
+)
+
 // --- profile links are the current ones, everywhere they are written ---------
 
 const LINK_SOURCES = [
