@@ -113,6 +113,15 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v43 — Perf work CLOSED OUT by user decision: main par sirf keepalive-defer + CSS-inline; hero-entrance experiment abandoned] — 6 Oct 2026
+**User ka decision:** "performance work stops here — mobile ~90 enough hai." Item 5 (vendor/manualChunks split) **untouched**. CSS-headline-entrance experiment (`perf/hero-css-entrance`) **abandoned + branch deleted** — honest median 87 (range 90) did NOT clear the user's <93 gate, so it did NOT ship. **Main (ahead 2, pushed) par sirf:**
+1. `f380be8` — keepalive-defer: `/health` ping ab `requestIdleCallback` se defer + sirf contact-section-approach par (backend warm, hero critical path se off). Cherry-pick of `5a2349b`.
+2. `a16ab7b` — CSS-inline: built stylesheet inline kiya har prerendered document me (per-route `<style>`, 0 stylesheet `<link>`). Cherry-pick of `dbc0356`. **FOUC prove hua flash-free:** CDP probe under emulated Slow-4G (750ms RTT, 150 KB/s) → first body sample hi `bg rgb(10,4,7)` / Inter, aur `dist/index.html` me stylesheet link count = **0**.
+3. `0ff705b` — `public/google86f73e3f9f31af5a.html` (GSC verification, 54 B exact, LF-only, no BOM); `vercel.json` rewrites ise touch nahi karte (sirf /resume, /blog*, /admin* — static file wins).
+4. AGENTS note (ye entry).
+**Gates on pushed main (`a16ab7b`+):** lint 0 errors (same 6 pre-existing warnings) · build pass · verify **269/269** (4c427bf ke +2 section asserts branch ke saath delete ho gaye) · secrets:check clean 114 files · 404 page (`Page not found`+`noindex`) OK · admin SPA shell via vercel rewrite (local serve2 404 = expected, deploy-time rewrite) · LH compressed harness 3-run median: **perf 89 · BP 100 · A11Y 100 · SEO 100 · FCP 1878 · LCP 3483 · TBT 118 · SI 2051 · CLS 0**.
+**Recorded numbers (VM-noisy, compressed `serve2.cjs`):** origin-main `ec0b637` baseline perf 90. BEFORE(HEAD=GSAP+keepalive+css-inline) 85 (FCP 1939/LCP 3589/TBT 178/SI 3488/CLS 0); AFTER(+CSS entrance) 87 (FCP 1911/LCP 3523/TBT 114/SI 3580/CLS 0); after-best 91. **v42-era remote "68 / FCP 4315" CONFOUNDED** (uncompressed server + stale `dist-before`) — kabhi use na karna.
+
 ### [v42 — h1 run-on text fix + work-heading count removed + `"in training"` meta hataya] — 6 Oct 2026
 **User ka brief (2 parts):** (A) `"in training"` ko meta description aur `site.webmanifest` se hatao; verify → commit → push. (B) (i) hero h1 ka text run-on fix karo, (ii) work heading me hardcoded count hatao, (iii) resume visible label ka report-only proposal do (apply **mat** karo), (iv) har jagah purane profile links list karo — code, seed, aur Supabase Admin ke fields — phir commit + push.
 
