@@ -145,7 +145,7 @@ export const PROJECTS: Project[] = [
 // `my_story_card` rows in supabase/seed.sql — edit them in Admin -> Story.
 export const STORY = {
   card:
-    "I'm not from a big city or a coding background — I'm a self-taught builder who chose to follow what actually interests me, even when the easier path was right there. I got into AI in 2025, and once I started, I didn't stop. Today I work with 25+ AI tools, I'm doing Digital Marketing with AI, and I'm building my own AI products on the side.",
+    "I'm not from a big city or a coding background — I'm studying digital marketing at an institute and I learn by building with AI tools hands-on. I chose to follow what actually interests me, even when the easier path was right there. I got into AI in 2025, and once I started, I didn't stop. Today I work with 25+ AI tools, I'm doing Digital Marketing with AI, and I'm building my own AI products on the side.",
   body: `I got interested in AI in 2025, and that's when I started exploring it seriously.
 
 I wanted to do a "Digital Marketing with AI" course early on, but I couldn't start right away — I had my 12th CBSE boards going on, and some family situations made it hard to begin. After I finished 12th, my family wanted me to take a different course. But I decided to follow what I was actually interested in, so I went ahead and completed the Digital Marketing with AI course anyway.

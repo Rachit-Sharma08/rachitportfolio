@@ -11,6 +11,11 @@ export const SITE_URL = (
   process.env.SITE_URL || 'https://rachitportfolio-fawn.vercel.app'
 ).replace(/\/$/, '')
 
+/**
+ * The site name for `og:site_name` — the site as a whole, not the home page's
+ * title, which is a different string on purpose. Mirrored as `SITE_NAME` in
+ * src/lib/seo.ts, which used to write the bare name and drift from this.
+ */
 export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
 export const OG_IMAGE = `${SITE_URL}/og-image.png`
 export const CONTACT_EMAIL = 'rachitsharma999088@gmail.com'
@@ -41,8 +46,10 @@ export const SOCIALS = {
  * contradiction, not a summary.
  *
  * Wording note: it says what he does, not how he learned to. Every qualifier
- * here has to be one the site can defend on its own pages; the "self-taught"
- * audit is reported, not copied in here.
+ * here has to be one the site can defend on its own pages — which is why the
+ * "how he learned to" claim ("self-taught") was dropped from every other string
+ * on the site too. He is studying digital marketing at an institute and picks AI
+ * tools up hands-on; `verify` keeps the word out of the shipped copy.
  *
  * Mirrored by `DEFINITION` in src/data.ts (the verifier compares the two).
  */
@@ -54,12 +61,13 @@ export const HOME_DESCRIPTION = `${DEFINITION} Explore his work, story and blog.
 // Individual posts get their title/description from the database at build time,
 // so only the index page needs a fixed description here.
 //
-// Left verbatim during the AEO pass, including "self-taught": the definition
-// work was scoped to the home page and the Person schema, and quietly rewording
-// copy nobody asked about is how a review turns into an argument. Reported
-// instead (see AGENTS.md).
+// Mirrored in PAGE_DESCRIPTIONS in src/lib/seo.ts (the verifier compares the
+// two). These used to carry "self-taught", then "in training". Neither belongs
+// in a search snippet: the home title already says "Digital Marketer", and the
+// resume page states his status on its own line ("Specialist (in training)").
+// A snippet is not the place to re-litigate it.
 export const BLOG_DESCRIPTION =
-  "Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a self-taught digital marketer learning in public."
+  'Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a digital marketer, learning in public.'
 
 /** Brand-last, the shape search results are read in. Mirrored in src/lib/seo.ts. */
 export const TITLE_SEPARATOR = ' | '
@@ -114,7 +122,7 @@ export const PAGES = {
   '/resume': {
     title: 'Resume | Rachit Sharma, Digital Marketer',
     description:
-      "Rachit Sharma's resume — a self-taught digital marketer pairing campaign strategy with 25+ AI tools. Education, skills and projects.",
+      "Rachit Sharma's resume — a digital marketer pairing campaign strategy with 25+ AI tools. Education, skills and projects.",
   },
   '/blog': {
     title: 'Blog | Rachit Sharma',

@@ -10,11 +10,38 @@
 // here matches that table, because a crawler reading the pre-rendered HTML and a
 // visitor reading document.title after a client-side navigation must not be told
 // two different things about the same page.
+/**
+ * Mirrors SITE_NAME in scripts/seo-config.mjs.
+ *
+ * This is the site, not the home page — the home `<title>` is a different string
+ * on purpose. `applyMeta` used to write the bare name here, so a client-side
+ * navigation quietly replaced the pre-rendered `og:site_name` with a shorter
+ * one and the two disagreed depending on how the page was reached.
+ */
+export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
+
 export const PAGE_TITLES: Record<string, string> = {
   '/': 'Rachit Sharma — AI-Powered Digital Marketer',
   '/resume': 'Resume | Rachit Sharma, Digital Marketer',
   '/blog': 'Blog | Rachit Sharma',
   '*': 'Rachit Sharma — Page Not Found',
+}
+
+/**
+ * Mirrors the `description` of every entry in PAGES in scripts/seo-config.mjs.
+ *
+ * The blog index used to carry its own retyped title and description, which is
+ * how `/blog` ended up showing "Journal — Rachit Sharma" to anyone who reached
+ * it by clicking and "Blog | Rachit Sharma" to anyone who loaded it directly.
+ * One table, asserted against the build by `npm run verify`.
+ */
+export const PAGE_DESCRIPTIONS: Record<string, string> = {
+  '/': 'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects. Explore his work, story and blog.',
+  '/resume':
+    "Rachit Sharma's resume — a digital marketer pairing campaign strategy with 25+ AI tools. Education, skills and projects.",
+  '/blog':
+    'Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a digital marketer, learning in public.',
+  '*': "That page doesn't exist. It may have been a journal post that is no longer published — everything currently published is on the Journal page.",
 }
 
 /** Mirrors TITLE_SEPARATOR in scripts/seo-config.mjs. */
@@ -129,7 +156,7 @@ export function applyMeta(meta: PageMeta): void {
   upsert(doc, 'meta', 'property', 'og:title', meta.title)
   upsert(doc, 'meta', 'property', 'og:description', meta.description)
   upsert(doc, 'meta', 'property', 'og:image', image)
-  upsert(doc, 'meta', 'property', 'og:site_name', 'Rachit Sharma')
+  upsert(doc, 'meta', 'property', 'og:site_name', SITE_NAME)
 
   upsert(doc, 'meta', 'name', 'twitter:card', 'summary_large_image')
   upsert(doc, 'meta', 'name', 'twitter:title', meta.title)

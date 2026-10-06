@@ -4,12 +4,11 @@ import { ArrowUpRight } from 'lucide-react'
 import SectionHeader from '../components/SectionHeader'
 import { RevealGroup, RevealItem } from '../components/Reveal'
 import { useSiteContent } from '../lib/content'
-import { applyMeta } from '../lib/seo'
+import { PAGE_DESCRIPTIONS, PAGE_TITLES, applyMeta } from '../lib/seo'
 
 const META = {
-  title: 'Journal — Rachit Sharma',
-  description:
-    'Notes on digital marketing, AI tooling and building with AI from Rachit Sharma — a digital marketer learning in public.',
+  title: PAGE_TITLES['/blog'],
+  description: PAGE_DESCRIPTIONS['/blog'],
 }
 
 export default function Blog() {

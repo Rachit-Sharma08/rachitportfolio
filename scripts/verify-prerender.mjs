@@ -6,10 +6,12 @@ import path from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
 import {
   SITE_URL,
+  SITE_NAME,
   PAGES,
   NOT_FOUND,
   DEFINITION,
   HOME_DESCRIPTION,
+  BLOG_DESCRIPTION,
   SOCIALS,
   TITLE_SEPARATOR,
   TITLE_MAX,
@@ -328,6 +330,33 @@ check('long post title is not truncated', postTitle(LONG_TITLE), LONG_TITLE)
 check('short post title keeps the brand', postTitle('One Brief'), `One Brief${TITLE_SEPARATOR}Rachit Sharma`)
 check('the branded title stays inside the budget', postTitle('One Brief').length <= TITLE_MAX, true)
 
+// Every fixed route has to fit the budget and say something no other route says.
+// Two pages with the same title are read by a search engine as one page, and a
+// title past the budget is cut off in the result, so whatever is being hidden
+// past the cut stops existing.
+const fixedTitles = { ...Object.fromEntries(Object.entries(PAGES).map(([route, p]) => [route, p.title])), '*': NOT_FOUND.title }
+for (const [route, title] of Object.entries(fixedTitles)) {
+  check(`title for ${route} fits the budget`, title.length <= TITLE_MAX, true)
+  check(`title for ${route} is not padded with stray whitespace`, title.trim(), title)
+}
+check('every route title is distinct', new Set(Object.values(fixedTitles)).size, Object.values(fixedTitles).length)
+check('the home title leads with the name', PAGES['/'].title.startsWith('Rachit Sharma'), true)
+check('the not-found title leads with the name', NOT_FOUND.title.startsWith('Rachit Sharma'), true)
+// The home page is the only name-first title, and deliberately so: it is the
+// brand page. The rest are brand-last, which is the shape a result is read in.
+check('the brand-last routes carry the brand', ['/resume', '/blog'].every((route) => PAGES[route].title.includes('Rachit Sharma')), true)
+
+// The site name and the home title are two different things, and each has to
+// reach every consumer unchanged: og:site_name names the site, og:title names
+// the page.
+check('home og:site_name is the site name', metaContent(homeHead, 'property', 'og:site_name'), SITE_NAME)
+check('the site name is not the home title', SITE_NAME === PAGES['/'].title, false)
+check('the Person schema names the person, not the page', jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.name, 'Rachit Sharma')
+check('the WebSite schema is named after the home page', jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.name, PAGES['/'].title)
+check('home twitter:title matches the home <title>', metaContent(homeHead, 'name', 'twitter:title'), PAGES['/'].title)
+check('blog twitter:title matches the blog <title>', metaContent(blogHead, 'name', 'twitter:title'), PAGES['/blog'].title)
+check('blog og:title matches the blog <title>', metaContent(blogHead, 'property', 'og:title'), PAGES['/blog'].title)
+
 // --- dateModified only when the edit is real --------------------------------
 
 const blogPost = (head) => jsonLd(head).find((s) => s['@type'] === 'BlogPosting')
@@ -368,6 +397,30 @@ check('client not-found title matches the build', seoTs.includes(`'*': '${NOT_FO
 check('client title separator matches the build', seoTs.includes(`const TITLE_SEPARATOR = '${TITLE_SEPARATOR}'`), true)
 check('client title budget matches the build', seoTs.includes(`const TITLE_MAX = ${TITLE_MAX}`), true)
 
+// The descriptions used to be retyped per page, which is how `/blog` reached a
+// visitor as "Journal — Rachit Sharma" after a click and "Blog | Rachit Sharma"
+// on a direct load. One table on each side, compared here.
+//
+// The build half writes single quotes; the client half uses whichever quote the
+// sentence needs (an apostrophe forces double quotes), so the comparison is on
+// the sentence itself inside the route's own entry rather than on the delimiter.
+const descBlock = seoTs.match(/PAGE_DESCRIPTIONS: Record<string, string> = \{([\s\S]*?)\n\}/)?.[1] ?? ''
+check('the client declares one description table', descBlock.length > 0, true)
+for (const [route, page] of Object.entries({ ...PAGES, '*': NOT_FOUND })) {
+  const at = descBlock.indexOf(`'${route}':`)
+  check(
+    `client description for ${route} matches the build`,
+    at !== -1 && descBlock.slice(at + route.length + 3, at + route.length + 243).includes(page.description),
+    true,
+  )
+}
+check('client site name matches the build', seoTs.includes(`const SITE_NAME = '${SITE_NAME}'`), true)
+check(
+  'client og:site_name is written from the mirror, not a literal',
+  /upsert\(doc, 'meta', 'property', 'og:site_name', SITE_NAME\)/.test(seoTs),
+  true,
+)
+
 // The threshold is written as `24 * 60 * 60 * 1000` on both sides, so compare the
 // evaluated numbers rather than the text — a different spelling of the same
 // duration is not a drift, a different duration is.
@@ -383,12 +436,33 @@ const dataTs = await readFile(path.join(process.cwd(), 'src', 'data.ts'), 'utf8'
 const indexHtml = await readFile(path.join(process.cwd(), 'index.html'), 'utf8')
 const aboutTsx = await readFile(path.join(process.cwd(), 'src', 'components', 'About.tsx'), 'utf8')
 const blogPostTsx = await readFile(path.join(process.cwd(), 'src', 'pages', 'BlogPost.tsx'), 'utf8')
+const blogTsx = await readFile(path.join(process.cwd(), 'src', 'pages', 'Blog.tsx'), 'utf8')
+const heroTsx = await readFile(path.join(process.cwd(), 'src', 'components', 'Hero.tsx'), 'utf8')
 
 check('the visible definition is DEFINITION, not a retyped copy', dataTs.includes(DEFINITION), true)
 check('About renders DEFINITION itself', aboutTsx.includes('{DEFINITION}'), true)
 check('index.html states the home description the build writes', indexHtml.includes(HOME_DESCRIPTION), true)
 check('BlogPost builds its title through postTitle()', !blogPostTsx.includes('`${post.title} — Rachit Sharma`'), true)
 check('BlogPost gates the visible Updated line on the same rule', blogPostTsx.includes('isMeaningfullyUpdated'), true)
+
+// The blog index retyped its own head, which meant `/blog` had two titles: the one
+// in the served HTML and the one document.title showed after a click. It has to
+// read both of them from the mirror tables instead of writing them out again.
+check('Blog reads its title from the mirror', /title: PAGE_TITLES\['\/blog'\]/.test(blogTsx), true)
+check('Blog reads its description from the mirror', /description: PAGE_DESCRIPTIONS\['\/blog'\]/.test(blogTsx), true)
+check('Blog carries no title literal of its own', /'Journal — Rachit Sharma'/.test(blogTsx), false)
+
+// --- the home page's own words carry the same two keywords -------------------
+//
+// The title promises "Digital Marketer" and "AI". A heading that only said one
+// of them would leave the page disagreeing with its own title, and the fix has
+// to stay cheap: each keyword appears once, in the sentence it belongs in, and
+// nothing is repeated to chase a score.
+const homeH1 = heroTsx.match(/aria-label="([^"]+)"/)?.[1] ?? ''
+check('the home h1 names the role', /Digital Marketer/i.test(homeH1), true)
+check('the h1 carries one role phrase, not a keyword list', homeH1.split('AI').length - 1 <= 0, true)
+check('the hero intro carries the AI keyword', /AI tools/i.test(dataTs), true)
+check('the visible definition carries both keywords', /digital marketer/i.test(DEFINITION) && /AI tools/i.test(DEFINITION), true)
 check('BlogPost byline points at the About section', blogPostTsx.includes('href="/#about"'), true)
 
 // --- profile links are the current ones, everywhere they are written ---------
@@ -427,6 +501,89 @@ check('story fallback links the current GitHub', dataTs.includes(`[GitHub](${SOC
 check('seed story links the current GitHub', linkSources['supabase/seed.sql'].includes(`[GitHub](${SOCIALS.github})`), true)
 check('seed story links the current LinkedIn', linkSources['supabase/seed.sql'].includes(`[LinkedIn](${SOCIALS.linkedin})`), true)
 check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/rachithunyawrr\//g) || []).length, 3)
+
+/* -------------------------------------------------------------------------- */
+/*  One "how he learned to" claim, and it is not "self-taught"                 */
+/* -------------------------------------------------------------------------- */
+
+// He studies digital marketing at an institute and picks AI tools up by using
+// them. "Self-taught" was a claim about how he learned that the site could no
+// longer defend, and it reached the browser three different ways: a route meta
+// description, the About story card (baked into every document as visible copy
+// *and* inside the inline content snapshot), and the web manifest. So the guard
+// is on the shipped strings and the files that hold them, not on one line.
+
+const SELF_TAUGHT = /self[-\s]?taught/i
+
+for (const [label, value] of [
+  ['DEFINITION', DEFINITION],
+  ['HOME_DESCRIPTION', HOME_DESCRIPTION],
+  ['BLOG_DESCRIPTION', BLOG_DESCRIPTION],
+  ['SITE_NAME', SITE_NAME],
+  ...Object.entries(PAGES).map(([route, page]) => [`the ${route} description`, page.description]),
+  ['the not-found description', NOT_FOUND.description],
+]) {
+  check(`${label} makes no self-taught claim`, SELF_TAUGHT.test(value), false)
+}
+
+/** Comments explain the removal, so they have to go before the text is scanned. */
+const stripComments = (src) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+
+async function collect(dir, extensions, found = []) {
+  for (const entry of await readdir(path.join(process.cwd(), dir), { withFileTypes: true })) {
+    const rel = `${dir}/${entry.name}`
+    if (entry.isDirectory()) await collect(rel, extensions, found)
+    else if (extensions.some((ext) => entry.name.endsWith(ext))) found.push(rel)
+  }
+  return found
+}
+
+// Every file that can put a sentence in front of a visitor or a crawler. Docs
+// are excluded: AGENTS.md quotes the old wording on purpose, to record that it
+// was removed.
+const COPY_FILES = [
+  'scripts/seo-config.mjs',
+  'scripts/head.mjs',
+  'index.html',
+  'supabase/seed.sql',
+  'public/site.webmanifest',
+  ...(await collect('src', ['.ts', '.tsx'])),
+]
+for (const file of COPY_FILES) {
+  const src = await readFile(path.join(process.cwd(), file), 'utf8')
+  check(`${file} makes no self-taught claim`, SELF_TAUGHT.test(stripComments(src)), false)
+}
+
+// The same sentence has to be in the generated head, not only in the source of
+// it, so a future edit to the writer cannot reintroduce the claim silently.
+for (const [label, head] of [
+  ['home', homeHead],
+  ['/resume', resumeHead],
+  ['/blog', blogHead],
+  ['a post', postHead],
+]) {
+  check(`the ${label} head makes no self-taught claim`, SELF_TAUGHT.test(head), false)
+}
+
+// The story card is authored in the admin panel and mirrored into two files so
+// builds that run without a database still show the real thing. Two of the three
+// can be compared here; the third is a Supabase row and needs the user's hands
+// (the exact field and replacement text are in AGENTS.md).
+const storyCard = dataTs.match(/^\s*card:\s*\n?\s*"([^"]+)",?$/m)?.[1] ?? ''
+const seededCard = (linkSources['supabase/seed.sql']
+  .match(/'my_story_card',\s*\n\s*(E'[\s\S]*?')\n\)/)?.[1] ?? '')
+  .replace(/^E'/, '')
+  .replace(/'$/, '')
+  .replace(/''/g, "'")
+check('the story card is written down', storyCard.length > 0, true)
+check('the seeded story card is the fallback story card, word for word', seededCard, storyCard)
+// And the same card is what actually ships: this build has no service key, so the
+// pre-rendered homepage carries the bundled fallback.
+const builtHome = await readFile(path.join(process.cwd(), 'dist', 'index.html'), 'utf8').catch(() => null)
+if (builtHome !== null) {
+  check('the built homepage shows the story card', builtHome.includes(storyCard), true)
+}
 
 /* -------------------------------------------------------------------------- */
 /*  404                                                                       */

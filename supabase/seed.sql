@@ -32,7 +32,7 @@ insert into public.site_settings (key, value) values
 insert into public.site_story (section_key, content) values
 (
   'my_story_card',
-  E'I''m not from a big city or a coding background — I''m a self-taught builder who chose to follow what actually interests me, even when the easier path was right there. I got into AI in 2025, and once I started, I didn''t stop. Today I work with 25+ AI tools, I''m doing Digital Marketing with AI, and I''m building my own AI products on the side.'
+  E'I''m not from a big city or a coding background — I''m studying digital marketing at an institute and I learn by building with AI tools hands-on. I chose to follow what actually interests me, even when the easier path was right there. I got into AI in 2025, and once I started, I didn''t stop. Today I work with 25+ AI tools, I''m doing Digital Marketing with AI, and I''m building my own AI products on the side.'
 ),
 (
   'my_story',
