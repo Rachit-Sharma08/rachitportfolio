@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, rm } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'vite'
@@ -113,6 +113,63 @@ if (!template.includes(rootMarker)) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Stylesheet inlining                                                        */
+/* -------------------------------------------------------------------------- */
+
+// The built sheet is the only render-blocking request left on the page, and it
+// arrives early enough to cost real time before the first paint. Inlining it
+// removes the request altogether: the styles are already inside the document,
+// so there is no round trip to wait on — and, more importantly, there is no
+// window in which the page could paint unstyled. The usual "load CSS async"
+// trick buys the same number at the price of a flash of unstyled content; this
+// has no such window to get wrong.
+//
+// The honest cost is caching. An external sheet is downloaded once and reused
+// across every route and repeat visit, while inlined CSS rides along with each
+// document. At this size that trade is close to byte-neutral — the sheet
+// compresses to roughly what the larger HTML costs — and it wins on latency,
+// but it is the reason this belongs on a small site rather than a large one.
+const assetDir = path.join(distDir, 'assets')
+const builtCss = (await readdir(assetDir)).filter((file) => file.endsWith('.css'))
+if (builtCss.length !== 1) {
+  throw new Error(`Expected exactly one built stylesheet, found ${builtCss.length}`)
+}
+const css = await readFile(path.join(assetDir, builtCss[0]), 'utf8')
+
+// Every url() in the built sheet has to resolve the same way once it moves into
+// the document. Root-absolute ("/fonts/…"), data and protocol-qualified URLs
+// all do. A bare relative path does not — it would resolve against the document
+// URL instead of the assets folder and 404 — so the build fails rather than
+// shipping fonts and a noise texture that silently failed to load.
+const relativeUrls = [...css.matchAll(/url\(([^)]*)\)/g)]
+  .map((match) => match[1].trim().replace(/^['"]|['"]$/g, ''))
+  .filter(
+    (value) =>
+      value !== '' &&
+      !/^data:/i.test(value) &&
+      !value.startsWith('/') &&
+      !/^[a-z][a-z0-9+.-]*:/i.test(value),
+  )
+if (relativeUrls.length > 0) {
+  throw new Error(
+    `Built CSS has relative url() refs (${relativeUrls.join(', ')}) — inlining would break them`,
+  )
+}
+
+// A "</style" sequence would close an inline tag early and dump the rest of the
+// sheet into the document as text. Valid CSS cannot contain one outside a
+// string, so refuse to inline instead of silently corrupting every page.
+if (/<\/style/i.test(css)) {
+  throw new Error('Built CSS contains "</style" — refusing to inline')
+}
+
+const STYLE_LINK = /<link[^>]*rel="stylesheet"[^>]*>/
+const styleLinkCount = template.split(STYLE_LINK).length - 1
+if (styleLinkCount !== 1) {
+  throw new Error(`Expected exactly one stylesheet link, found ${styleLinkCount}`)
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Document assembly                                                          */
 /* -------------------------------------------------------------------------- */
 
@@ -125,6 +182,9 @@ if (!template.includes(rootMarker)) {
  * The template ships exactly one of each, and the replaces are unanchored to
  * the first match only, so an appended canonical from a previous pass is never
  * duplicated.
+ *
+ * The stylesheet link is replaced by the sheet's own contents on the way
+ * through, so every route it has to be applied to gets the treatment.
  */
 function composeHtml(markup, head) {
   const lines = head.split('\n')
@@ -132,6 +192,7 @@ function composeHtml(markup, head) {
   html = html
     .replace(/<title>[\s\S]*?<\/title>/, lines[0])
     .replace(/<meta[^>]*name="description"[^>]*\/>/, lines[1])
+  html = html.replace(STYLE_LINK, `<style>${css}</style>`)
   html = html.replace('</head>', `    ${lines.slice(2).join('\n    ')}\n  </head>`)
 
   // Embed the snapshot every route shares. `safeJson` escapes "<" so no post
