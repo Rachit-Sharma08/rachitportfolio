@@ -2,6 +2,7 @@ import { useState } from 'react'
 import RevealHeading from './RevealHeading'
 import { Reveal } from './Reveal'
 import Magnetic from './Magnetic'
+import { wakeBackend } from '../lib/keepalive'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 const API_URL = API_BASE ? `${API_BASE.replace(/\/$/, '')}/api/send-email` : '/api/send-email'
@@ -60,6 +61,11 @@ export default function EnquiryForm() {
     if (Object.keys(errs).length > 0) return
 
     setSending(true)
+    // The keep-alive ping normally fires when the contact section approaches the
+    // viewport. Someone who submits before that (or on a route where it never
+    // fires) gets an explicit nudge, so the first attempt is less likely to eat
+    // a cold start. The retry loop below is still what guarantees delivery.
+    wakeBackend()
     const MAX_ATTEMPTS = 3
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       try {
