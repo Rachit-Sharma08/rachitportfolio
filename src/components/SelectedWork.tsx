@@ -111,7 +111,7 @@ export default function SelectedWork() {
                 {project.imageUrl ? (
                   <img
                     src={project.imageUrl}
-                    alt={`${project.title} project preview`}
+                    alt={`${project.title} project preview by Rachit Sharma`}
                     loading="lazy"
                     width={1280}
                     height={640}

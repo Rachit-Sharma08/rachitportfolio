@@ -21,7 +21,7 @@ delete from public.site_settings;
 insert into public.site_settings (key, value) values
   ('hero_base_url',    '/assets/hero-base.webp'),
   ('hero_reveal_url',  '/assets/hero-reveal.webp'),
-  ('og_image_url',     '/og-image.png');
+  ('og_image_url',     '/og-image.webp');
 
 
 -- ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ insert into public.site_story (section_key, content) values
 
 I wanted to do a "Digital Marketing with AI" course early on, but I couldn''t start right away — I had my 12th CBSE boards going on, and some family situations made it hard to begin. After I finished 12th, my family wanted me to take a different course. But I decided to follow what I was actually interested in, so I went ahead and completed the Digital Marketing with AI course anyway.
 
-Now I''m working on real projects — you can check them out on my [GitHub](https://github.com/rachithunyawrr) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/).
+Now I''m working on real projects — you can check them out on my [GitHub](https://github.com/Rachit-Sharma08) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/).
 
 I currently know how to use 25+ AI tools. The ones I use the most are OpenCode (a coding agent), OpenAI''s GPT, ElevenLabs, Cartesia AI, and Claude.
 
@@ -62,8 +62,8 @@ values
   'A fitness-focused site built to practice clean UI and real brand messaging.',
   'A fitness-focused website built to practice clean UI, responsive layout, and brand messaging. Designed to feel energetic, trustworthy, and conversion-friendly across every screen size.',
   array['UI Design', 'Responsive', 'Branding'],
-  'https://socialify.git.ci/rachithunyawrr/Fitness-website/png?theme=Dark&font=Rokkitt&pattern=Circuit%20Board',
-  'https://github.com/rachithunyawrr/Fitness-website',
+  'https://tbcfezkedxliqnajvgjy.supabase.co/storage/v1/object/public/site-media/projects/Infinity%20Fitness%20Neon%20Showcase.webp',
+  'https://github.com/Rachit-Sharma08/Fitness-website',
   '#d62e4a',
   1
 ),
@@ -73,8 +73,8 @@ values
   'A neon-soaked browser racer — built for fun, kept for the speed.',
   'A browser racing game built for fun and practice with JavaScript game loops. Fast, flashy, and built to feel arcade-smooth under the hood.',
   array['JavaScript', 'Game Loops', 'Canvas'],
-  'https://socialify.git.ci/rachithunyawrr/neon-car-racing-game-/png?theme=Dark&font=Rokkitt&pattern=Floating%20Cogs',
-  'https://github.com/rachithunyawrr/neon-car-racing-game-',
+  'https://tbcfezkedxliqnajvgjy.supabase.co/storage/v1/object/public/site-media/projects/Neon%20Rush%20Cyberpunk%20Racing%20Laptop.webp',
+  'https://github.com/Rachit-Sharma08/neon-car-racing-game-',
   '#a11f3c',
   2
 ),
@@ -84,8 +84,8 @@ values
   'A chatbot that answers questions and helps users get things done',
   'An AI assistant chatbot designed to be added to any business website. It greets visitors, answers common questions about the business, and helps them find what they need without waiting for a human reply. I built it with OpenCode and Replit, handling the idea, prompts and testing myself.',
   array['OpenCode', 'replit'],
-  'https://rynizhsmvxmvwqvldwkt.supabase.co/storage/v1/object/public/site-media/projects/Cinematic%20Laptop%20AI%20Assistant%20Showcase.webp',
-  'https://github.com/rachithunyawrr/ai-assistant',
+  'https://tbcfezkedxliqnajvgjy.supabase.co/storage/v1/object/public/site-media/projects/Cinematic%20Laptop%20AI%20Assistant%20Showcase.webp',
+  'https://github.com/Rachit-Sharma08/ai-assistant',
   '#d62e4a',
   3
 );

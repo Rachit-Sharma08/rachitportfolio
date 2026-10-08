@@ -122,7 +122,7 @@ function upsert(
   node.setAttribute(tag === 'link' ? 'href' : 'content', target)
 }
 
-const OG_IMAGE = '/og-image.png'
+const OG_IMAGE = '/og-image.webp'
 
 export interface PageMeta {
   title: string

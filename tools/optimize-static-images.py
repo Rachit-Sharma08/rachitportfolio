@@ -18,7 +18,7 @@ feeding an encoder its own output compounds the resampling loss every run.
                        (1 / 1.3 / 1.75 / 2 / 3) onto exact device pixels — no
                        viewport downloads more than it draws. The 1200px JPEG
                        this replaced cost 92 KiB per visit into that box.
-  public/og-image.png  Social share card. Never rendered on the page, so it is
+  public/og-image.webp  Social share card. Never rendered on the page, so it is
                        not on any visitor's critical path — measured and
                        reported, and only rewritten if the win is large.
 
@@ -33,7 +33,7 @@ from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 PORTRAIT_SOURCE = os.path.join(ROOT, "tools", "source", "rachit.jpg")
-OG = os.path.join(ROOT, "public", "og-image.png")
+OG = os.path.join(ROOT, "public", "og-image.webp")
 
 # The image box inside the About frame is a fixed 236 CSS px square (a 240px
 # ring with 2px padding) at every viewport, so these are its exact device-pixel
@@ -117,7 +117,7 @@ def probe_og(original):
     hides. Trading a visible design asset for a number that buys no performance
     is the wrong side of the brief, so this stays as measured and unwritten.
     """
-    print(f"\n=== og-image.png  {original.size[0]}x{original.size[1]} "
+    print(f"\n=== og-image.webp  {original.size[0]}x{original.size[1]} "
           f"{os.path.getsize(OG):,} B  (1200x630 is the OG spec size) ===")
     tmp = os.path.join(ROOT, "dist", "probe-og.png")
     ref = original.convert("RGB")

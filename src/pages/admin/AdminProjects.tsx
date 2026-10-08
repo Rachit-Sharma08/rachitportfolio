@@ -249,7 +249,7 @@ export default function AdminProjects() {
               {draft.image_url ? (
                 <img
                   src={draft.image_url}
-                  alt=""
+                  alt={`${draft.title || 'Project'} image`}
                   className="mb-3 h-32 w-full rounded-tile object-cover"
                 />
               ) : (
@@ -312,7 +312,7 @@ export default function AdminProjects() {
                 {row.image_url ? (
                   <img
                     src={row.image_url}
-                    alt=""
+                    alt={`${row.title} thumbnail`}
                     className="h-12 w-20 flex-shrink-0 rounded-lg object-cover"
                   />
                 ) : (

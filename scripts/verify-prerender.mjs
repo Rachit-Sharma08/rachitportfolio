@@ -529,7 +529,7 @@ const linkSources = Object.fromEntries(
   ),
 )
 
-const OLD_OWNER = /digitalguru99908-dev/
+const OLD_OWNER = /digitalguru99908-dev|rachithunyawrr/
 const OLD_LINKEDIN = /linkedin\.com\/in\/rachit-sharma(?!-ab199443a)/
 const OLD_INSTAGRAM = /instagram\.com\/rachitsharma/
 for (const [file, src] of Object.entries(linkSources)) {
@@ -547,7 +547,7 @@ check('Instagram profile is written down', dataTs.includes(SOCIALS.instagram), t
 check('story fallback links the current GitHub', dataTs.includes(`[GitHub](${SOCIALS.github})`), true)
 check('seed story links the current GitHub', linkSources['supabase/seed.sql'].includes(`[GitHub](${SOCIALS.github})`), true)
 check('seed story links the current LinkedIn', linkSources['supabase/seed.sql'].includes(`[LinkedIn](${SOCIALS.linkedin})`), true)
-check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/rachithunyawrr\//g) || []).length, 3)
+check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/Rachit-Sharma08\//g) || []).length, 3)
 
 /* -------------------------------------------------------------------------- */
 /*  One "how he learned to" claim, and it is not "self-taught"                 */

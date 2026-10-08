@@ -47,7 +47,7 @@ export default function Blog() {
                     {post.coverImageUrl ? (
                       <img
                         src={post.coverImageUrl}
-                        alt=""
+                        alt={post.title}
                         loading="lazy"
                         width={1280}
                         height={630}

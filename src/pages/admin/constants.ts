@@ -4,7 +4,7 @@
 export const DEFAULT_SETTINGS: Record<string, string> = {
   hero_base_url: '/assets/hero-base.webp',
   hero_reveal_url: '/assets/hero-reveal.webp',
-  og_image_url: '/og-image.png',
+  og_image_url: '/og-image.webp',
 }
 
 export const IMAGE_FIELDS = [

@@ -250,7 +250,7 @@ export default function AdminBlog() {
               {draft.cover_image_url ? (
                 <img
                   src={draft.cover_image_url}
-                  alt=""
+                  alt={`${draft.title || 'Post'} cover image`}
                   className="mb-3 aspect-[1200/630] w-full rounded-tile object-cover"
                 />
               ) : (

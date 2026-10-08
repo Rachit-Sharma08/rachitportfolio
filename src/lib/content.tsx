@@ -133,7 +133,7 @@ export const FALLBACK: SiteContent = {
   settings: {
     heroBaseUrl: '/assets/hero-base.webp',
     heroRevealUrl: '/assets/hero-reveal.webp',
-    ogImageUrl: '/og-image.png',
+    ogImageUrl: '/og-image.webp',
   },
   storyCard: STORY.card,
   storyBody: STORY.body,

@@ -165,7 +165,7 @@ export default function BlogPost() {
             <Reveal>
               <img
                 src={post.coverImageUrl}
-                alt=""
+                alt={post.title}
                 width={1280}
                 height={630}
                 className="mt-10 aspect-[1200/630] w-full rounded-card border border-stroke object-cover"

@@ -17,7 +17,7 @@ export const SITE_URL = (
  * src/lib/seo.ts, which used to write the bare name and drift from this.
  */
 export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
-export const OG_IMAGE = `${SITE_URL}/og-image.png`
+export const OG_IMAGE = `${SITE_URL}/og-image.webp`
 export const CONTACT_EMAIL = 'rachitsharma999088@gmail.com'
 
 /**
@@ -31,7 +31,7 @@ export const CONTACT_EMAIL = 'rachitsharma999088@gmail.com'
  * session that clicked, not the profile, and have no business in a canonical.
  */
 export const SOCIALS = {
-  github: 'https://github.com/rachithunyawrr',
+  github: 'https://github.com/Rachit-Sharma08',
   linkedin: 'https://www.linkedin.com/in/rachit-sharma-ab199443a/',
   instagram: 'https://www.instagram.com/rachit.08_',
 }
