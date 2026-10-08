@@ -17,7 +17,7 @@ language sql
 stable
 set search_path = ''
 as $$
-  select lower(coalesce(auth.jwt() ->> 'email', '')) = 'rachitsharma999088@gmail.com';
+  select lower(coalesce(auth.jwt() ->> 'email', '')) = 'rachitsharma9990888@gmail.com';
 $$;
 
 revoke all on function public.is_admin() from public;
