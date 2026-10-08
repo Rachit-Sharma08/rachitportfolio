@@ -12,6 +12,9 @@ const APPROACH_MARGIN = '800px 0px'
 const FORM_SECTIONS = ['#enquiry', '#contact']
 
 async function ping() {
+  // Serverless par koi alag backend nahi bacha — same-origin function hai,
+  // wahan karne ke liye warm karne ko kuch nahi.
+  if (!API_BASE) return
   try {
     const res = await fetch(`${API_BASE}/health`, { method: 'GET' })
     if (!res.ok) throw new Error(String(res.status))
