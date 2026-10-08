@@ -109,6 +109,9 @@ export default function AdminDashboard() {
           <QuickAction to="/admin/story" icon={<PenLine className="h-4 w-4" />}>
             Edit My Story
           </QuickAction>
+          <QuickAction to="/admin/resume" icon={<FileText className="h-4 w-4" />}>
+            Edit Resume
+          </QuickAction>
           <a
             href="/"
             target="_blank"

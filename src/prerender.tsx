@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { AppContent } from './App'
-import { FALLBACK, toPost, toProject } from './lib/content'
+import { FALLBACK, parseResume, toPost, toProject } from './lib/content'
 import type { Post, Project, SiteContent } from './lib/content'
 
 /**
@@ -65,6 +65,7 @@ export function mapBuildContent(raw: BuildContentRaw): SiteContent {
     },
     storyCard: storyValue('my_story_card', FALLBACK.storyCard),
     storyBody: storyValue('my_story', FALLBACK.storyBody),
+    resume: parseResume(settings.resume, FALLBACK.resume),
   }
 }
 

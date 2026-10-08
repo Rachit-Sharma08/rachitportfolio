@@ -21,7 +21,8 @@ delete from public.site_settings;
 insert into public.site_settings (key, value) values
   ('hero_base_url',    '/assets/hero-base.webp'),
   ('hero_reveal_url',  '/assets/hero-reveal.webp'),
-  ('og_image_url',     '/og-image.webp');
+  ('og_image_url',     '/og-image.webp'),
+  ('resume',           '{"subtitle":"Digital Marketing Specialist (in training) · Digital Marketing with AI course, in progress.","education":{"title":"Digital Marketing with AI","period":"Currently completing · 2026"},"skills":["Social Media Marketing","SEO & Content","AI Prompting","Copywriting","Campaign Planning","Canva","Ad Design Basics"],"projects":[{"title":"Fitness Website","desc":"A fitness-focused website built to practice clean UI, responsive layout, and brand messaging."},{"title":"Neon Car Racing Game","desc":"A browser racing game built for fun and practice with JavaScript game loops."}]}');
 
 
 -- ---------------------------------------------------------------------------

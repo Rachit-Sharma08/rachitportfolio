@@ -47,7 +47,11 @@ export function supabase(): Promise<SupabaseClient | null> {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: false,
+          // On: Admin -> Password "forgot password" sends a recovery email whose
+          // link carries a token in the URL hash; Supabase can only consume it
+          // if it is told to look there. No token in a URL is the normal case
+          // and reads nothing, so this never affects a plain page load.
+          detectSessionInUrl: true,
           storageKey: 'rs-admin-session',
         },
       })

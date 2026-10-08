@@ -6,7 +6,8 @@ import {
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
-import { JOURNAL, PROJECTS, STORY } from '../data'
+import { JOURNAL, PROJECTS, RESUME, STORY } from '../data'
+import type { ResumeData } from '../data'
 
 /* -------------------------------------------------------------------------- */
 /*  Shapes                                                                    */
@@ -51,6 +52,7 @@ export interface SiteContent {
   settings: SiteSettings
   storyCard: string
   storyBody: string
+  resume: ResumeData
 }
 
 /* -------------------------------------------------------------------------- */
@@ -137,6 +139,63 @@ export const FALLBACK: SiteContent = {
   },
   storyCard: STORY.card,
   storyBody: STORY.body,
+  resume: RESUME,
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Resume                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Turn the `resume` site_settings value into a ResumeData shape. The stored
+ * value is a JSON string; anything that is missing, empty or unparsable falls
+ * back field by field to the bundled copy. A *present but empty* skills or
+ * projects array is honoured — the admin cleared it on purpose, and the page
+ * hides the section instead of resurrecting the bundled list.
+ */
+export function parseResume(
+  value: string | null | undefined,
+  fallback: ResumeData,
+): ResumeData {
+  if (!value) return fallback
+  let raw: unknown
+  try {
+    raw = JSON.parse(value)
+  } catch {
+    return fallback
+  }
+  if (!raw || typeof raw !== 'object') return fallback
+  const v = raw as Record<string, unknown>
+  const blank = (field: unknown): field is string =>
+    typeof field === 'string' && field.trim().length > 0
+  const education =
+    v.education && typeof v.education === 'object'
+      ? (v.education as Record<string, unknown>)
+      : {}
+  const projects = Array.isArray(v.projects)
+    ? v.projects
+        .filter(
+          (project): project is Record<string, unknown> =>
+            Boolean(project && typeof project === 'object'),
+        )
+        .map((project) => ({
+          title: typeof project.title === 'string' ? project.title : '',
+          desc: typeof project.desc === 'string' ? project.desc : '',
+        }))
+    : []
+  return {
+    subtitle: blank(v.subtitle) ? v.subtitle : fallback.subtitle,
+    education: {
+      title: blank(education.title) ? education.title : fallback.education.title,
+      period: blank(education.period)
+        ? education.period
+        : fallback.education.period,
+    },
+    skills: Array.isArray(v.skills)
+      ? v.skills.filter((skill): skill is string => typeof skill === 'string')
+      : fallback.skills,
+    projects: Array.isArray(v.projects) ? projects : fallback.projects,
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -190,6 +249,7 @@ async function loadRemoteContent(): Promise<{
   storyBody?: string
   projects?: Row[]
   posts?: Row[]
+  resume?: string | null
 } | null> {
   try {
     const response = await fetch('/api/content', { headers: { accept: 'application/json' } })
@@ -261,6 +321,10 @@ export function SiteContentProvider({ initial, children }: ProviderProps) {
         },
         storyCard: remote?.storyCard ?? prev.storyCard,
         storyBody: remote?.storyBody ?? prev.storyBody,
+        resume:
+          remote?.resume != null
+            ? parseResume(remote.resume, prev.resume)
+            : prev.resume,
       }))
     })()
 

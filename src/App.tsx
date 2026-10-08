@@ -34,6 +34,8 @@ const AdminProjects = lazy(() => import('./pages/admin/AdminProjects'))
 const AdminImages = lazy(() => import('./pages/admin/AdminImages'))
 const AdminStory = lazy(() => import('./pages/admin/AdminStory'))
 const AdminBlog = lazy(() => import('./pages/admin/AdminBlog'))
+const AdminResume = lazy(() => import('./pages/admin/AdminResume'))
+const AdminPassword = lazy(() => import('./pages/admin/AdminPassword'))
 
 /** Shown for the fraction of a second a lazy route takes to arrive. */
 function RouteFallback() {
@@ -65,6 +67,8 @@ function AdminRoutes() {
         <Route path="/admin/images" element={<AdminImages />} />
         <Route path="/admin/story" element={<AdminStory />} />
         <Route path="/admin/blog" element={<AdminBlog />} />
+        <Route path="/admin/resume" element={<AdminResume />} />
+        <Route path="/admin/password" element={<AdminPassword />} />
         <Route path="*" element={<AdminNotFound />} />
       </Routes>
     </Suspense>

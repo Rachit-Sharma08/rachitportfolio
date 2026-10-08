@@ -157,6 +157,59 @@ I currently know how to use 25+ AI tools. The ones I use the most are OpenCode (
 I'm also starting to build my own AI products. One of them is called **VoiceMemories AI** — the idea is that someone can clone a loved one's voice (if they have a voice sample) and have a real, emotionally supportive conversation with that voice — even live calls, not just text. It's meant for people who've lost someone and want a way to feel close to them again. The project isn't finished yet — I've paused it for now because of funding — but it's something I really care about and plan to come back to.`,
 }
 
+export interface ResumeEducation {
+  title: string
+  period: string
+}
+
+export interface ResumeProject {
+  title: string
+  desc: string
+}
+
+/**
+ * Everything the /resume page renders. Stored as a single JSON blob under the
+ * `resume` key in site_settings — "no row" and "blank field" both fall back to
+ * these bundled values, but an empty skills/projects *array* is honoured (the
+ * admin cleared them on purpose). Mirror of the `resume` row in
+ * supabase/seed.sql; Admin -> Resume is the source of truth once Supabase
+ * answers.
+ */
+export interface ResumeData {
+  subtitle: string
+  education: ResumeEducation
+  skills: string[]
+  projects: ResumeProject[]
+}
+
+export const RESUME: ResumeData = {
+  subtitle:
+    'Digital Marketing Specialist (in training) · Digital Marketing with AI course, in progress.',
+  education: {
+    title: 'Digital Marketing with AI',
+    period: 'Currently completing · 2026',
+  },
+  skills: [
+    'Social Media Marketing',
+    'SEO & Content',
+    'AI Prompting',
+    'Copywriting',
+    'Campaign Planning',
+    'Canva',
+    'Ad Design Basics',
+  ],
+  projects: [
+    {
+      title: 'Fitness Website',
+      desc: 'A fitness-focused website built to practice clean UI, responsive layout, and brand messaging.',
+    },
+    {
+      title: 'Neon Car Racing Game',
+      desc: 'A browser racing game built for fun and practice with JavaScript game loops.',
+    },
+  ],
+}
+
 export interface JournalEntry {
   title: string
   tag: string

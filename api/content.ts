@@ -96,6 +96,7 @@ export default async function handler(req: Req, res: Res) {
     },
     storyCard: copy.my_story_card ?? '',
     storyBody: copy.my_story ?? '',
+    resume: values.resume ?? null,
     projects: projects.data ?? [],
     posts: posts.data ?? [],
   })

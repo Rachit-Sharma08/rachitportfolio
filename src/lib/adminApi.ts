@@ -1,6 +1,7 @@
 import { STORAGE_BUCKET, supabase } from './supabase'
 import { toPost } from './content'
 import type { Post } from './content'
+import type { ResumeData } from '../data'
 
 /**
  * Every read and write the admin panel makes. All of it goes straight to
@@ -176,6 +177,33 @@ export async function saveSetting(key: string, value: string) {
     .from('site_settings')
     .upsert({ key, value })
   if (error) throw new Error(message(error, 'Could not save the image setting.'))
+}
+
+/** The whole resume is one JSON string under the `resume` settings key. */
+export async function saveResume(resume: ResumeData) {
+  await saveSetting('resume', JSON.stringify(resume))
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Account                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export async function changePassword(password: string) {
+  const { error } = await (await client()).auth.updateUser({ password })
+  if (error) throw new Error(message(error, 'Could not update the password.'))
+}
+
+/**
+ * Sends Supabase Auth's password-recovery email to the admin address. The link
+ * lands on /admin/login, where `detectSessionInUrl` reads its token and signs
+ * the admin in so they can set a new password. Requires Supabase Auth to have a
+ * working email provider (SMTP config in the dashboard).
+ */
+export async function sendPasswordReset(email: string) {
+  const { error } = await (await client()).auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/admin/login`,
+  })
+  if (error) throw new Error(message(error, 'Could not send the reset email.'))
 }
 
 /* -------------------------------------------------------------------------- */
