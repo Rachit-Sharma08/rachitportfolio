@@ -816,6 +816,23 @@ if (llms !== null) {
   // Same-origin only: an llms.txt that hands over a localhost or preview host is
   // worse than none.
   check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-rouge\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com)/.test(llms), false)
+
+  // The three sections an answer engine looks for: who he is, what he has built,
+  // and what he builds with. Plain text, so it can be lifted and quoted as-is.
+  check('llms.txt has an About section', llms.includes('## About'), true)
+  check('llms.txt has a Projects section', llms.includes('## Projects'), true)
+  check('llms.txt has a Tools section', llms.includes('## Tools'), true)
+  const projectsBlock = llms.split('## Projects')[1]?.split('\n## ')[0] ?? ''
+  check(
+    'llms.txt Projects section lists at least one project',
+    /- \[.+\]\(.+\)/.test(projectsBlock),
+    true,
+  )
+  check(
+    'llms.txt names the core tools',
+    ['OpenCode', 'ElevenLabs', 'Cartesia AI', 'Claude'].every((tool) => llms.includes(tool)),
+    true,
+  )
 }
 
 /* -------------------------------------------------------------------------- */

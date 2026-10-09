@@ -341,6 +341,10 @@ const llms = [
   '',
   `> ${DEFINITION}`,
   '',
+  '## About',
+  '',
+  'Rachit Sharma is a digital marketer from Kaithal, Haryana, India. He studies Digital Marketing with AI at Zedking Group of Institution, works with 25+ AI tools, and builds his own AI products on the side.',
+  '',
   '## Key pages',
   '',
   `- [Home](${SITE_URL}/): Portfolio landing page — about, capabilities, selected work, journal and contact.`,
@@ -348,6 +352,33 @@ const llms = [
   `- [Journal](${SITE_URL}/blog): Notes on digital marketing, AI tooling, SEO and building with AI.`,
   '',
 ]
+
+// What he has built, from the same snapshot the pages rendered with — so a
+// DB-less build still lists the bundled projects, and one deleted in the admin
+// leaves here exactly as it leaves the page.
+llms.push('## Projects', '')
+for (const project of snapshot.projects) {
+  const name = project.projectUrl
+    ? `[${project.title}](${project.projectUrl})`
+    : project.title
+  const summary = project.tagline
+    ? `: ${project.tagline.replace(/\s+/g, ' ').trim()}`
+    : ''
+  llms.push(`- ${name}${summary}`)
+}
+llms.push(
+  '',
+  '## Tools',
+  '',
+  'Rachit works with 25+ AI tools. The ones he uses most:',
+  '',
+  '- OpenCode — a coding agent',
+  '- OpenAI (GPT)',
+  '- ElevenLabs',
+  '- Cartesia AI',
+  '- Claude',
+  '',
+)
 
 const published = (content?.posts ?? []).filter((post) => post.slug)
 if (published.length) {
