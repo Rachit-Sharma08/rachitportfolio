@@ -276,6 +276,15 @@ check('home meta description leads with the definition', metaContent(homeHead, '
 check('llms summary is the definition, not a second wording', HOME_DESCRIPTION.startsWith(DEFINITION), true)
 check('home page itself states the definition', home.includes(DEFINITION), true)
 
+// The location has to be stated where a searcher and an answer engine each look:
+// the home title, the Person schema's postal address, and the footer's own line.
+check('the home title names the town', PAGES['/'].title.includes('Kaithal'), true)
+check(
+  'the Person schema address is the town and state',
+  [homePerson?.address?.addressLocality, homePerson?.address?.addressRegion],
+  ['Kaithal', 'Haryana'],
+)
+
 // --- Person everywhere, WebSite only on the home page -----------------------
 
 check('home emits Person + WebSite', types(homeHead), ['Person', 'WebSite'])
@@ -442,6 +451,13 @@ const heroTsx = await readFile(path.join(process.cwd(), 'src', 'components', 'He
 check('the visible definition is DEFINITION, not a retyped copy', dataTs.includes(DEFINITION), true)
 check('About renders DEFINITION itself', aboutTsx.includes('{DEFINITION}'), true)
 check('index.html states the home description the build writes', indexHtml.includes(HOME_DESCRIPTION), true)
+check(
+  'the footer states the base location',
+  (await readFile(path.join(process.cwd(), 'src', 'components', 'Footer.tsx'), 'utf8')).includes(
+    'Based in Kaithal, Haryana, India',
+  ),
+  true,
+)
 check('BlogPost builds its title through postTitle()', !blogPostTsx.includes('`${post.title} — Rachit Sharma`'), true)
 check('BlogPost gates the visible Updated line on the same rule', blogPostTsx.includes('isMeaningfullyUpdated'), true)
 

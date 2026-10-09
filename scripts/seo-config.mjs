@@ -54,9 +54,12 @@ export const SOCIALS = {
  * Mirrored by `DEFINITION` in src/data.ts (the verifier compares the two).
  */
 export const DEFINITION =
-  'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects.'
+  'Rachit Sharma is a digital marketer from Kaithal, Haryana, India who uses AI tools to build brands, campaigns and creative projects.'
 
-export const HOME_DESCRIPTION = `${DEFINITION} Explore his work, story and blog.`
+// The home snippet is the same claim plus a nudge to browse. It still leads with
+// the definition (the verifier asserts `startsWith(DEFINITION)`), so the two can
+// never disagree about who the page is about.
+export const HOME_DESCRIPTION = `${DEFINITION} See his work.`
 
 // Individual posts get their title/description from the database at build time,
 // so only the index page needs a fixed description here.
@@ -116,7 +119,7 @@ export function isMeaningfullyUpdated(publishedAt, updatedAt) {
  */
 export const PAGES = {
   '/': {
-    title: 'Rachit Sharma — AI-Powered Digital Marketer',
+    title: 'Rachit Sharma — AI-Powered Digital Marketer, Kaithal',
     description: HOME_DESCRIPTION,
   },
   '/resume': {

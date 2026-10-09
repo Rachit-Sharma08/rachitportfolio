@@ -15,7 +15,7 @@ export const PERSONAL = {
  * verify` asserts the two strings are byte-identical.
  */
 export const DEFINITION =
-  'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects.'
+  'Rachit Sharma is a digital marketer from Kaithal, Haryana, India who uses AI tools to build brands, campaigns and creative projects.'
 
 export const SOCIALS = {
   github: 'https://github.com/Rachit-Sharma08',

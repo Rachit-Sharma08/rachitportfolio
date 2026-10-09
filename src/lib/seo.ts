@@ -21,7 +21,7 @@
 export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
 
 export const PAGE_TITLES: Record<string, string> = {
-  '/': 'Rachit Sharma — AI-Powered Digital Marketer',
+  '/': 'Rachit Sharma — AI-Powered Digital Marketer, Kaithal',
   '/resume': 'Resume | Rachit Sharma, Digital Marketer',
   '/blog': 'Blog | Rachit Sharma',
   '*': 'Rachit Sharma — Page Not Found',
@@ -36,7 +36,7 @@ export const PAGE_TITLES: Record<string, string> = {
  * One table, asserted against the build by `npm run verify`.
  */
 export const PAGE_DESCRIPTIONS: Record<string, string> = {
-  '/': 'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects. Explore his work, story and blog.',
+  '/': 'Rachit Sharma is a digital marketer from Kaithal, Haryana, India who uses AI tools to build brands, campaigns and creative projects. See his work.',
   '/resume':
     "Rachit Sharma's resume — a digital marketer pairing campaign strategy with 25+ AI tools. Education, skills and projects.",
   '/blog':
