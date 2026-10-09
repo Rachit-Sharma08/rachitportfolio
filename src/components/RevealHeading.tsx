@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   easePower3,
@@ -51,20 +51,31 @@ export default function RevealHeading({
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([])
   const [lineOf, setLineOf] = useState<number[]>([])
 
-  let wordIndex = 0
-  const words = segments.flatMap((segment, s) => {
-    const parts = segment.text.split(' ').filter(Boolean)
-    return parts.map((word, w) => {
-      const isLast = s === segments.length - 1 && w === parts.length - 1
-      return {
+  // One flat word list drives both the render and the accessible name, so the
+  // two can never disagree about how many spaces sit between the words.
+  const words = segments.flatMap((segment) =>
+    segment.text
+      .split(' ')
+      .filter(Boolean)
+      .map((word) => ({
         word,
         italic: Boolean(segment.italic),
         className: segment.className,
-        trail: isLast ? '' : ' ',
-        index: wordIndex++,
-      }
-    })
-  })
+      })),
+  )
+
+  // A closing mark clings to the word before it ("Rachit Sharma?"), so no space
+  // goes in front of it. Every other gap between words is a single space.
+  const isClosingMark = (word: string) => /^[?!.,;:%)…]/.test(word)
+
+  // The accessible name is the same words joined the same way the render lays
+  // them out. Building it from the shared list is what stops the double spaces
+  // that segment-by-segment joining used to leave at every boundary.
+  const label = words.reduce(
+    (acc, { word }, index) =>
+      index === 0 || isClosingMark(word) ? `${acc}${word}` : `${acc} ${word}`,
+    '',
+  )
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -104,39 +115,40 @@ export default function RevealHeading({
     <Tag
       id={id}
       className={`relative ${className}`}
-      aria-label={segments.map((s) => s.text).join(' ')}
+      aria-label={label}
     >
-      {words.map(({ word, italic, className: wordCls, trail, index }) => {
+      {words.map(({ word, italic, className: wordCls }, index) => {
         const line = lineOf[index] ?? 0
         const wordDelay =
           delay + line * STAGGER + (italic ? ITALIC_EXTRA_DELAY : 0)
 
         return (
-          <span
-            key={index}
-            ref={(el) => {
-              wordRefs.current[index] = el
-            }}
-            className="inline-block overflow-hidden align-bottom"
-            style={{ paddingBottom: '0.1em', marginBottom: '-0.1em' }}
-          >
-            <motion.span
-              className={`inline-block ${
-                italic ? 'font-display text-[0.76em] font-normal italic' : ''
-              } ${wordCls ?? ''}`}
-              initial={reduce ? { opacity: 0 } : { y: '110%', opacity: italic ? 0 : 1 }}
-              whileInView={reduce ? { opacity: 1 } : { y: '0%', opacity: 1 }}
-              viewport={{ once: true, margin: VIEWPORT_MARGIN }}
-              transition={{
-                duration: reduce ? REDUCED_DURATION : LINE_DURATION,
-                ease: easePower3(),
-                delay: reduce ? 0 : wordDelay,
+          <Fragment key={index}>
+            {index > 0 && !isClosingMark(word) ? ' ' : null}
+            <span
+              ref={(el) => {
+                wordRefs.current[index] = el
               }}
+              className="inline-block overflow-hidden align-bottom"
+              style={{ paddingBottom: '0.1em', marginBottom: '-0.1em' }}
             >
-              {word}
-              {trail}
-            </motion.span>
-          </span>
+              <motion.span
+                className={`inline-block ${
+                  italic ? 'font-display text-[0.76em] font-normal italic' : ''
+                } ${wordCls ?? ''}`}
+                initial={reduce ? { opacity: 0 } : { y: '110%', opacity: italic ? 0 : 1 }}
+                whileInView={reduce ? { opacity: 1 } : { y: '0%', opacity: 1 }}
+                viewport={{ once: true, margin: VIEWPORT_MARGIN }}
+                transition={{
+                  duration: reduce ? REDUCED_DURATION : LINE_DURATION,
+                  ease: easePower3(),
+                  delay: reduce ? 0 : wordDelay,
+                }}
+              >
+                {word}
+              </motion.span>
+            </span>
+          </Fragment>
         )
       })}
     </Tag>

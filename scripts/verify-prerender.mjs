@@ -510,6 +510,35 @@ check(
   true,
 )
 
+// --- the reveal headings keep their inter-word spaces ------------------------
+//
+// Every word in a masked heading sits in its own `inline-block overflow-hidden`
+// wrapper. A trailing space rendered inside that wrapper is trimmed by the
+// browser, so the words came out jammed — "WhoisRachitSharma?" on screen — while
+// the aria-label, which joined the raw segments, doubled the space at each
+// boundary. The words now share one flat list for both the render and the label,
+// and the single space between them is a text node BETWEEN the wrappers, where
+// it survives. This is a CSS-rendering bug, so the check reads the built HTML:
+// it proves the space is a real sibling text node rather than a space inside a
+// mask (which would be trimmed), and that no label space leaked before a mark.
+const builtAboutHeading = builtHomeHtml.match(/<h2[^>]*id="about-heading"[\s\S]*?<\/h2>/)?.[0] ?? ''
+check('the About heading reads with single spaces', builtAboutHeading.includes('aria-label="Who is Rachit Sharma?"'), true)
+check(
+  'the About heading puts each space between the masked words',
+  (builtAboutHeading.match(/<\/span><\/span> <span/g) || []).length === 3,
+  true,
+)
+check('the About heading keeps no space inside a mask', /\S <\/span>/.test(builtAboutHeading), false)
+const revealHeadingLabels = (
+  await Promise.all(
+    ['dist/index.html', 'dist/resume/index.html', 'dist/blog/index.html'].map((f) =>
+      readFile(path.join(process.cwd(), f), 'utf8'),
+    ),
+  )
+).flatMap((html) => [...html.matchAll(/<h[1-6][^>]*aria-label="([^"]*)"/g)].map((m) => m[1]))
+check('no reveal heading carries a double space', revealHeadingLabels.some((l) => l.includes('  ')), false)
+check('no reveal heading carries a space before punctuation', revealHeadingLabels.some((l) => /\s[?!.,;:]/.test(l)), false)
+
 // --- no section heading hardcodes a count the database can contradict ---------
 //
 // The Work heading read "Four builds, zero templates" while the counter next to
