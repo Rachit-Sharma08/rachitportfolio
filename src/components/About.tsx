@@ -99,9 +99,9 @@ export default function About() {
         </Reveal>
 
         <Reveal className="mb-12 md:mb-16">
-          <h2 className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
+          <h3 className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
             Quick facts
-          </h2>
+          </h3>
           <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {QUICK_FACTS.map((fact) => (
               <div key={fact.q} className="glass lift p-5">
@@ -220,9 +220,9 @@ export default function About() {
         </div>
 
         <Reveal className="mt-16 md:mt-24">
-          <h2 className="mb-8 text-xs uppercase tracking-[0.3em] text-muted">
+          <h3 className="mb-8 text-xs uppercase tracking-[0.3em] text-muted">
             My Journey
-          </h2>
+          </h3>
           <RevealGroup className="relative flex flex-col gap-9 pl-8" stagger={0.1}>
             <div className="absolute bottom-2 left-[5px] top-2 w-px bg-stroke" />
             {JOURNEY.map((item) => (

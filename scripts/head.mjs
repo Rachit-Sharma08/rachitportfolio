@@ -126,7 +126,7 @@ export function headFor(route, content) {
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="${isArticle ? 'article' : 'website'}" />`,
     `<meta property="og:site_name" content="${escapeAttr(SITE_NAME)}" />`,
-    `<meta property="og:locale" content="en_US" />`,
+    `<meta property="og:locale" content="en_IN" />`,
     `<meta property="og:title" content="${t}" />`,
     `<meta property="og:description" content="${d}" />`,
     `<meta property="og:url" content="${url}" />`,
