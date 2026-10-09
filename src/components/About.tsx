@@ -14,6 +14,34 @@ const STAT_CHIPS = [
   'Building: VoiceMemories AI',
 ]
 
+// Five self-contained answers, each written answer-first so an answer engine can
+// quote one line without the question for context. Every claim is already on the
+// page elsewhere (the definition, the story, the chips, the resume) — nothing new
+// is asserted here — and this stays visible copy: there is deliberately no
+// FAQPage structured data behind it.
+const QUICK_FACTS = [
+  {
+    q: 'Who is Rachit Sharma?',
+    a: 'A digital marketer from Kaithal, Haryana, India. He uses AI tools to build brands, campaigns and creative projects.',
+  },
+  {
+    q: 'What does Rachit Sharma do?',
+    a: "Digital marketing with AI — campaigns, content and creative projects — powered by 25+ AI tools like OpenCode, OpenAI's GPT, ElevenLabs, Cartesia AI and Claude.",
+  },
+  {
+    q: 'Where is Rachit Sharma based?',
+    a: 'Kaithal, Haryana, India.',
+  },
+  {
+    q: 'What is Rachit Sharma studying?',
+    a: 'Digital Marketing with AI at Zedking Group of Institution, learning the tools hands-on by building with them.',
+  },
+  {
+    q: 'What is Rachit Sharma building?',
+    a: 'His own AI products, including VoiceMemories AI — a way to have a warm, supportive conversation with a loved one\u2019s cloned voice, even on live calls.',
+  },
+]
+
 const JOURNEY = [
   {
     year: '2025',
@@ -67,6 +95,20 @@ export default function About() {
           <p className="max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
             {DEFINITION}
           </p>
+        </Reveal>
+
+        <Reveal className="mb-12 md:mb-16">
+          <h2 className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
+            Quick facts
+          </h2>
+          <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {QUICK_FACTS.map((fact) => (
+              <div key={fact.q} className="glass lift p-5">
+                <dt className="text-sm font-semibold text-text-primary">{fact.q}</dt>
+                <dd className="mt-2 text-sm leading-relaxed text-muted">{fact.a}</dd>
+              </div>
+            ))}
+          </dl>
         </Reveal>
 
         <div className="grid gap-10 md:grid-cols-[320px_1fr] md:gap-14 lg:gap-20">

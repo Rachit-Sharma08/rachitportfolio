@@ -557,6 +557,31 @@ check(
   true,
 )
 
+// --- the About copy answers the obvious questions, in plain text -------------
+//
+// Five self-contained answers sit in a small visible "Quick facts" list. The
+// brief was explicit that this is page text, not an FAQPage block: an answer
+// engine should read the same words a visitor does, and the page should add no
+// schema it would then have to keep true.
+const QUICK_FACT_QUESTIONS = [
+  'Who is Rachit Sharma?',
+  'What does Rachit Sharma do?',
+  'Where is Rachit Sharma based?',
+  'What is Rachit Sharma studying?',
+  'What is Rachit Sharma building?',
+]
+check(
+  'About writes all five Quick facts questions',
+  QUICK_FACT_QUESTIONS.every((q) => aboutTsx.includes(q)),
+  true,
+)
+check(
+  'the Quick facts answers are in the served home HTML',
+  QUICK_FACT_QUESTIONS.every((q) => builtHomeHtml.includes(q)),
+  true,
+)
+check('the Quick facts copy adds no FAQPage schema', builtHomeHtml.includes('FAQPage'), false)
+
 // --- profile links are the current ones, everywhere they are written ---------
 
 const LINK_SOURCES = [
