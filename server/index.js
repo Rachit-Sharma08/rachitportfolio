@@ -42,7 +42,7 @@ app.post('/api/send-email', async (req, res) => {
     const resend = new Resend(apiKey)
     const { error } = await resend.emails.send({
       from: 'Rachit Portfolio <onboarding@resend.dev>',
-      to: process.env.CONTACT_EMAIL ?? 'rachitsharma999088@gmail.com',
+      to: process.env.CONTACT_EMAIL ?? 'rachitsharma9990888@gmail.com',
       replyTo: email,
       subject: `New enquiry — ${reason ?? 'General'} (from ${name})`,
       text: `Name: ${name}\nEmail: ${email}\nReason: ${reason ?? 'General'}\n\n${message}`,

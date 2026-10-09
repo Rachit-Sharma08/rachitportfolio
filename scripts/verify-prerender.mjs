@@ -805,7 +805,7 @@ if (llms !== null) {
   check('llms.txt leads with the definition', llms.includes(`> ${DEFINITION}\n`), true)
   check('llms.txt lists GitHub', llms.includes(SOCIALS.github), true)
   check('llms.txt lists LinkedIn', llms.includes(SOCIALS.linkedin), true)
-  check('llms.txt lists the contact address', llms.includes('rachitsharma999088@gmail.com'), true)
+  check('llms.txt lists the contact address', llms.includes('rachitsharma9990888@gmail.com'), true)
   check(
     'llms.txt points at the sitemap',
     llms.includes(`Sitemap: ${SITE_URL}/sitemap.xml`),

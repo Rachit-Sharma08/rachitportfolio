@@ -18,7 +18,7 @@ export const SITE_URL = (
  */
 export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
 export const OG_IMAGE = `${SITE_URL}/og-image.webp`
-export const CONTACT_EMAIL = 'rachitsharma999088@gmail.com'
+export const CONTACT_EMAIL = 'rachitsharma9990888@gmail.com'
 
 /**
  * Identity profiles. These have to match what the visitor can actually click
