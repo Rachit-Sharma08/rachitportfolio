@@ -582,6 +582,82 @@ check(
 )
 check('the Quick facts copy adds no FAQPage schema', builtHomeHtml.includes('FAQPage'), false)
 
+// --- the resume is one shape, authored once ----------------------------------
+//
+// The resume used to live as a one-off subtitle + flat skill list hand-copied
+// between the page, the admin form and the seed row, and a copy change left
+// them disagreeing. Now the page, the admin editor and the seed all share the
+// same ResumeData shape (summary / skill groups / education / projects /
+// lastUpdated), and a database row from the pre-rebuild shape is dropped
+// wholesale so its old wording can never resurface. The PDF download is
+// optional: the file ships with a user handoff, so a checkout without it only
+// warns.
+
+const RESUME_SUMMARY =
+  'Digital marketer from Kaithal, Haryana, who uses AI tools to build brands, campaigns and creative projects. Works hands-on with 25+ AI tools for content, voice, search optimisation and product building, and develops his own AI products alongside his studies. Seeking an entry-level digital marketing role where AI-driven work can support real campaigns.'
+
+const resumePage = renderRoute('/resume', content)
+check('resume renders the single-source summary', resumePage.includes(RESUME_SUMMARY), true)
+check('resume writes the education list', resumePage.includes('RKSD College, Kaithal'), true)
+check('resume keeps the skills as group headings', resumePage.includes('Search Optimisation'), true)
+check('resume has exactly one h1', (resumePage.match(/<h1/g) || []).length, 1)
+check('resume carries no phone number', resumePage.includes('83071'), false)
+check('resume offers the PDF download', resumePage.includes('Download resume (PDF)'), true)
+check('resume points at the PDF path', resumePage.includes('/Rachit-Sharma-Resume.pdf'), true)
+check('resume says when it was last updated', resumePage.includes('Last updated ·'), true)
+
+// A pre-rebuild row stored `subtitle` + a single `education` object and no
+// `summary`. Matching that signature restores the bundled copy whole rather
+// than mixing old wording into a new layout.
+const legacyResume = mapBuildContent({
+  ...RAW,
+  settings: [
+    ...RAW.settings,
+    {
+      key: 'resume',
+      value: JSON.stringify({
+        subtitle: 'Digital Marketing Specialist (in training) old row.',
+        education: { title: 'Digital Marketing with AI', period: '2025' },
+        skills: ['An old skill'],
+        projects: [{ title: 'Old project', desc: 'old' }],
+      }),
+    },
+  ],
+}).resume
+check('a legacy resume row is dropped wholesale', legacyResume.summary, RESUME_SUMMARY)
+check(
+  'no old group survives the legacy-drop',
+  legacyResume.skills.some((g) => g.heading === 'Search Optimisation'),
+  true,
+)
+
+const editedResume = mapBuildContent({
+  ...RAW,
+  settings: [
+    ...RAW.settings,
+    {
+      key: 'resume',
+      value: JSON.stringify({
+        summary: 'A shorter, admin-authored summary.',
+        skills: [
+          { heading: 'One', items: ['a', 'b'] },
+          { heading: '', items: [] },
+        ],
+        education: [{ title: 'Class XII (CBSE)', institution: '', period: '2026' }],
+        projects: [{ title: 'P', desc: 'd', url: 'https://example.com/' }],
+        lastUpdated: 'October 2026',
+      }),
+    },
+  ],
+}).resume
+check('a new-shape resume row is honoured', editedResume.summary, 'A shorter, admin-authored summary.')
+check('an empty group in the new shape is dropped', editedResume.skills.length, 1)
+check('the admin project url survives', editedResume.projects[0].url, 'https://example.com/')
+check('a blank summary falls back per-field', mapBuildContent({
+  ...RAW,
+  settings: [...RAW.settings, { key: 'resume', value: JSON.stringify({ summary: '', lastUpdated: '' }) }],
+}).resume.summary, RESUME_SUMMARY)
+
 // --- profile links are the current ones, everywhere they are written ---------
 
 const LINK_SOURCES = [
@@ -681,6 +757,60 @@ for (const [label, head] of [
   ['a post', postHead],
 ]) {
   check(`the ${label} head makes no self-taught claim`, SELF_TAUGHT.test(head), false)
+}
+
+// --- no "learning status" words in anything that ships ------------------------
+//
+// The resume once called the position "in training", and a status word reads
+// as a stage of a career. "Self-taught" got a guard above for the same reason;
+// these four can each leak in a sentence a visitor skips but a crawler obeys,
+// so they get the same treatment: source files (comments stripped), built
+// documents, generated heads, and the resume summary itself.
+
+const STATUS_WORDS = /\b(training|trainee|fresher|intern|internship)\b/i
+
+for (const [label, value] of [
+  ['DEFINITION', DEFINITION],
+  ['HOME_DESCRIPTION', HOME_DESCRIPTION],
+  ['BLOG_DESCRIPTION', BLOG_DESCRIPTION],
+  ['SITE_NAME', SITE_NAME],
+  ...Object.entries(PAGES).map(([route, page]) => [`the ${route} description`, page.description]),
+  ['the not-found description', NOT_FOUND.description],
+  ['RESUME_SUMMARY', RESUME_SUMMARY],
+]) {
+  check(`${label} carries no status word`, STATUS_WORDS.test(value), false)
+}
+
+for (const file of COPY_FILES) {
+  const src = await readFile(path.join(process.cwd(), file), 'utf8')
+  check(`${file} carries no status word`, STATUS_WORDS.test(stripComments(src)), false)
+}
+
+for (const [label, head] of [
+  ['home', homeHead],
+  ['/resume', resumeHead],
+  ['/blog', blogHead],
+  ['a post', postHead],
+]) {
+  check(`the ${label} head carries no status word`, STATUS_WORDS.test(head), false)
+}
+
+for (const doc of await Promise.all(
+  ['dist/index.html', 'dist/resume/index.html', 'dist/blog/index.html', 'dist/404.html', 'dist/llms.txt', 'dist/robots.txt'].map(
+    (f) => readFile(path.join(process.cwd(), f), 'utf8'),
+  ),
+)) {
+  check('no built document carries a status word', STATUS_WORDS.test(doc), false)
+}
+
+// The PDF is a handoff artifact, so its absence is a warning, not a failure:
+// the resume page links /Rachit-Sharma-Resume.pdf and exists in the repo only
+// when the user drops the file into public/.
+try {
+  await readFile(path.join(process.cwd(), 'public', 'Rachit-Sharma-Resume.pdf'))
+  check('the resume PDF ships with the site', true, true)
+} catch {
+  console.log('WARN  no public/Rachit-Sharma-Resume.pdf yet — the page link is correct, the file comes with the handoff')
 }
 
 // The story card is authored in the admin panel and mirrored into two files so

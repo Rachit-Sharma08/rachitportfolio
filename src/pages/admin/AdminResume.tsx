@@ -13,23 +13,48 @@ import { parseResume } from '../../lib/content'
 import { RESUME } from '../../data'
 import type { ResumeData } from '../../data'
 
+interface SkillDraft {
+  heading: string
+  items: string
+}
+
+interface EducationDraft {
+  title: string
+  institution: string
+  period: string
+}
+
+interface ProjectDraft {
+  title: string
+  url: string
+  desc: string
+}
+
 interface Draft {
-  subtitle: string
-  educationTitle: string
-  educationPeriod: string
-  skills: string
-  projects: { title: string; desc: string }[]
+  summary: string
+  skills: SkillDraft[]
+  education: EducationDraft[]
+  projects: ProjectDraft[]
+  lastUpdated: string
 }
 
 const toDraft = (resume: ResumeData): Draft => ({
-  subtitle: resume.subtitle,
-  educationTitle: resume.education.title,
-  educationPeriod: resume.education.period,
-  skills: resume.skills.join('\n'),
+  summary: resume.summary,
+  skills: resume.skills.map((group) => ({
+    heading: group.heading,
+    items: group.items.join('\n'),
+  })),
+  education: resume.education.map((entry) => ({
+    title: entry.title,
+    institution: entry.institution,
+    period: entry.period,
+  })),
   projects: resume.projects.map((project) => ({
     title: project.title,
+    url: project.url ?? '',
     desc: project.desc,
   })),
+  lastUpdated: resume.lastUpdated,
 })
 
 export default function AdminResume(): ReactNode {
@@ -63,21 +88,31 @@ export default function AdminResume(): ReactNode {
     setState('idle')
     try {
       const resume: ResumeData = {
-        subtitle: draft.subtitle.trim(),
-        education: {
-          title: draft.educationTitle.trim(),
-          period: draft.educationPeriod.trim(),
-        },
+        summary: draft.summary.trim(),
         skills: draft.skills
-          .split('\n')
-          .map((skill) => skill.trim())
-          .filter(Boolean),
+          .map((group) => ({
+            heading: group.heading.trim(),
+            items: group.items
+              .split('\n')
+              .map((item) => item.trim())
+              .filter(Boolean),
+          }))
+          .filter((group) => group.heading || group.items.length > 0),
+        education: draft.education
+          .map((entry) => ({
+            title: entry.title.trim(),
+            institution: entry.institution.trim(),
+            period: entry.period.trim(),
+          }))
+          .filter((entry) => entry.title || entry.institution || entry.period),
         projects: draft.projects
           .map((project) => ({
             title: project.title.trim(),
+            url: project.url.trim() || undefined,
             desc: project.desc.trim(),
           }))
           .filter((project) => project.title || project.desc),
+        lastUpdated: draft.lastUpdated.trim(),
       }
       await saveResume(resume)
       setState('ok')
@@ -96,27 +131,43 @@ export default function AdminResume(): ReactNode {
     setState('idle')
   }
 
-  const patchProject = (index: number, part: { title?: string; desc?: string }) => {
+  const patchAt = (
+    key: 'skills' | 'education' | 'projects',
+    index: number,
+    part: Partial<SkillDraft> | Partial<EducationDraft> | Partial<ProjectDraft>,
+  ) => {
     setDraft((prev) => {
       if (!prev) return prev
-      const projects = prev.projects.map((project, i) =>
-        i === index ? { ...project, ...part } : project,
-      )
-      return { ...prev, projects }
+      const rows = [...prev[key]]
+      const row = rows[index] as SkillDraft | EducationDraft | ProjectDraft
+      rows[index] = {
+        ...row,
+        ...part,
+      } as SkillDraft & EducationDraft & ProjectDraft
+      return { ...prev, [key]: rows } as Draft
     })
     setState('idle')
   }
 
-  const addProject = () => {
-    setDraft((prev) => (prev ? { ...prev, projects: [...prev.projects, { title: '', desc: '' }] } : prev))
+  const addAt = (key: 'skills' | 'education' | 'projects') => {
+    setDraft((prev) => {
+      if (!prev) return prev
+      const empty =
+        key === 'skills'
+          ? { heading: '', items: '' }
+          : key === 'education'
+            ? { title: '', institution: '', period: '' }
+            : { title: '', url: '', desc: '' }
+      return { ...prev, [key]: [...prev[key], empty] } as Draft
+    })
     setState('idle')
   }
 
-  const removeProject = (index: number) => {
+  const removeAt = (key: 'skills' | 'education' | 'projects', index: number) => {
     setDraft((prev) => {
       if (!prev) return prev
-      const projects = prev.projects.filter((_, i) => i !== index)
-      return { ...prev, projects }
+      const rows = prev[key].filter((_, i) => i !== index)
+      return { ...prev, [key]: rows } as Draft
     })
     setState('idle')
   }
@@ -124,7 +175,7 @@ export default function AdminResume(): ReactNode {
   return (
     <AdminLayout
       title="Resume"
-      subtitle="Everything the Resume page shows. Skills: one per line. Projects: title + description each."
+      subtitle="Everything the Resume page shows. Skill items: one per line. Projects: title, link (optional) + description."
     >
       <Status state={state} message={message} />
 
@@ -137,60 +188,117 @@ export default function AdminResume(): ReactNode {
       {draft ? (
         <>
           <AdminPanel
-            title="Introduction"
-            description="The line under your name on the Resume page."
+            title="Summary"
+            description="The paragraph under your name on the Resume page."
             action={
               <Button variant="primary" loading={busy} onClick={() => void save()}>
                 Save resume
               </Button>
             }
           >
-            <TextField
-              label="Tagline"
-              value={draft.subtitle}
-              onChange={(e) => patch({ subtitle: e.target.value })}
+            <TextArea
+              label="Summary"
+              rows={5}
+              value={draft.summary}
+              onChange={(e) => patch({ summary: e.target.value })}
             />
             <p className="mt-3 text-xs text-muted">
-              {draft.subtitle.length} characters
+              {draft.summary.length} characters
             </p>
           </AdminPanel>
 
           <AdminPanel
-            title="Education"
-            description="One course — change the fields to show another."
+            title="Skills"
+            description="Group + items (one per line) each. Empty rows are dropped on save; clearing a whole group hides it from the page."
+            action={
+              <Button onClick={() => addAt('skills')} className="border-accent/40 text-accent-ink">
+                Add group
+              </Button>
+            }
           >
-            <div className="grid gap-5 md:grid-cols-2">
-              <TextField
-                label="Course"
-                value={draft.educationTitle}
-                onChange={(e) => patch({ educationTitle: e.target.value })}
-              />
-              <TextField
-                label="Period"
-                value={draft.educationPeriod}
-                onChange={(e) => patch({ educationPeriod: e.target.value })}
-              />
+            <div className="flex flex-col gap-6">
+              {draft.skills.length === 0 ? (
+                <p className="text-sm text-muted">
+                  No skill groups yet — add one to show something here.
+                </p>
+              ) : (
+                draft.skills.map((group, index) => (
+                  <div key={index} className="flex flex-col gap-3 rounded-2xl border border-stroke p-4">
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <TextField
+                          label={`Group ${index + 1} — heading`}
+                          value={group.heading}
+                          onChange={(e) => patchAt('skills', index, { heading: e.target.value })}
+                        />
+                      </div>
+                      <Button variant="danger" onClick={() => removeAt('skills', index)}>
+                        Remove
+                      </Button>
+                    </div>
+                    <TextArea
+                      label="Items (one per line)"
+                      rows={4}
+                      value={group.items}
+                      placeholder={'SEO\nAEO\nStructured data'}
+                      onChange={(e) => patchAt('skills', index, { items: e.target.value })}
+                    />
+                  </div>
+                ))
+              )}
             </div>
           </AdminPanel>
 
           <AdminPanel
-            title="Skills"
-            description="One per line — like the chips on the page."
+            title="Education"
+            description="Title, institution and period each. Empty rows are dropped on save."
+            action={
+              <Button onClick={() => addAt('education')} className="border-accent/40 text-accent-ink">
+                Add entry
+              </Button>
+            }
           >
-            <TextArea
-              label="Skills"
-              rows={8}
-              value={draft.skills}
-              placeholder={'Social Media Marketing\nSEO & Content'}
-              onChange={(e) => patch({ skills: e.target.value })}
-            />
+            <div className="flex flex-col gap-6">
+              {draft.education.length === 0 ? (
+                <p className="text-sm text-muted">
+                  No education entries yet — add one to show something here.
+                </p>
+              ) : (
+                draft.education.map((entry, index) => (
+                  <div key={index} className="flex flex-col gap-3 rounded-2xl border border-stroke p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <TextField
+                        label="Title"
+                        value={entry.title}
+                        onChange={(e) => patchAt('education', index, { title: e.target.value })}
+                      />
+                      <TextField
+                        label="Institution"
+                        value={entry.institution}
+                        onChange={(e) => patchAt('education', index, { institution: e.target.value })}
+                      />
+                      <TextField
+                        label="Period"
+                        value={entry.period}
+                        onChange={(e) => patchAt('education', index, { period: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="danger" onClick={() => removeAt('education', index)}>
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </AdminPanel>
 
           <AdminPanel
             title="Projects"
-            description="Title + description each. Empty rows are dropped on save."
+            description="Title, optional link and description each. Empty rows are dropped on save."
             action={
-              <Button onClick={addProject} className="border-accent/40 text-accent-ink">
+              <Button onClick={() => addAt('projects')} className="border-accent/40 text-accent-ink">
                 Add project
               </Button>
             }
@@ -203,19 +311,26 @@ export default function AdminResume(): ReactNode {
               ) : (
                 draft.projects.map((project, index) => (
                   <div key={index} className="flex flex-col gap-3 rounded-2xl border border-stroke p-4">
-                    <TextField
-                      label={`Project ${index + 1} — title`}
-                      value={project.title}
-                      onChange={(e) => patchProject(index, { title: e.target.value })}
-                    />
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <TextField
+                        label={`Project ${index + 1} — title`}
+                        value={project.title}
+                        onChange={(e) => patchAt('projects', index, { title: e.target.value })}
+                      />
+                      <TextField
+                        label="Link (optional)"
+                        value={project.url}
+                        onChange={(e) => patchAt('projects', index, { url: e.target.value })}
+                      />
+                    </div>
                     <TextArea
                       label="Description"
                       rows={3}
                       value={project.desc}
-                      onChange={(e) => patchProject(index, { desc: e.target.value })}
+                      onChange={(e) => patchAt('projects', index, { desc: e.target.value })}
                     />
                     <div className="flex justify-end">
-                      <Button variant="danger" onClick={() => removeProject(index)}>
+                      <Button variant="danger" onClick={() => removeAt('projects', index)}>
                         Remove
                       </Button>
                     </div>
@@ -223,6 +338,17 @@ export default function AdminResume(): ReactNode {
                 ))
               )}
             </div>
+          </AdminPanel>
+
+          <AdminPanel
+            title="Last updated"
+            description="Shown on the page next to your email — a month and year."
+          >
+            <TextField
+              label="Last updated"
+              value={draft.lastUpdated}
+              onChange={(e) => patch({ lastUpdated: e.target.value })}
+            />
           </AdminPanel>
         </>
       ) : null}

@@ -153,57 +153,102 @@ Today I'm working on real projects, and you can see them on my [GitHub](https://
 I'm also building my own AI products. One of them is VoiceMemories AI. With a real voice sample, a person could have a warm, supportive conversation with a loved one's cloned voice, even on live calls and not just in text. It is meant for people who have lost someone and want to feel close to them again. The project is paused for now because of funding, but I care about it and plan to return to it.`,
 }
 
-export interface ResumeEducation {
+export interface ResumeSkillGroup {
+  heading: string
+  items: string[]
+}
+
+export interface ResumeEducationEntry {
   title: string
+  institution: string
   period: string
 }
 
 export interface ResumeProject {
   title: string
+  url?: string
   desc: string
 }
 
 /**
  * Everything the /resume page renders. Stored as a single JSON blob under the
- * `resume` key in site_settings — "no row" and "blank field" both fall back to
- * these bundled values, but an empty skills/projects *array* is honoured (the
- * admin cleared them on purpose). Mirror of the `resume` row in
- * supabase/seed.sql; Admin -> Resume is the source of truth once Supabase
- * answers.
+ * `resume` key in site_settings — "no row", an old-shape row and every blank
+ * field all fall back to these bundled values, but a *present but empty* skills
+ * / education / projects array is honoured (the admin cleared it on purpose and
+ * the page hides the section). Mirror of the `resume` row in supabase/seed.sql;
+ * Admin -> Resume is the source of truth once Supabase answers.
  */
 export interface ResumeData {
-  subtitle: string
-  education: ResumeEducation
-  skills: string[]
+  summary: string
+  skills: ResumeSkillGroup[]
+  education: ResumeEducationEntry[]
   projects: ResumeProject[]
+  lastUpdated: string
 }
 
 export const RESUME: ResumeData = {
-  subtitle:
-    'Digital Marketing Specialist (in training) · Digital Marketing with AI course, in progress.',
-  education: {
-    title: 'Digital Marketing with AI',
-    period: 'Currently completing · 2026',
-  },
+  summary:
+    'Digital marketer from Kaithal, Haryana, who uses AI tools to build brands, campaigns and creative projects. Works hands-on with 25+ AI tools for content, voice, search optimisation and product building, and develops his own AI products alongside his studies. Seeking an entry-level digital marketing role where AI-driven work can support real campaigns.',
   skills: [
-    'Social Media Marketing',
-    'SEO & Content',
-    'AI Prompting',
-    'Copywriting',
-    'Campaign Planning',
-    'Canva',
-    'Ad Design Basics',
+    {
+      heading: 'Digital Marketing',
+      items: ['Marketing strategy', 'Social media marketing', 'Campaign planning', 'Copywriting'],
+    },
+    {
+      heading: 'Search Optimisation',
+      items: ['SEO', 'AEO', 'GEO', 'Structured data', 'llms.txt'],
+    },
+    {
+      heading: 'AI Tools',
+      items: ['OpenAI GPT', 'Claude', 'Gemini', 'ElevenLabs', 'Cartesia AI', 'OpenCode', '25+ tools'],
+    },
+    {
+      heading: 'Voice AI',
+      items: ['ElevenLabs', 'Cartesia AI', 'Groq Whisper', 'Voice cloning for AI products'],
+    },
+    {
+      heading: 'Web Development',
+      items: ['React', 'TypeScript', 'Vite', 'Supabase', 'Vercel'],
+    },
+  ],
+  education: [
+    {
+      title: 'Bachelor of Business Administration (BBA)',
+      institution: 'RKSD College, Kaithal (Kurukshetra University)',
+      period: '2026 – Present',
+    },
+    {
+      title: 'Digital Marketing with AI',
+      institution: 'Zedking Group of Institution',
+      period: '2026',
+    },
+    {
+      title: 'Class XII (CBSE)',
+      institution: '',
+      period: '2026',
+    },
+    {
+      title: 'Class X (CBSE)',
+      institution: '',
+      period: '2024',
+    },
   ],
   projects: [
     {
-      title: 'Fitness Website',
-      desc: 'A fitness-focused website built to practice clean UI, responsive layout, and brand messaging.',
+      title: 'Personal Portfolio Website',
+      url: 'https://rachitportfolio-rouge.vercel.app',
+      desc: 'A personal portfolio for a digital marketer — built with React and TypeScript, deployed on Vercel, with SEO, AEO and answer-engine optimisation baked in.',
     },
     {
-      title: 'Neon Car Racing Game',
-      desc: 'A browser racing game built for fun and practice with JavaScript game loops.',
+      title: 'Jarvis — Personal AI Voice Assistant',
+      desc: 'A voice-first personal AI assistant prototype — voice commands, reminders and smart replies driven by an LLM.',
+    },
+    {
+      title: 'VoiceMemories AI',
+      desc: 'A way to have a warm, supportive conversation with a loved one\u2019s cloned voice, even on live calls. Paused while I focus on my digital marketing studies and live projects.',
     },
   ],
+  lastUpdated: 'October 2026',
 }
 
 export interface JournalEntry {

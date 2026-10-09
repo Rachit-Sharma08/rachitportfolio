@@ -149,9 +149,14 @@ export const FALLBACK: SiteContent = {
 /**
  * Turn the `resume` site_settings value into a ResumeData shape. The stored
  * value is a JSON string; anything that is missing, empty or unparsable falls
- * back field by field to the bundled copy. A *present but empty* skills or
- * projects array is honoured — the admin cleared it on purpose, and the page
- * hides the section instead of resurrecting the bundled list.
+ * back field by field to the bundled copy. A *present but empty* skills /
+ * education / projects array is honoured — the admin cleared it on purpose, and
+ * the page hides the section instead of resurrecting the bundled list.
+ *
+ * Rows created before the resume rebuild (which stored `subtitle` + a single
+ * `education` object) fall back to the bundled copy wholesale: their shape
+ * can't express the new sections, and the old subtitle carried words the site
+ * no longer uses. The admin can resave once, which stores the new shape.
  */
 export function parseResume(
   value: string | null | undefined,
@@ -168,33 +173,55 @@ export function parseResume(
   const v = raw as Record<string, unknown>
   const blank = (field: unknown): field is string =>
     typeof field === 'string' && field.trim().length > 0
-  const education =
-    v.education && typeof v.education === 'object'
-      ? (v.education as Record<string, unknown>)
-      : {}
+  // Legacy rows are identified by their old `subtitle` field and no `summary`.
+  if (blank(v.subtitle) && !blank(v.summary)) return fallback
+
+  const asObject = (entry: unknown): Record<string, unknown> | null =>
+    entry && typeof entry === 'object'
+      ? (entry as Record<string, unknown>)
+      : null
+  const skills = Array.isArray(v.skills)
+    ? v.skills
+        .map(asObject)
+        .filter((group): group is Record<string, unknown> => Boolean(group))
+        .map((group) => ({
+          heading: blank(group.heading) ? group.heading : '',
+          items: Array.isArray(group.items)
+            ? group.items.filter(
+                (item): item is string => typeof item === 'string',
+              )
+            : [],
+        }))
+        .filter((group) => group.heading || group.items.length > 0)
+    : fallback.skills
+  const education = Array.isArray(v.education)
+    ? v.education
+        .map(asObject)
+        .filter((entry): entry is Record<string, unknown> => Boolean(entry))
+        .map((entry) => ({
+          title: blank(entry.title) ? entry.title : '',
+          institution: blank(entry.institution) ? entry.institution : '',
+          period: blank(entry.period) ? entry.period : '',
+        }))
+        .filter((entry) => entry.title || entry.institution || entry.period)
+    : fallback.education
   const projects = Array.isArray(v.projects)
     ? v.projects
-        .filter(
-          (project): project is Record<string, unknown> =>
-            Boolean(project && typeof project === 'object'),
-        )
+        .map(asObject)
+        .filter((project): project is Record<string, unknown> => Boolean(project))
         .map((project) => ({
           title: typeof project.title === 'string' ? project.title : '',
+          url: typeof project.url === 'string' ? project.url : undefined,
           desc: typeof project.desc === 'string' ? project.desc : '',
         }))
-    : []
+    : fallback.projects
+
   return {
-    subtitle: blank(v.subtitle) ? v.subtitle : fallback.subtitle,
-    education: {
-      title: blank(education.title) ? education.title : fallback.education.title,
-      period: blank(education.period)
-        ? education.period
-        : fallback.education.period,
-    },
-    skills: Array.isArray(v.skills)
-      ? v.skills.filter((skill): skill is string => typeof skill === 'string')
-      : fallback.skills,
+    summary: blank(v.summary) ? v.summary : fallback.summary,
+    skills: Array.isArray(v.skills) ? skills : fallback.skills,
+    education: Array.isArray(v.education) ? education : fallback.education,
     projects: Array.isArray(v.projects) ? projects : fallback.projects,
+    lastUpdated: blank(v.lastUpdated) ? v.lastUpdated : fallback.lastUpdated,
   }
 }
 

@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import SectionHeader from './SectionHeader'
 import { Reveal, RevealGroup, RevealItem } from './Reveal'
@@ -109,6 +110,12 @@ export default function About() {
               </div>
             ))}
           </dl>
+          <Link
+            to="/resume"
+            className="mt-5 inline-flex items-center gap-1 text-sm text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
+          >
+            View the full resume <span className="inline-block">↗</span>
+          </Link>
         </Reveal>
 
         <div className="grid gap-10 md:grid-cols-[320px_1fr] md:gap-14 lg:gap-20">

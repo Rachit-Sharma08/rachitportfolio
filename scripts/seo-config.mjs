@@ -65,10 +65,10 @@ export const HOME_DESCRIPTION = `${DEFINITION} See his work.`
 // so only the index page needs a fixed description here.
 //
 // Mirrored in PAGE_DESCRIPTIONS in src/lib/seo.ts (the verifier compares the
-// two). These used to carry "self-taught", then "in training". Neither belongs
-// in a search snippet: the home title already says "Digital Marketer", and the
-// resume page states his status on its own line ("Specialist (in training)").
-// A snippet is not the place to re-litigate it.
+// two). These used to try on a status word in a search snippet; neither
+// belongs there: the home title already says "Digital Marketer", and the
+// resume page states his status on its own line. A snippet is not the place
+// to re-litigate it.
 export const BLOG_DESCRIPTION =
   'Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a digital marketer, learning in public.'
 

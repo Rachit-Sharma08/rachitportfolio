@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { SOCIAL_LINKS } from '../data'
 import { Reveal } from './Reveal'
 
@@ -19,6 +20,12 @@ export default function Footer() {
     <Reveal>
       <footer className="flex flex-col items-center justify-between gap-6 border-t border-stroke px-6 pt-10 pb-8 text-center md:flex-row md:text-left">
         <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
+          <Link
+            to="/resume"
+            className="chip nav-hit px-4 py-2 text-sm text-accent-ink transition-colors duration-300 hover:border-accent/60"
+          >
+            Resume ↗
+          </Link>
           {socialLinks}
         </div>
 
