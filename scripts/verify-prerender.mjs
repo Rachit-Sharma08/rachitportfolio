@@ -749,6 +749,30 @@ if (llms !== null) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  dist: no retired host baked into any served document                      */
+/* -------------------------------------------------------------------------- */
+
+// The pre-rendered files ARE the SEO surface, so one leftover `fawn` URL in any
+// of them advertises a host that is not the live site. Walk every text document
+// dist ships and fail if the retired preview host appears anywhere.
+const distDir = path.join(process.cwd(), 'dist')
+async function collectDistDocs(dir) {
+  const out = []
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) out.push(...(await collectDistDocs(full)))
+    else if (/\.(html|txt|xml|json|webmanifest|js|css)$/.test(entry.name)) out.push(full)
+  }
+  return out
+}
+const staleHostFiles = []
+for (const file of await collectDistDocs(distDir)) {
+  const src = await readFile(file, 'utf8')
+  if (/fawn/i.test(src)) staleHostFiles.push(path.relative(process.cwd(), file))
+}
+check('no retired host baked into any dist document', staleHostFiles, [])
+
+/* -------------------------------------------------------------------------- */
 /*  Bundle: the Supabase SDK must stay admin-only                             */
 /* -------------------------------------------------------------------------- */
 
