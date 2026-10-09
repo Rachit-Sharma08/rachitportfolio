@@ -33,19 +33,15 @@ insert into public.site_settings (key, value) values
 insert into public.site_story (section_key, content) values
 (
   'my_story_card',
-  E'I''m not from a big city or a coding background — I''m studying digital marketing at an institute and I learn by building with AI tools hands-on. I chose to follow what actually interests me, even when the easier path was right there. I got into AI in 2025, and once I started, I didn''t stop. Today I work with 25+ AI tools, I''m doing Digital Marketing with AI, and I''m building my own AI products on the side.'
+  E'I''m Rachit Sharma, a digital marketer from Kaithal, Haryana. I''m studying digital marketing at Zedking Group of Institution and I learn by building with AI tools hands-on. I started exploring AI seriously in 2025, and today I work with 25+ AI tools and build my own AI products on the side.'
 ),
 (
   'my_story',
-  E'I got interested in AI in 2025, and that''s when I started exploring it seriously.
+  E'I started exploring AI seriously in 2025. I knew early on that I wanted to study Digital Marketing with AI, and after finishing my 12th (CBSE) I made it my path, even though it wasn''t the most conventional choice. Since then I''ve been learning it at Zedking Group of Institution and applying it by building real projects.
 
-I wanted to do a "Digital Marketing with AI" course early on, but I couldn''t start right away — I had my 12th CBSE boards going on, and some family situations made it hard to begin. After I finished 12th, my family wanted me to take a different course. But I decided to follow what I was actually interested in, so I went ahead and completed the Digital Marketing with AI course anyway.
+Today I''m working on real projects, and you can see them on my [GitHub](https://github.com/Rachit-Sharma08) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/). I use 25+ AI tools. The ones I use most are OpenCode (a coding agent), OpenAI''s GPT, ElevenLabs, Cartesia AI and Claude.
 
-Now I''m working on real projects — you can check them out on my [GitHub](https://github.com/Rachit-Sharma08) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/).
-
-I currently know how to use 25+ AI tools. The ones I use the most are OpenCode (a coding agent), OpenAI''s GPT, ElevenLabs, Cartesia AI, and Claude.
-
-I''m also starting to build my own AI products. One of them is called **VoiceMemories AI** — the idea is that someone can clone a loved one''s voice (if they have a voice sample) and have a real, emotionally supportive conversation with that voice — even live calls, not just text. It''s meant for people who''ve lost someone and want a way to feel close to them again. The project isn''t finished yet — I''ve paused it for now because of funding — but it''s something I really care about and plan to come back to.'
+I''m also building my own AI products. One of them is VoiceMemories AI. With a real voice sample, a person could have a warm, supportive conversation with a loved one''s cloned voice, even on live calls and not just in text. It is meant for people who have lost someone and want to feel close to them again. The project is paused for now because of funding, but I care about it and plan to return to it.'
 );
 
 
