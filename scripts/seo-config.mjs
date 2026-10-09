@@ -8,7 +8,7 @@
  * mirrors still match — one fact, one place it is written, one place it can rot.
  */
 export const SITE_URL = (
-  process.env.SITE_URL || 'https://rachitportfolio-fawn.vercel.app'
+  process.env.SITE_URL || 'https://rachitportfolio-rouge.vercel.app'
 ).replace(/\/$/, '')
 
 /**

@@ -7,7 +7,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 const ALLOWED_ORIGINS = [
-  'https://rachitportfolio-fawn.vercel.app',
+  'https://rachitportfolio-rouge.vercel.app',
   'https://rachitportfolio.vercel.app',
   'http://localhost:5173',
   'http://localhost:4173',

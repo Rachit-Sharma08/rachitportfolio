@@ -745,7 +745,7 @@ if (llms !== null) {
   check('llms.txt has no unrendered placeholder', llms.includes('undefined'), false)
   // Same-origin only: an llms.txt that hands over a localhost or preview host is
   // worse than none.
-  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-fawn\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com)/.test(llms), false)
+  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-rouge\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com)/.test(llms), false)
 }
 
 /* -------------------------------------------------------------------------- */
