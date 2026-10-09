@@ -16,6 +16,8 @@ import {
   TITLE_SEPARATOR,
   TITLE_MAX,
   UPDATE_THRESHOLD_MS,
+  PERSON_ID,
+  KNOWS_ABOUT,
   postTitle,
   isMeaningfullyUpdated,
 } from './seo-config.mjs'
@@ -261,8 +263,12 @@ const sameDateHead = headFor('/blog/seo-is-not-dead', content)
 
 const homePerson = jsonLd(homeHead).find((s) => s['@type'] === 'Person')
 check('home Person schema carries the definition', homePerson?.description, DEFINITION)
-check('home Person schema is absolute-URLed', homePerson?.url, `${SITE_URL}/`)
+check('home Person schema url is the site root', homePerson?.url, SITE_URL)
+check('home Person schema has a stable @id', homePerson?.['@id'], PERSON_ID)
 check('home Person schema has @context', homePerson?.['@context'], 'https://schema.org')
+check('home Person schema alternateNames', homePerson?.alternateName, ['Rachit', 'RachitSharma'])
+check('home Person schema studied at RKSD College', homePerson?.alumniOf?.name, 'RKSD College, Kaithal')
+check('home Person schema knowsAbout is the site topic list', homePerson?.knowsAbout, KNOWS_ABOUT)
 // The social card is the og card; schema:image is "what does this person look
 // like", so it points at the cut-out rather than the 1200x630 banner.
 check('home Person schema image is the portrait, not the og card', homePerson?.image, `${SITE_URL}/assets/hero-base.webp`)
@@ -292,9 +298,22 @@ check('resume emits Person only', types(resumeHead), ['Person'])
 check('blog index emits Person only', types(blogHead), ['Person'])
 check('post emits Person + BlogPosting', types(postHead), ['Person', 'BlogPosting'])
 check(
-  'Person url follows the page it is emitted on',
-  jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.url,
-  `${SITE_URL}/resume`,
+  'Person url is the site root on every page',
+  [
+    jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.url,
+    jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.url,
+    jsonLd(postHead).find((s) => s['@type'] === 'Person')?.url,
+  ],
+  [SITE_URL, SITE_URL, SITE_URL],
+)
+check(
+  'Person @id is identical on every page',
+  [
+    jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.['@id'],
+    jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.['@id'],
+    jsonLd(postHead).find((s) => s['@type'] === 'Person')?.['@id'],
+  ],
+  [PERSON_ID, PERSON_ID, PERSON_ID],
 )
 check(
   'WebSite url is the site root',
@@ -361,7 +380,8 @@ check('the brand-last routes carry the brand', ['/resume', '/blog'].every((route
 check('home og:site_name is the site name', metaContent(homeHead, 'property', 'og:site_name'), SITE_NAME)
 check('the site name is not the home title', SITE_NAME === PAGES['/'].title, false)
 check('the Person schema names the person, not the page', jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.name, 'Rachit Sharma')
-check('the WebSite schema is named after the home page', jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.name, PAGES['/'].title)
+check('the WebSite schema is named for the site', jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.name, 'Rachit Sharma')
+check('the WebSite schema has an alternateName', jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.alternateName, 'Rachit Sharma Portfolio')
 check('home twitter:title matches the home <title>', metaContent(homeHead, 'name', 'twitter:title'), PAGES['/'].title)
 check('blog twitter:title matches the blog <title>', metaContent(blogHead, 'name', 'twitter:title'), PAGES['/blog'].title)
 check('blog og:title matches the blog <title>', metaContent(blogHead, 'property', 'og:title'), PAGES['/blog'].title)

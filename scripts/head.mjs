@@ -61,7 +61,7 @@ export function headFor(route, content) {
   let page = pageFor(route)
   // Person is emitted on every page: it is the author of a post and the owner
   // of the site, and search engines use it to tie the two together.
-  const schemas = [{ json: personSchema(url) }]
+  const schemas = [{ json: personSchema() }]
 
   // Social preview image. A post with its own cover uses it, so the card that
   // shows up in a feed matches the post; everything else uses the site image.

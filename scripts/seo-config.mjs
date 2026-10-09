@@ -148,18 +148,47 @@ export const NOT_FOUND = {
 }
 
 /**
+ * The Person node's stable id. Every page emits the same Person, so the id is
+ * the site root, not the page: an answer engine that sees `…/#person` on the
+ * home page and again inside a post's Article author resolves one entity, not
+ * one anonymous person per URL. `verify` asserts it is identical everywhere.
+ */
+export const PERSON_ID = `${SITE_URL}/#person`
+
+/**
  * Every entry is a topic the site publishes or teaches on its own pages — the
  * Capabilities grid, the resume skills, or the blog. `knowsAbout` is a claim,
  * not a keyword list: an entry the site never supports is a topic its author
  * does not have. (The resume also lists social media marketing, Canva and ad
  * design; those are reported rather than added here.)
+ *
+ * `SEO`/`AI Tools` were spelled out to `Search Engine Optimisation`/`Artificial
+ * Intelligence Tools`, and the AEO/GEO pair added, so the list states the
+ * broader search work the site actually does rather than only the acronyms.
  */
-export function personSchema(url) {
+export const KNOWS_ABOUT = [
+  'Digital Marketing',
+  'Search Engine Optimisation',
+  'Answer Engine Optimisation',
+  'Generative Engine Optimisation',
+  'Web Development',
+  'Artificial Intelligence Tools',
+  'Content Marketing',
+  'AI Prompting',
+  'Copywriting',
+  'Campaign Planning',
+]
+
+export function personSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Person',
+    '@id': PERSON_ID,
     name: 'Rachit Sharma',
-    url,
+    alternateName: ['Rachit', 'RachitSharma'],
+    // The identity's home, not the page: this is where the person lives, and it
+    // is the same on every route so no page claims to be a different person.
+    url: SITE_URL,
     // The cut-out, not the social card: this is the schema's answer to "what
     // does this person look like", and og:image already covers the card.
     image: `${SITE_URL}/assets/hero-base.webp`,
@@ -168,15 +197,11 @@ export function personSchema(url) {
     // quoting this has to be able to find the claim on the page itself.
     description: DEFINITION,
     sameAs: [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram],
-    knowsAbout: [
-      'Digital Marketing',
-      'SEO',
-      'AI Tools',
-      'Content Marketing',
-      'AI Prompting',
-      'Copywriting',
-      'Campaign Planning',
-    ],
+    alumniOf: {
+      '@type': 'CollegeOrUniversity',
+      name: 'RKSD College, Kaithal',
+    },
+    knowsAbout: KNOWS_ABOUT,
     address: {
       '@type': 'PostalAddress',
       addressLocality: 'Kaithal',
@@ -190,7 +215,8 @@ export function websiteSchema(url) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: PAGES['/'].title,
+    name: 'Rachit Sharma',
+    alternateName: 'Rachit Sharma Portfolio',
     url,
   }
 }
