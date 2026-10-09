@@ -146,6 +146,8 @@ export default function About() {
                   className="h-full w-full rounded-full object-cover"
                   width={240}
                   height={240}
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             </Reveal>
