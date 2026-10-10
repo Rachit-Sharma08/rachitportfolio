@@ -18,6 +18,7 @@ import {
   UPDATE_THRESHOLD_MS,
   PERSON_ID,
   KNOWS_ABOUT,
+  QUICK_FACTS,
   postTitle,
   isMeaningfullyUpdated,
 } from './seo-config.mjs'
@@ -611,25 +612,70 @@ check(
 
 // --- the About copy answers the obvious questions, in plain text -------------
 //
-// Five self-contained answers sit in a small visible "Quick facts" list. The
-// brief was explicit that this is page text, not an FAQPage block: an answer
-// engine should read the same words a visitor does, and the page should add no
-// schema it would then have to keep true.
-const QUICK_FACT_QUESTIONS = [
-  'Who is Rachit Sharma?',
-  'What does Rachit Sharma do?',
-  'Where is Rachit Sharma based?',
-  'What is Rachit Sharma studying?',
-  'What is Rachit Sharma building?',
-]
+// Seven self-contained answers sit in a small visible "Quick facts" list, and
+// the brief was explicit that this is page text, not an FAQPage block: an
+// answer engine should read the same words a visitor does, and the page should
+// add no schema it would then have to keep true. The canonical copy lives in
+// src/data.ts (About renders it); the build mirror in seo-config.mjs drives
+// /llms-full.txt and must never drift from it.
+// src/data.ts lives on the client, so the verifier can't import it — it
+// compares the build mirror against the source text instead, after undoing the
+// two things that legitimately differ: the `\u2019` escape (single-quoted
+// strings) and the markdown link that the page renders as an anchor.
+// `[^\]\n]` in the link-bracket class: the answers only carry single-line
+// inline links like `[Resume page](/resume)`. A newline in the class makes a
+// stray `[` (e.g. the `[` that opens the QUICK_FACTS array itself) unable to
+// start a match, so the whole-array text is never swallowed as one fake link.
+const INLINE_LINK = /\[([^\]\n]+)\]\([^)]*\)/g
+const stripInline = (s) => s.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+const dataTsNorm = dataTs
+  .replace(/\\u2019/g, '\u2019')
+  .replace(INLINE_LINK, '$1')
+const dataTsIncludesQuickFact = (q, a) =>
+  dataTsNorm.includes(`q: '${q}'`) && dataTsNorm.includes(stripInline(a))
+
+const QUICK_FACT_QUESTIONS = QUICK_FACTS.map((f) => f.q)
+check('Quick facts is exactly seven items', QUICK_FACTS.length, 7)
 check(
-  'About writes all five Quick facts questions',
-  QUICK_FACT_QUESTIONS.every((q) => aboutTsx.includes(q)),
+  'the quick-fact questions live in the shared data source',
+  QUICK_FACT_QUESTIONS.every((q) => dataTs.includes(q)),
+  true,
+)
+check(
+  'every Quick facts answer names Rachit Sharma',
+  QUICK_FACTS.every((f) => f.a.includes('Rachit Sharma') || f.a.startsWith('Yes. Rachit Sharma')),
+  true,
+)
+check(
+  'every Quick facts answer is at most two sentences',
+  QUICK_FACTS.every((f) => f.a.split(/[.!?](?=\s|$)/).filter(Boolean).length <= 2),
+  true,
+)
+check(
+  'the Quick facts mirrors are byte-identical',
+  QUICK_FACTS.every((f) => dataTsIncludesQuickFact(f.q, f.a)),
   true,
 )
 check(
   'the Quick facts answers are in the served home HTML',
   QUICK_FACT_QUESTIONS.every((q) => builtHomeHtml.includes(q)),
+  true,
+)
+// The page renders markdown through markdown-it: ASCII apostrophes become
+// `&#39;`, `[Resume page](/resume)` becomes an anchor, and the Q7 bare email is
+// linkified into a mailto anchor. So "in the served HTML" is checked against
+// the tag-stripped, entity-unescaped text — visually the same sentence.
+const builtHomePlain = builtHomeHtml
+  .replace(/<[^>]+>/g, '')
+  .replace(/&lt;/g, '<')
+  .replace(/&gt;/g, '>')
+  .replace(/&amp;/g, '&')
+  .replace(/&#x27;/g, "'")
+  .replace(/&#39;/g, "'")
+  .replace(/&quot;/g, '"')
+check(
+  'all seven quick-fact answers render in the served home HTML',
+  QUICK_FACTS.every((f) => builtHomePlain.includes(stripInline(f.a))),
   true,
 )
 check('the Quick facts copy adds no FAQPage schema', builtHomeHtml.includes('FAQPage'), false)

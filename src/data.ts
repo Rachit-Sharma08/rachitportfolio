@@ -27,6 +27,52 @@ export const SOCIAL_LINKS = [
   { label: 'Instagram', href: SOCIALS.instagram },
 ]
 
+/**
+ * The visible "Quick facts" cards under the About definition. Seven
+ * self-contained answers, each an answer-first complete sentence that names
+ * Rachit Sharma, so an answer engine can quote one line without the question
+ * for context. The words "Resume page" (Q6 answer) link to /resume; answers
+ * render through renderInline, which turns that markdown link into the anchor.
+ *
+ * This stays plain visible page text: there is deliberately no FAQPage
+ * structured data behind it, and every claim is already made elsewhere on the
+ * site. `npm run verify` asserts there are exactly seven items, that each
+ * answer is at most two sentences, that each question appears in the served
+ * home HTML, and that this copy is byte-identical to the build mirror in
+ * scripts/seo-config.mjs (which drives /llms-full.txt) — one fact, one place
+ * it is written, one place it can rot.
+ */
+export const QUICK_FACTS = [
+  {
+    q: 'Who is Rachit Sharma?',
+    a: 'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects.',
+  },
+  {
+    q: 'What does Rachit Sharma do?',
+    a: "Rachit Sharma works in digital marketing with AI: Google Ads, Meta Ads, SEO, AEO and GEO (getting found on Google and in AI answers), plus web development. He uses 25+ AI tools, including OpenCode, OpenAI's GPT, ElevenLabs, Cartesia AI and Claude.",
+  },
+  {
+    q: 'Where is Rachit Sharma based?',
+    a: 'Rachit Sharma is based in Kaithal, Haryana, India.',
+  },
+  {
+    q: 'What is Rachit Sharma studying?',
+    a: 'Rachit Sharma is doing a BBA at RKSD College (Kurukshetra University) and is building his career in digital marketing with AI. He learns by building real projects with AI tools.',
+  },
+  {
+    q: 'What is Rachit Sharma building?',
+    a: "Rachit Sharma is building his own AI products, including VoiceMemories AI, which is designed to let a person have a warm, supportive conversation with a loved one's cloned voice, even on live calls. It is paused for now.",
+  },
+  {
+    q: 'Does Rachit Sharma have a resume?',
+    a: 'Yes. Rachit Sharma\u2019s resume is available to read on the [Resume page](/resume) and to download as a PDF.',
+  },
+  {
+    q: 'How can I contact Rachit Sharma?',
+    a: 'Rachit Sharma can be contacted by email at rachitsharma9990888@gmail.com or through the Contact section of this website.',
+  },
+]
+
 // Both cut-outs are 1086x1448 (exactly 3:4) and pixel-aligned with each
 // other. `base` is the bottom layer, always visible; `reveal` is masked on top
 // and only shows through the circle that follows the cursor.

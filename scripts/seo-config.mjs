@@ -37,6 +37,43 @@ export const SOCIALS = {
 }
 
 /**
+ * The visible "Quick facts" cards — the canonical copy lives in src/data.ts and
+ * this must stay byte-identical to it (the verifier compares the two). The
+ * build half reads it to generate /llms-full.txt; the "Resume page" markdown
+ * link inside the Q6 answer is stripped there so the text file gets plain text.
+ */
+export const QUICK_FACTS = [
+  {
+    q: 'Who is Rachit Sharma?',
+    a: 'Rachit Sharma is a digital marketer who uses AI tools to build brands, campaigns and creative projects.',
+  },
+  {
+    q: 'What does Rachit Sharma do?',
+    a: "Rachit Sharma works in digital marketing with AI: Google Ads, Meta Ads, SEO, AEO and GEO (getting found on Google and in AI answers), plus web development. He uses 25+ AI tools, including OpenCode, OpenAI's GPT, ElevenLabs, Cartesia AI and Claude.",
+  },
+  {
+    q: 'Where is Rachit Sharma based?',
+    a: 'Rachit Sharma is based in Kaithal, Haryana, India.',
+  },
+  {
+    q: 'What is Rachit Sharma studying?',
+    a: 'Rachit Sharma is doing a BBA at RKSD College (Kurukshetra University) and is building his career in digital marketing with AI. He learns by building real projects with AI tools.',
+  },
+  {
+    q: 'What is Rachit Sharma building?',
+    a: "Rachit Sharma is building his own AI products, including VoiceMemories AI, which is designed to let a person have a warm, supportive conversation with a loved one's cloned voice, even on live calls. It is paused for now.",
+  },
+  {
+    q: 'Does Rachit Sharma have a resume?',
+    a: 'Yes. Rachit Sharma\u2019s resume is available to read on the [Resume page](/resume) and to download as a PDF.',
+  },
+  {
+    q: 'How can I contact Rachit Sharma?',
+    a: 'Rachit Sharma can be contacted by email at rachitsharma9990888@gmail.com or through the Contact section of this website.',
+  },
+]
+
+/**
  * One sentence that answers "who is this and what do they do".
  *
  * This is the site's single definitional claim and it is repeated verbatim in

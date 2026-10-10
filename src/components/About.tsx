@@ -7,40 +7,12 @@ import { useStoryReveal } from '../lib/useStoryReveal'
 import { easeExpo } from '../lib/motion'
 import { renderInline, splitParagraphs } from '../lib/markdown'
 import { useSiteContent } from '../lib/content'
-import { SOCIALS, DEFINITION } from '../data'
+import { SOCIALS, DEFINITION, QUICK_FACTS } from '../data'
 
 const STAT_CHIPS = [
   'AI Tools: 25+',
   'Focus: Digital Marketing + AI',
   'Building: VoiceMemories AI',
-]
-
-// Five self-contained answers, each written answer-first so an answer engine can
-// quote one line without the question for context. Every claim is already on the
-// page elsewhere (the definition, the story, the chips, the resume) — nothing new
-// is asserted here — and this stays visible copy: there is deliberately no
-// FAQPage structured data behind it.
-const QUICK_FACTS = [
-  {
-    q: 'Who is Rachit Sharma?',
-    a: 'A digital marketer from Kaithal, Haryana, India. He uses AI tools to build brands, campaigns and creative projects.',
-  },
-  {
-    q: 'What does Rachit Sharma do?',
-    a: "Digital marketing with AI — campaigns, content and creative projects — powered by 25+ AI tools like OpenCode, OpenAI's GPT, ElevenLabs, Cartesia AI and Claude.",
-  },
-  {
-    q: 'Where is Rachit Sharma based?',
-    a: 'Kaithal, Haryana, India.',
-  },
-  {
-    q: 'What is Rachit Sharma studying?',
-    a: 'Digital Marketing with AI at Zedking Group of Institution, learning the tools hands-on by building with them.',
-  },
-  {
-    q: 'What is Rachit Sharma building?',
-    a: 'His own AI products, including VoiceMemories AI — a way to have a warm, supportive conversation with a loved one\u2019s cloned voice, even on live calls.',
-  },
 ]
 
 const JOURNEY = [
@@ -106,7 +78,13 @@ export default function About() {
             {QUICK_FACTS.map((fact) => (
               <div key={fact.q} className="glass lift p-5">
                 <dt className="text-sm font-semibold text-text-primary">{fact.q}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-muted">{fact.a}</dd>
+                {/* Answers render inline (`[Resume page](/resume)` becomes the
+                    anchor in the Q6 answer); a plain text node would print the
+                    markdown source. */}
+                <dd
+                  className="mt-2 text-sm leading-relaxed text-muted"
+                  dangerouslySetInnerHTML={{ __html: renderInline(fact.a) }}
+                />
               </div>
             ))}
           </dl>
