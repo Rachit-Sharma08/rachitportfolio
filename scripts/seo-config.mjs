@@ -202,9 +202,13 @@ export const PERSON_ID = `${SITE_URL}/#person`
  * `SEO`/`AI Tools` were spelled out to `Search Engine Optimisation`/`Artificial
  * Intelligence Tools`, and the AEO/GEO pair added, so the list states the
  * broader search work the site actually does rather than only the acronyms.
+ * `Google Ads`/`Meta Ads` joined after resume task T2 wrote them into the
+ * resume skills line.
  */
 export const KNOWS_ABOUT = [
   'Digital Marketing',
+  'Google Ads',
+  'Meta Ads',
   'Search Engine Optimisation',
   'Answer Engine Optimisation',
   'Generative Engine Optimisation',

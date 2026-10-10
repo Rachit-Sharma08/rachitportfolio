@@ -344,6 +344,7 @@ const llms = [
   '## About',
   '',
   'Rachit Sharma is a digital marketer from Kaithal, Haryana, India. He studies Digital Marketing with AI at Zedking Group of Institution, works with 25+ AI tools, and builds his own AI products on the side.',
+  'Works with Google Ads, Meta Ads, SEO, AEO, GEO and web development.',
   '',
   '## Key pages',
   '',
