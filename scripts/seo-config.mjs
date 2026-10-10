@@ -156,7 +156,7 @@ export function isMeaningfullyUpdated(publishedAt, updatedAt) {
  */
 export const PAGES = {
   '/': {
-    title: 'Rachit Sharma — AI-Powered Digital Marketer, Kaithal',
+    title: 'Rachit Sharma — Digital Marketer & AI Builder, Kaithal',
     description: HOME_DESCRIPTION,
   },
   '/resume': {

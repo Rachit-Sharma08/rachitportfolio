@@ -26,7 +26,7 @@ export default function Blog() {
             as="h1"
             eyebrow="Journal"
             segments={[{ text: 'All ' }, { text: 'writing', italic: true }]}
-            subtext="Notes from my digital marketing + AI course work, plus what I learn building things."
+            subtext="Notes from my digital marketing and AI work, plus what I learn building things."
             id="blog-heading"
             action={
               <Link to="/" className="pill px-5 py-2.5 text-sm" data-no-intercept>

@@ -26,7 +26,7 @@ const JOURNEY = [
   },
   {
     year: '2026',
-    text: 'Finished 12th. Chose to follow my own interest instead of the path others wanted for me, and completed the Digital Marketing with AI course.',
+    text: 'Finished 12th (CBSE) and chose Digital Marketing with AI, alongside a BBA at RKSD College.',
   },
   {
     year: '2026',

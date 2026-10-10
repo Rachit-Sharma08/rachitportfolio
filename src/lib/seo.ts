@@ -21,7 +21,7 @@
 export const SITE_NAME = 'Rachit Sharma — Digital Marketer'
 
 export const PAGE_TITLES: Record<string, string> = {
-  '/': 'Rachit Sharma — AI-Powered Digital Marketer, Kaithal',
+  '/': 'Rachit Sharma — Digital Marketer & AI Builder, Kaithal',
   '/resume': 'Resume | Rachit Sharma, Digital Marketer',
   '/blog': 'Blog | Rachit Sharma',
   '*': 'Rachit Sharma — Page Not Found',

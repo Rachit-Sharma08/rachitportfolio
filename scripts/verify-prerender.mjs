@@ -22,7 +22,7 @@ import {
   postTitle,
   isMeaningfullyUpdated,
 } from './seo-config.mjs'
-import { headFor, isoYearMonth, comparisonTime, newestRealDate } from './head.mjs'
+import { headFor, escapeAttr, isoYearMonth, comparisonTime, newestRealDate } from './head.mjs'
 
 const ssr = await import(
   pathToFileURL(path.join(process.cwd(), 'dist-ssr', 'prerender.js')).href
@@ -439,7 +439,7 @@ for (const [label, head] of [
 
 // --- titles: one string, reused by every tag that repeats it ----------------
 
-check('home <title>', homeHead.includes(`<title>${PAGES['/'].title}</title>`), true)
+check('home <title>', homeHead.includes(`<title>${escapeAttr(PAGES['/'].title)}</title>`), true)
 check('blog index <title>', blogHead.includes(`<title>${PAGES['/blog'].title}</title>`), true)
 check('post <title> carries the brand', postHead.includes(`<title>${postTitle('One Brief, One Campaign Sprint')}</title>`), true)
 check(
@@ -455,7 +455,7 @@ check(
 check(
   'home og:title matches the home <title>',
   metaContent(homeHead, 'property', 'og:title'),
-  PAGES['/'].title,
+  escapeAttr(PAGES['/'].title),
 )
 check('post canonical is its own URL', postHead.includes(`<link rel="canonical" href="${SITE_URL}/blog/one-brief-one-campaign-sprint" />`), true)
 check('post og:type is article', metaContent(postHead, 'property', 'og:type'), 'article')
@@ -498,7 +498,7 @@ check('the site name is not the home title', SITE_NAME === PAGES['/'].title, fal
 check('the Person schema names the person, not the page', jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.name, 'Rachit Sharma')
 check('the WebSite schema is named for the site', jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.name, 'Rachit Sharma')
 check('the WebSite schema has an alternateName', jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.alternateName, 'Rachit Sharma Portfolio')
-check('home twitter:title matches the home <title>', metaContent(homeHead, 'name', 'twitter:title'), PAGES['/'].title)
+check('home twitter:title matches the home <title>', metaContent(homeHead, 'name', 'twitter:title'), escapeAttr(PAGES['/'].title))
 check('blog twitter:title matches the blog <title>', metaContent(blogHead, 'name', 'twitter:title'), PAGES['/blog'].title)
 check('blog og:title matches the blog <title>', metaContent(blogHead, 'property', 'og:title'), PAGES['/blog'].title)
 

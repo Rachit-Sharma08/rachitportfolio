@@ -29,7 +29,7 @@ export default function Journal({ action }: JournalProps) {
               delay={0.1}
             />
             <p className="mt-5 max-w-md text-base text-muted">
-              Notes from my digital marketing + AI course work.
+              Notes from my digital marketing and AI work.
             </p>
           </div>
           {action}
