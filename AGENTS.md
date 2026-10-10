@@ -126,6 +126,40 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v51 — Phase 2 (AEO/GEO hardening): 7 Quick facts, /llms-full.txt, AI-crawler robots.txt groups, ProfilePage/BreadcrumbList/Article schema, real dateModified] — 10 Oct 2026
+
+**Brief:** `docs/BRIEF-phase2.md` (saved verbatim, `docs/` is not served). One branch `phase2-aeo-geo`, one commit per task, all four gates after each (`lint` / `build` / `verify` / `secrets:check`), then a single fast-forward merge into `main` and one push. No secrets; the phone lives only inside the PDF; forbidden words (`training|trainee|fresher|intern|internship`) nowhere; no visual/design change.
+
+**T0 (`91ce113`)** — AGENTS.md stale deploy notes fixed (push = auto-deploy).
+
+**T1 (`83e9656`) — Quick facts.** 7 visible Q&A cards on home (after the About definition card), plain text, **no FAQPage**. Canonical `QUICK_FACTS` in `src/data.ts:45`, rendered by `About.tsx`; the "Does Rachit Sharma have a resume?" answer links "Resume page" to `/resume`. Byte-identical build mirror.
+
+**T2 (`ba51707`) — Resume skills + PDF.** Digital Marketing skills group → `AI-powered digital marketing, Google Ads, Meta Ads, brand building, campaign building, creative content creation with AI` (as items in `src/data.ts` `RESUME`, as one line in `supabase/seed.sql`); `lastUpdated` → `October 2026`. Shipped the newest resume PDF: source `D:\Downloads\Rachit Sharma - Resume (1).pdf` (61,968 B, 10-10-2026 09:12:54 — 2 pages, text-selectable, has Professional Summary/Skills/Projects/Education, has Google Ads + Meta Ads, no forbidden words) → copied to `public/Rachit-Sharma-Resume.pdf` (61,968 B).
+
+**T3 (`cdbfc86`) — knowsAbout.** Person `knowsAbout` += `Google Ads`, `Meta Ads`; `llms.txt` `## About` += "Works with Google Ads, Meta Ads, SEO, AEO, GEO and web development."
+
+**T4 (`693c1f6`) — Schema.** ProfilePage JSON-LD on home (`mainEntity` = Person `@id`); BreadcrumbList on `/resume` and `/blog`; blog posts emit `Article` (headline, datePublished, dateModified, `author` = Person `@id`, image only when the post has one). **T4d** blog-writing rules written into AGENTS.md (`0d169e3`): question-style h2, direct 1–2 sentence answer first (complete sentence naming its subject), then detail, no unnatural keyword repetition.
+
+**T5 (`fb15387`) — robots.txt AI groups.** `User-agent: *` kept, plus one group each for OAI-SearchBot, ChatGPT-User, GPTBot, ClaudeBot, Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User, Google-Extended, Applebot-Extended — every group repeats `Allow: /`, `Disallow: /admin`, `Disallow: /api`; Sitemap line kept.
+
+**T6 (`546c3ee`) — `/llms-full.txt`.** Generated at build from live data (7 Quick facts, resume skills/projects/education, contact email + LinkedIn/GitHub/site URL, no phone, `Last updated: October 2026`); linked from `llms.txt`.
+
+**T7 — report only (no commit).** In the prerendered HTML of `/`, `/resume` and `/blog`, **no key content is JS-only or fetched at runtime** — content is baked at build (v31 inline snapshot; production skips `/api/content`). Only motion/interaction is client-side.
+
+**T8 (`f0f3725`) — real dateModified.** Home = newest of resume month + post effective dates; `/resume` = its own `lastUpdated` month (`2026-10`); posts = their updated/published date. Never future, never invented, omitted when no real date.
+
+**T9 (`aabbf48`) — verify additions.** robots.txt has every group with the three lines + the Sitemap line; `/llms-full.txt` exists, no phone, no forbidden words, contains all 7 Quick-fact questions; no FAQPage in any dist document (sweep); kept all existing assertions (h1/title/description budgets, JSON-LD `@context`+`@type`, Person `@id` identical, home exactly 7 Quick facts with answers ≤ 2 sentences).
+
+**Gates:** `npm run lint` 0 errors (pre-existing warnings only) · `npm run build` pass (writes `dist/robots.txt` + `dist/llms-full.txt`) · `npm run verify` all PASS · `npm run secrets:check` clean (120 tracked files, 12 patterns).
+
+**T10 — merged + pushed + LIVE (10 Oct):** `git merge --ff-only phase2-aeo-geo` → `f2af4aa..0d169e3`, `git push origin main` (one push, auto-deploy). Live verify: `/`, `/resume`, `/blog`, `/robots.txt`, `/sitemap.xml`, `/Rachit-Sharma-Resume.pdf`, `/llms.txt`, `/llms-full.txt` all **200**; phone `83071`/`tel:` **0** on every page + text file; home Quick facts **7**; forbidden words **0**; robots.txt 10 AI groups + Sitemap line.
+
+**Lighthouse (live, mobile, 3-run median — VM-noisy, TBT inflated):** `/` perf **75** · LCP **3.31 s** · CLS **0** · TBT **508 ms**; `/resume` perf **91** · LCP **2.66 s** · CLS **0** · TBT **202 ms**.
+
+**Report-only ("course", not changed):** visible text at `About.tsx:29`, `Journal.tsx:32`, `Blog.tsx:29` (not in the forbidden list).
+
+**Hand-offs (user):** Admin → Resume paste the new Digital Marketing skills line; Admin → Blog shorten the 89-char `one-brief-one-campaign-sprint` title below 60 (keep the slug); Quick facts have **no** admin field (they live in `src/data.ts`); Search Console, Bing Webmaster Tools, GitHub profile README, LinkedIn + Instagram bio.
+
 ### [v50 — Phase 1 SEO/AEO hardening complete (P1.2–P1.5): en-IN, stable Person @id/url, perf quick win, built-surface assertions + phone gone from the page] — 10 Oct 2026
 
 **Brief:** Phase 1 of the SEO/AEO hardening — P1.1 (`/resume` single-source) was shipped as `v49`. Now P1.2 = `<html lang="en-IN">` + `og:locale en_IN`; P1.3 = stable Person `@id`/`url` = site root on every page + `alternateName`, `alumniOf` (RKSD only), broader `knowsAbout`, WebSite name; P1.4 = a perf quick win; P1.5 = assert the **built** surface (exactly one h1 per page, title < 60, meta description < 160, every JSON-LD block parses with `@context` + `@type`, `83071` absent from every dist document) **and** make the site satisfy it. Report Lighthouse before/after medians + total JS size, commit each task separately, push only if all gates pass.
