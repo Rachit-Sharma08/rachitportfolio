@@ -126,6 +126,25 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v52 — new home title + three visible copy lines; `supabase/seed.sql` CRLF normalised so verify is green on Windows] — 10 Oct 2026
+
+**Brief:** exactly two copy changes. (A) New home `<title>` = `Rachit Sharma — Digital Marketer & AI Builder, Kaithal` (54 chars; was `Rachit Sharma — AI-Powered Digital Marketer, Kaithal`, 52). (B) Replace exactly three visible sentences, dropping the word "course" from each. Then gates, fast-forward merge into `main`, one push, live check. Nothing else changed.
+
+**A — home title (`index.html:21`, `scripts/seo-config.mjs:159`, `src/lib/seo.ts:24`).** All three (raw HTML + build `PAGES` + client mirror) updated together; `SITE_NAME` left as `Rachit Sharma — Digital Marketer` (site name ≠ page title). The new title contains `&`, so the build emits `&amp;` in the head — the three home-title verify assertions now compare against `escapeAttr(PAGES['/'].title)` (`escapeAttr` added to the `scripts/head.mjs` import in `verify-prerender.mjs`).
+
+**B — three sentences replaced:**
+- `src/components/About.tsx:29` journey text → `Finished 12th (CBSE) and chose Digital Marketing with AI, alongside a BBA at RKSD College.`
+- `src/components/Journal.tsx:32` → `Notes from my digital marketing and AI work.`
+- `src/pages/Blog.tsx:29` subtext → `Notes from my digital marketing and AI work, plus what I learn building things.`
+
+**Line-ending fix (why verify failed before).** `supabase/seed.sql` is committed as **LF**, but with `core.autocrlf=true` (and no `.gitattributes`) the Windows working tree held **CRLF**, so the story-card verify regex (needs a bare `\n)` line) returned empty → 1 FAIL. Normalised the working tree back to LF (`crlf 168 → 0`, 14,409 bytes) — **byte-identical to the committed blob** (SHA-256 `60e0b43a…`, git oid unchanged `4f3bb216…`); `git status` / `git diff` for the file are clean. **No** change to any verify script, `.gitattributes`, git config, or file content.
+
+**Gates:** `npm run lint` 0 errors (7 pre-existing warnings) · `npm run build` pass (`/` 119,882 B, `/resume` 84,055, `/blog` 79,627, `404.html` 73,345) · `npm run verify` **All checks passed** · `npm run secrets:check` clean (120 tracked files).
+
+**Merge + push:** fast-forward `main`, single push → Vercel auto-deploy (live verification in this session's report).
+
+**Left alone (report-only):** alt `"Rachit Sharma, AI Powered Marketer"` (`About.tsx:123`, `Hero.tsx:222`), `Capabilities.tsx:28` "AI-Powered Campaigns", and the historical "AI-Powered"/"course" mentions in this file's older entries.
+
 ### [v51 — Phase 2 (AEO/GEO hardening): 7 Quick facts, /llms-full.txt, AI-crawler robots.txt groups, ProfilePage/BreadcrumbList/Article schema, real dateModified] — 10 Oct 2026
 
 **Brief:** `docs/BRIEF-phase2.md` (saved verbatim, `docs/` is not served). One branch `phase2-aeo-geo`, one commit per task, all four gates after each (`lint` / `build` / `verify` / `secrets:check`), then a single fast-forward merge into `main` and one push. No secrets; the phone lives only inside the PDF; forbidden words (`training|trainee|fresher|intern|internship`) nowhere; no visual/design change.
