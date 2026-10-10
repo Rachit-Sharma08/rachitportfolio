@@ -22,7 +22,7 @@ import {
   postTitle,
   isMeaningfullyUpdated,
 } from './seo-config.mjs'
-import { headFor } from './head.mjs'
+import { headFor, isoYearMonth, comparisonTime, newestRealDate } from './head.mjs'
 
 const ssr = await import(
   pathToFileURL(path.join(process.cwd(), 'dist-ssr', 'prerender.js')).href
@@ -295,7 +295,7 @@ check(
 // --- Person everywhere, WebSite only on the home page -----------------------
 
 check('home emits Person + WebSite + ProfilePage', types(homeHead), ['Person', 'WebSite', 'ProfilePage'])
-check('resume emits Person + BreadcrumbList', types(resumeHead), ['Person', 'BreadcrumbList'])
+check('resume emits Person + BreadcrumbList + ProfilePage', types(resumeHead), ['Person', 'BreadcrumbList', 'ProfilePage'])
 check('blog index emits Person + BreadcrumbList', types(blogHead), ['Person', 'BreadcrumbList'])
 check('post emits Person + Article', types(postHead), ['Person', 'Article'])
 check(
@@ -335,6 +335,53 @@ check(
   'ProfilePage url is the site root',
   jsonLd(homeHead).find((s) => s['@type'] === 'ProfilePage')?.url,
   `${SITE_URL}/`,
+)
+
+// --- dateModified comes from real dates only, never invented (T8) -------------
+//
+// The resume entry ships a display label ("October 2026") with no day, so the
+// profile dates are year-months and no day is ever fabricated. Home owns the
+// newest date on the site — resume label or latest post edit/publication — and
+// the resume page claims its own. A value with no real date stays absent.
+
+const homeProfile = jsonLd(homeHead).find((s) => s['@type'] === 'ProfilePage')
+const resumeProfiles = jsonLd(resumeHead).filter((s) => s['@type'] === 'ProfilePage')
+
+// The resume label is the newest date among the fixture content: the resume
+// "October 2026" beats one-brief's edit (2026-02-02) and the same-instant post.
+check('home dateModified is the newest real site date', homeProfile?.dateModified, '2026-10')
+check('home dateModified is not in the future', comparisonTime(homeProfile?.dateModified) <= Date.now(), true)
+
+// The home page never invents a date when nothing real exists.
+const emptyHome = jsonLd(headFor('/', { resume: null, posts: [] })).find((s) => s['@type'] === 'ProfilePage')
+check('home emits no dateModified when nothing is dated', emptyHome?.dateModified, undefined)
+
+// The resume page has exactly one ProfilePage, tied to the same Person, on the
+// resume URL, carrying the resume's own last-updated label as a year-month.
+check('resume emits exactly one ProfilePage', resumeProfiles.length, 1)
+check('resume ProfilePage points at the Person @id', resumeProfiles[0]?.mainEntity, { '@id': PERSON_ID })
+check('resume ProfilePage url is the resume page', resumeProfiles[0]?.url, `${SITE_URL}/resume`)
+check('resume dateModified is the resume last-updated month', resumeProfiles[0]?.dateModified, '2026-10')
+check('resume dateModified is not in the future', comparisonTime(resumeProfiles[0]?.dateModified) <= Date.now(), true)
+check('resume emits no ProfilePage dateModified when unlabelled', jsonLd(headFor('/resume', { resume: null })).find((s) => s['@type'] === 'ProfilePage')?.dateModified, undefined)
+
+// The exact-same helpers the build uses: a label becomes a year-month, a
+// year-month counts as the first of that month when compared, and the newest
+// real value wins while staying in its original form.
+check('isoYearMonth parses "October 2026"', isoYearMonth('October 2026'), '2026-10')
+check('isoYearMonth parses "March 2026"', isoYearMonth('March 2026'), '2026-03')
+check('isoYearMonth rejects an unparseable label', isoYearMonth('sometime in 2026'), null)
+check('isoYearMonth rejects a missing label', isoYearMonth(undefined), null)
+check('comparisonTime treats a year-month as the first of that month', comparisonTime('2026-10'), Date.parse('2026-10-01T00:00:00Z'))
+check(
+  'newestRealDate picks the resume month over an older post edit',
+  newestRealDate(['2026-02-02T10:00:00Z', '2026-10']),
+  '2026-10',
+)
+check(
+  'newestRealDate leaves the winning value in its original form',
+  newestRealDate(['2026-10-15T10:00:00Z', '2026-10']),
+  '2026-10-15T10:00:00Z',
 )
 
 // --- Breadcrumbs say plainly which pages are ours -----------------------------
