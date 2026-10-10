@@ -1180,6 +1180,71 @@ if (llms !== null) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  robots.txt: every AI crawler gets its own complete group                  */
+/* -------------------------------------------------------------------------- */
+
+// Each answer-engine bot is governed by its own User-agent block (a bot that
+// matches a named group ignores the `*` group entirely), and every block repeats
+// the same posture: allow the whole site, keep the admin panel and the API out.
+// A single missing line in a single group is a real leak, so each group is
+// asserted as a unit rather than by grepping the file once.
+const AI_CRAWLERS = [
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'GPTBot',
+  'ClaudeBot',
+  'Claude-SearchBot',
+  'Claude-User',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Google-Extended',
+  'Applebot-Extended',
+]
+const robotsTxt = await readFile(path.join(process.cwd(), 'dist', 'robots.txt'), 'utf8').catch(() => null)
+check('robots.txt written', robotsTxt !== null, true)
+if (robotsTxt !== null) {
+  check('robots.txt opens with the wildcard group', robotsTxt.startsWith('User-agent: *\n'), true)
+  const groupOf = (ua) =>
+    robotsTxt.split(`User-agent: ${ua}\n`)[1]?.split(/\n\n|\nUser-agent: /)[0] ?? ''
+  const postureOk = (ua) => {
+    const g = groupOf(ua)
+    return g.includes('Allow: /') && g.includes('Disallow: /admin') && g.includes('Disallow: /api')
+  }
+  check(
+    'every AI crawler group exists',
+    AI_CRAWLERS.every((ua) => robotsTxt.includes(`User-agent: ${ua}`)),
+    true,
+  )
+  check(
+    'every AI group allows the site and keeps admin and API out',
+    AI_CRAWLERS.every(postureOk),
+    true,
+  )
+  check('robots.txt advertises the sitemap', robotsTxt.includes(`Sitemap: ${SITE_URL}/sitemap.xml`), true)
+}
+
+/* -------------------------------------------------------------------------- */
+/*  llms-full.txt: the long-form index stays clean and complete               */
+/* -------------------------------------------------------------------------- */
+
+// The full plain-text index is generated from the same data the pages render
+// with, so it must carry the exact Quick facts questions, and — being an
+// index for AI agents — must itself obey the two hard copy rules the rest of
+// the site obeys: no phone number, no status words.
+const llmsFull = await readFile(path.join(process.cwd(), 'dist', 'llms-full.txt'), 'utf8').catch(() => null)
+check('llms-full.txt written', llmsFull !== null, true)
+if (llmsFull !== null) {
+  check('llms-full.txt opens with the H1', llmsFull.startsWith('# Rachit Sharma\n'), true)
+  check('llms-full.txt carries no phone number', llmsFull.includes('83071'), false)
+  check('llms-full.txt is free of status words', STATUS_WORDS.test(llmsFull), false)
+  check(
+    'llms-full.txt asks every Quick facts question',
+    QUICK_FACTS.every((f) => llmsFull.includes(`Q: ${f.q}`)),
+    true,
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  dist: no retired host baked into any served document                      */
 /* -------------------------------------------------------------------------- */
 
@@ -1265,6 +1330,17 @@ for (const file of distText) {
   if (doc.includes('83071')) phoneHits.push(path.relative(process.cwd(), file))
 }
 check('the phone number is absent from every dist document', phoneHits, [])
+
+// The Quick facts are deliberately page text, not an FAQPage block, and T9 asks
+// for that to hold site-wide — the l.791 check covers the baked home HTML and
+// the JSON-LD readers above cover the schemas, so this sweeps every served text
+// file as the last net.
+const faqHits = []
+for (const file of distText) {
+  const doc = await readFile(file, 'utf8')
+  if (doc.includes('FAQPage')) faqHits.push(path.relative(process.cwd(), file))
+}
+check('no FAQPage block in any dist document', faqHits, [])
 
 /* -------------------------------------------------------------------------- */
 /*  Bundle: the Supabase SDK must stay admin-only                             */
