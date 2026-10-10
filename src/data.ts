@@ -236,7 +236,14 @@ export const RESUME: ResumeData = {
   skills: [
     {
       heading: 'Digital Marketing',
-      items: ['Marketing strategy', 'Social media marketing', 'Campaign planning', 'Copywriting'],
+      items: [
+        'AI-powered digital marketing',
+        'Google Ads',
+        'Meta Ads',
+        'brand building',
+        'campaign building',
+        'creative content creation with AI',
+      ],
     },
     {
       heading: 'Search Optimisation',
