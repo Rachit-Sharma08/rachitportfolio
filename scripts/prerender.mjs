@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'vite'
-import { SITE_URL, PAGES, NOT_FOUND, DEFINITION, SOCIALS, CONTACT_EMAIL } from './seo-config.mjs'
+import { SITE_URL, PAGES, NOT_FOUND, DEFINITION, SOCIALS, CONTACT_EMAIL, QUICK_FACTS } from './seo-config.mjs'
 import { escapeAttr, headFor, safeJson } from './head.mjs'
 
 const root = process.cwd()
@@ -378,6 +378,7 @@ const llms = [
   `- [Home](${SITE_URL}/): Portfolio landing page — about, capabilities, selected work, journal and contact.`,
   `- [Resume](${SITE_URL}/resume): Education, skills and projects.`,
   `- [Journal](${SITE_URL}/blog): Notes on digital marketing, AI tooling, SEO and building with AI.`,
+  `- [Full llms.txt](${SITE_URL}/llms-full.txt): Quick facts, skills, projects, education and contact in plain text.`,
   '',
 ]
 
@@ -434,3 +435,82 @@ llms.push(
 )
 await writeFile(path.join(distDir, 'llms.txt'), llms.join('\n'))
 console.log(`Wrote dist/llms.txt (${published.length} posts listed)`)
+
+/* -------------------------------------------------------------------------- */
+/*  llms-full.txt                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The long-form plain-text index for AI agents and crawlers that want more than
+ * the /llms.txt landing page: quick facts, skills, projects, education and
+ * contact. Everything is generated from the same data the pages render with
+ * (QUICK_FACTS, the resume snapshot, the project snapshot, SOCIALS /
+ * CONTACT_EMAIL / SITE_URL) — nothing is retyped here, so this cannot drift
+ * from the visible site. Linked from the /llms.txt Key pages list.
+ */
+
+// `/llms-full.txt` is plain text; a markdown link like `[Resume page](/resume)`
+// (used inside the Quick facts Q6 answer) becomes just its label.
+const stripMarkdownLinks = (text) => text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+
+const llmsFullSkills = snapshot.resume.skills
+  .map((group) => `- ${group.heading}: ${group.items.join(', ')}`)
+  .join('\n')
+
+const llmsFullProjects = snapshot.projects
+  .map((project) => {
+    const name = project.projectUrl
+      ? `[${project.title}](${project.projectUrl})`
+      : project.title
+    const summary = project.tagline
+      ? `: ${project.tagline.replace(/\s+/g, ' ').trim()}`
+      : ''
+    return `- ${name}${summary}`
+  })
+  .join('\n')
+
+const llmsFullEducation = snapshot.resume.education
+  .map((entry) => {
+    const parts = [entry.title]
+    if (entry.institution) parts.push(entry.institution)
+    if (entry.period) parts.push(entry.period)
+    return `- ${parts.join(', ')}`
+  })
+  .join('\n')
+
+const llmsFull = [
+  '# Rachit Sharma',
+  '',
+  `> ${DEFINITION}`,
+  '',
+  '## Quick facts',
+  '',
+  ...QUICK_FACTS.flatMap((fact) => [
+    `Q: ${fact.q}`,
+    `A: ${stripMarkdownLinks(fact.a)}`,
+    '',
+  ]),
+  '## Skills',
+  '',
+  llmsFullSkills,
+  '',
+  '## Projects',
+  '',
+  llmsFullProjects,
+  '',
+  '## Education',
+  '',
+  llmsFullEducation,
+  '',
+  '## Contact',
+  '',
+  `Email: ${CONTACT_EMAIL}`,
+  `LinkedIn: ${SOCIALS.linkedin}`,
+  `GitHub: ${SOCIALS.github}`,
+  `Site: ${SITE_URL}`,
+  '',
+  `Last updated: ${snapshot.resume.lastUpdated}`,
+  '',
+].join('\n')
+await writeFile(path.join(distDir, 'llms-full.txt'), llmsFull)
+console.log('Wrote dist/llms-full.txt')
