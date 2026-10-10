@@ -86,26 +86,6 @@ export default function Contact() {
               </Magnetic>
             </motion.div>
           </motion.div>
-
-          <motion.p
-            className="mt-6 text-sm text-muted"
-            initial={{ opacity: 0, y: reduce ? 0 : REVEAL_Y }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-12% 0px -12% 0px' }}
-            transition={{
-              duration: reduce ? REDUCED_DURATION : 0.8,
-              ease: easeExpo(),
-              delay: reduce ? 0 : 0.45,
-            }}
-          >
-            or call me on{' '}
-            <a
-              href={PERSONAL.phoneHref}
-              className="text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
-            >
-              {PERSONAL.phone}
-            </a>
-          </motion.p>
         </div>
 
         <Footer />

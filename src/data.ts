@@ -1,8 +1,6 @@
 export const PERSONAL = {
   name: 'Rachit Sharma',
   email: 'rachitsharma9990888@gmail.com',
-  phone: '+91 83071 51186',
-  phoneHref: 'tel:+918307151186',
 }
 
 /**

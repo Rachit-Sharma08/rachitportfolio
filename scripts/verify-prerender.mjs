@@ -302,24 +302,56 @@ check(
   [
     jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.url,
     jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.url,
+    jsonLd(blogHead).find((s) => s['@type'] === 'Person')?.url,
     jsonLd(postHead).find((s) => s['@type'] === 'Person')?.url,
   ],
-  [SITE_URL, SITE_URL, SITE_URL],
+  [SITE_URL, SITE_URL, SITE_URL, SITE_URL],
 )
 check(
   'Person @id is identical on every page',
   [
     jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.['@id'],
     jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.['@id'],
+    jsonLd(blogHead).find((s) => s['@type'] === 'Person')?.['@id'],
     jsonLd(postHead).find((s) => s['@type'] === 'Person')?.['@id'],
   ],
-  [PERSON_ID, PERSON_ID, PERSON_ID],
+  [PERSON_ID, PERSON_ID, PERSON_ID, PERSON_ID],
 )
 check(
   'WebSite url is the site root',
   jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.url,
   `${SITE_URL}/`,
 )
+
+// --- every shipped JSON-LD block is valid and carries @context + @type -------
+//
+// A single malformed block is silently dropped by a crawler, so the page is
+// left advertising nothing. Parse each block the way a consumer would and
+// require the two fields that make it addressable.
+for (const [label, head] of [
+  ['home', homeHead],
+  ['/resume', resumeHead],
+  ['/blog', blogHead],
+  ['a post', postHead],
+]) {
+  const blocks = [...head.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1])
+  const parsed = blocks.map((raw) => {
+    try {
+      return { ok: true, value: JSON.parse(raw) }
+    } catch {
+      return { ok: false, value: null }
+    }
+  })
+  check(`${label} has a JSON-LD block`, blocks.length > 0, true)
+  check(`${label} JSON-LD blocks all parse`, parsed.every((p) => p.ok), true)
+  check(
+    `${label} JSON-LD blocks declare @context + @type`,
+    parsed.filter((p) => p.ok).every(
+      (p) => p.value['@context'] === 'https://schema.org' && typeof p.value['@type'] === 'string' && p.value['@type'].length > 0,
+    ),
+    true,
+  )
+}
 
 // --- titles: one string, reused by every tag that repeats it ----------------
 
@@ -815,11 +847,10 @@ for (const [label, head] of [
   check(`the ${label} head carries no status word`, STATUS_WORDS.test(head), false)
 }
 
-for (const doc of await Promise.all(
-  ['dist/index.html', 'dist/resume/index.html', 'dist/blog/index.html', 'dist/404.html', 'dist/llms.txt', 'dist/robots.txt'].map(
-    (f) => readFile(path.join(process.cwd(), f), 'utf8'),
-  ),
-)) {
+const distTextDocs = (await collectDistDocs(path.join(process.cwd(), 'dist'))).filter((f) =>
+  /\.(html|txt|xml|webmanifest|json)$/.test(f),
+)
+for (const doc of await Promise.all(distTextDocs.map((f) => readFile(f, 'utf8')))) {
   check('no built document carries a status word', STATUS_WORDS.test(doc), false)
 }
 
@@ -829,6 +860,13 @@ for (const doc of await Promise.all(
 try {
   await readFile(path.join(process.cwd(), 'public', 'Rachit-Sharma-Resume.pdf'))
   check('the resume PDF ships with the site', true, true)
+  check(
+    'the resume PDF is copied into dist',
+    await readFile(path.join(process.cwd(), 'dist', 'Rachit-Sharma-Resume.pdf'))
+      .then(() => true)
+      .catch(() => false),
+    true,
+  )
 } catch {
   console.log('WARN  no public/Rachit-Sharma-Resume.pdf yet — the page link is correct, the file comes with the handoff')
 }
@@ -1008,6 +1046,69 @@ for (const file of await collectDistDocs(distDir)) {
   if (/fawn/i.test(src)) staleHostFiles.push(path.relative(process.cwd(), file))
 }
 check('no retired host baked into any dist document', staleHostFiles, [])
+
+/* -------------------------------------------------------------------------- */
+/*  dist surface: one h1, budgeted head, valid JSON-LD, no phone              */
+/* -------------------------------------------------------------------------- */
+
+// These are the exact bytes a crawler reads, so the invariants are asserted on
+// the shipped files rather than on the renderer's output. `escapeAttr` writes
+// entities, so titles/descriptions are decoded before the length is measured —
+// the budget is on what a reader (and a search-engine snippet) actually sees.
+const decodeEntities = (value) =>
+  value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#x27;/g, "'")
+
+const distAll = await collectDistDocs(distDir)
+// A search-console verification file is a bare token served verbatim, not a
+// rendered page, so the page invariants below do not apply to it.
+const distHtml = distAll.filter(
+  (f) => f.endsWith('.html') && !/[/\\]google[\da-f]+\.html$/i.test(f),
+)
+const distText = distAll.filter((f) => /\.(html|txt|xml|json|webmanifest)$/.test(f))
+
+const pagesWithWrongH1 = []
+const longTitles = []
+const longDescriptions = []
+const badSchema = []
+const phoneHits = []
+for (const file of distHtml) {
+  const rel = path.relative(process.cwd(), file)
+  const doc = await readFile(file, 'utf8')
+  if ((doc.match(/<h1[\s>]/g) || []).length !== 1) pagesWithWrongH1.push(rel)
+  const title = decodeEntities(doc.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '')
+  if (title.length === 0 || title.length > 60) longTitles.push(`${rel} (${title.length})`)
+  const description = decodeEntities(doc.match(/<meta name="description" content="([^"]*)" \/>/)?.[1] ?? '')
+  if (description.length === 0 || description.length > 160) longDescriptions.push(`${rel} (${description.length})`)
+  for (const raw of doc.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
+    let parsed = null
+    try {
+      parsed = JSON.parse(raw[1])
+    } catch {
+      // falls through to the assertion below
+    }
+    if (!parsed || parsed['@context'] !== 'https://schema.org' || typeof parsed['@type'] !== 'string' || !parsed['@type']) {
+      badSchema.push(rel)
+      break
+    }
+  }
+}
+check('every dist HTML page has exactly one h1', pagesWithWrongH1, [])
+check('every dist HTML title stays under 60 chars', longTitles, [])
+check('every dist HTML description stays under 160 chars', longDescriptions, [])
+check('every dist JSON-LD block parses with @context + @type', badSchema, [])
+
+// The phone number lives only inside the resume PDF, so no served text file
+// (HTML, JSON-LD, llms.txt, sitemap, manifest) may carry it.
+for (const file of distText) {
+  const doc = await readFile(file, 'utf8')
+  if (doc.includes('83071')) phoneHits.push(path.relative(process.cwd(), file))
+}
+check('the phone number is absent from every dist document', phoneHits, [])
 
 /* -------------------------------------------------------------------------- */
 /*  Bundle: the Supabase SDK must stay admin-only                             */
