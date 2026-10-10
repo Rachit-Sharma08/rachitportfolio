@@ -285,12 +285,39 @@ console.log(`Wrote dist/404.html (${notFoundHtml.length} bytes)`)
 /*  robots.txt + sitemap.xml                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * AI/answer-engine crawlers get their own group so they are not accidentally
+ * governed by the `*` group. Every group repeats the same three lines because
+ * a bot that matches its own group ignores the `*` group entirely.
+ * Each name is verified against the vendor's official documentation
+ * (OpenAI, Anthropic, Perplexity, Google, Apple).
+ */
+const AI_CRAWLERS = [
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'GPTBot',
+  'ClaudeBot',
+  'Claude-SearchBot',
+  'Claude-User',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Google-Extended',
+  'Applebot-Extended',
+]
+
 const robots = [
   'User-agent: *',
   'Allow: /',
   'Disallow: /admin',
   'Disallow: /api',
   '',
+  ...AI_CRAWLERS.flatMap((ua) => [
+    `User-agent: ${ua}`,
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api',
+    '',
+  ]),
   `Sitemap: ${SITE_URL}/sitemap.xml`,
   '',
 ].join('\n')
