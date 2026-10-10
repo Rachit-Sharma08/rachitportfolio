@@ -1343,6 +1343,40 @@ for (const file of distText) {
 check('no FAQPage block in any dist document', faqHits, [])
 
 /* -------------------------------------------------------------------------- */
+/*  Google Search Console verification file                                   */
+/* -------------------------------------------------------------------------- */
+
+// A search-console token file must ship byte-for-byte as downloaded — a stray
+// newline or a line-ending rewrite breaks ownership verification. It is public
+// by design (never a secret) and must never leak into sitemap/llms/robots.
+const GSC_FILE = 'google8296cc44e5c4188b.html'
+const GSC_CONTENT = `google-site-verification: ${GSC_FILE}`
+const gscPublic = await readFile(path.join(process.cwd(), 'public', GSC_FILE))
+let gscDist = null
+try {
+  gscDist = await readFile(path.join(distDir, GSC_FILE))
+} catch {
+  // falls through to the FAIL below
+}
+check('GSC verification file is copied into dist', gscDist !== null, true)
+check(
+  'GSC verification file is byte-identical to public/',
+  gscDist === null ? -1 : Buffer.compare(gscPublic, gscDist),
+  0,
+)
+check(
+  'GSC verification file has exactly the expected content',
+  gscDist === null ? null : gscDist.toString('utf8'),
+  GSC_CONTENT,
+)
+const gscLeaks = []
+for (const name of ['sitemap.xml', 'llms.txt', 'llms-full.txt', 'robots.txt']) {
+  const doc = await readFile(path.join(distDir, name), 'utf8')
+  if (doc.includes(GSC_FILE)) gscLeaks.push(name)
+}
+check('GSC verification file is not advertised in sitemap/llms/robots', gscLeaks, [])
+
+/* -------------------------------------------------------------------------- */
 /*  Bundle: the Supabase SDK must stay admin-only                             */
 /* -------------------------------------------------------------------------- */
 

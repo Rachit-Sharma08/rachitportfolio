@@ -126,6 +126,10 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v53 — Google Search Console verification file added] — 10 Oct 2026
+
+`public/google8296cc44e5c4188b.html` is the Google Search Console verification file; never delete or edit it, or Search Console will lose ownership.
+
 ### [v52 — new home title + three visible copy lines; `supabase/seed.sql` CRLF normalised so verify is green on Windows] — 10 Oct 2026
 
 **Brief:** exactly two copy changes. (A) New home `<title>` = `Rachit Sharma — Digital Marketer & AI Builder, Kaithal` (54 chars; was `Rachit Sharma — AI-Powered Digital Marketer, Kaithal`, 52). (B) Replace exactly three visible sentences, dropping the word "course" from each. Then gates, fast-forward merge into `main`, one push, live check. Nothing else changed.
