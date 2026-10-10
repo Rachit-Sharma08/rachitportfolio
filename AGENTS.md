@@ -18,6 +18,11 @@
 5. **Code conventions follow karo** — React + TypeScript + Vite + Tailwind CSS v4 + Framer Motion + GSAP. Existing pattern/style copy karo, unwanted comments mat daalo.
 6. **Verification** — Har change ke baad `npm run lint` chalao. Build check ke liye `npm run build` chalao.
 7. **Git/GitHub** — Changes sirf tab push karo jab user kaho. Commit messages chhote aur clear rakho.
+8. **Blog post writing rules (Phase 2, task T4d)** — Har naya blog post (`/blog/:slug`) is structure par:
+   - **h2 question-style** — heading ek sawal ki tarah likho (e.g. "What makes a headline convert?"), heading text copy se doge nahi.
+   - **Pehla jawab turant** — h2 ke turant baad 1–2 sentence ka direct answer, jo ek **complete sentence** ho aur apna subject name kare (e.g. "A headline converts when it names the reader's problem..."). Baaki content detail hai.
+   - **Keyword aur unnatural repetition nahi** — same keyword ko artificially baar-baar mat doh-rao; ek jagah clear use karo.
+   - Ye structure answer engines ko post ka core point turant dene ke liye hai (AEO/GEO).
 
 ---
 
