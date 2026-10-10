@@ -2,14 +2,16 @@
 // content).
 //
 // Split out of prerender.mjs so `npm run verify` can assert the head a route
-// *would* get — titles, canonical, OG/Twitter mirroring, the Person and
-// BlogPosting schema, the `dateModified` gate — against a synthetic snapshot.
+// *would* get — titles, canonical, OG/Twitter mirroring, the Person, WebSite,
+// ProfilePage, BreadcrumbList and Article schemas, the `dateModified` gate —
+// against a synthetic snapshot.
 // Those were previously only checkable by grepping a local build that has no
 // database in it, which is how the last few titles on this site drifted apart
 // without anything going red.
 import {
   OG_IMAGE,
   PAGES,
+  PERSON_ID,
   SITE_NAME,
   SITE_URL,
   isMeaningfullyUpdated,
@@ -95,25 +97,59 @@ export function headFor(route, content) {
       schemas.push({
         json: {
           '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
+          '@type': 'Article',
           headline: post.title,
           description,
           mainEntityOfPage: url,
           datePublished: post.publishedAt ?? undefined,
           ...(updated ? { dateModified: updated } : {}),
-          author: { '@type': 'Person', name: 'Rachit Sharma' },
-          publisher: { '@type': 'Person', name: 'Rachit Sharma' },
-          image,
+          author: { '@type': 'Person', '@id': PERSON_ID, name: 'Rachit Sharma' },
+          publisher: { '@type': 'Person', '@id': PERSON_ID, name: 'Rachit Sharma' },
+          // The brief asks for the image only when the post actually has one;
+          // the og:image that falls back to the site card stays a feed concern.
+          ...(post.coverImageUrl ? { image: absoluteUrl(post.coverImageUrl) } : {}),
         },
         // Tagged so the hydrated page finds and replaces this exact node instead
-        // of appending a second BlogPosting beside it.
+        // of appending a second Article beside it.
         seo: 'blog-post',
       })
     }
   }
 
   page = page ?? PAGES['/']
-  if (route === '/') schemas.push({ json: websiteSchema(url) })
+  if (route === '/') {
+    schemas.push({ json: websiteSchema(url) })
+    // The home page is the profile page: mainEntity points back at the Person
+    // @id, so the entity a search engine reads for "who is Rachit Sharma" is
+    // the same one the answer engines assemble answers from.
+    schemas.push({
+      json: {
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        mainEntity: { '@id': PERSON_ID },
+        url,
+      },
+    })
+  }
+  if (route === '/resume' || route === '/blog') {
+    // A breadcrumb ties the page into site structure for both search engines
+    // and answer engines, and says plainly that these are our own pages.
+    schemas.push({
+      json: {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: route === '/resume' ? 'Resume' : 'Blog',
+            item: url,
+          },
+        ],
+      },
+    })
+  }
 
   const t = escapeAttr(page.title)
   const d = escapeAttr(page.description)

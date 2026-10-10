@@ -294,10 +294,10 @@ check(
 
 // --- Person everywhere, WebSite only on the home page -----------------------
 
-check('home emits Person + WebSite', types(homeHead), ['Person', 'WebSite'])
-check('resume emits Person only', types(resumeHead), ['Person'])
-check('blog index emits Person only', types(blogHead), ['Person'])
-check('post emits Person + BlogPosting', types(postHead), ['Person', 'BlogPosting'])
+check('home emits Person + WebSite + ProfilePage', types(homeHead), ['Person', 'WebSite', 'ProfilePage'])
+check('resume emits Person + BreadcrumbList', types(resumeHead), ['Person', 'BreadcrumbList'])
+check('blog index emits Person + BreadcrumbList', types(blogHead), ['Person', 'BreadcrumbList'])
+check('post emits Person + Article', types(postHead), ['Person', 'Article'])
 check(
   'Person url is the site root on every page',
   [
@@ -322,6 +322,42 @@ check(
   'WebSite url is the site root',
   jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.url,
   `${SITE_URL}/`,
+)
+
+// --- ProfilePage ties the home page to the Person the home page is about ------
+
+check(
+  'ProfilePage points at the Person @id',
+  jsonLd(homeHead).find((s) => s['@type'] === 'ProfilePage')?.mainEntity,
+  { '@id': PERSON_ID },
+)
+check(
+  'ProfilePage url is the site root',
+  jsonLd(homeHead).find((s) => s['@type'] === 'ProfilePage')?.url,
+  `${SITE_URL}/`,
+)
+
+// --- Breadcrumbs say plainly which pages are ours -----------------------------
+
+check(
+  'resume breadcrumb starts at Home',
+  jsonLd(resumeHead).find((s) => s['@type'] === 'BreadcrumbList')?.itemListElement?.[0],
+  { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+)
+check(
+  'resume breadcrumb names the Resume page',
+  jsonLd(resumeHead).find((s) => s['@type'] === 'BreadcrumbList')?.itemListElement?.[1],
+  { '@type': 'ListItem', position: 2, name: 'Resume', item: `${SITE_URL}/resume` },
+)
+check(
+  'blog breadcrumb starts at Home',
+  jsonLd(blogHead).find((s) => s['@type'] === 'BreadcrumbList')?.itemListElement?.[0],
+  { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+)
+check(
+  'blog breadcrumb names the Blog page',
+  jsonLd(blogHead).find((s) => s['@type'] === 'BreadcrumbList')?.itemListElement?.[1],
+  { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
 )
 
 // --- every shipped JSON-LD block is valid and carries @context + @type -------
@@ -421,11 +457,11 @@ check('blog og:title matches the blog <title>', metaContent(blogHead, 'property'
 
 // --- dateModified only when the edit is real --------------------------------
 
-const blogPost = (head) => jsonLd(head).find((s) => s['@type'] === 'BlogPosting')
-check('a month-later edit is claimed', blogPost(postHead)?.dateModified, '2026-02-02T10:00:00Z')
-check('a same-instant save is not claimed', blogPost(sameDateHead)?.dateModified, undefined)
-check('dateModified still absent for a same-instant save', JSON.stringify(blogPost(sameDateHead)).includes('dateModified'), false)
-check('datePublished is always claimed', blogPost(sameDateHead)?.datePublished, '2025-12-01T10:00:00Z')
+const articleSchema = (head) => jsonLd(head).find((s) => s['@type'] === 'Article')
+check('a month-later edit is claimed', articleSchema(postHead)?.dateModified, '2026-02-02T10:00:00Z')
+check('a same-instant save is not claimed', articleSchema(sameDateHead)?.dateModified, undefined)
+check('dateModified still absent for a same-instant save', JSON.stringify(articleSchema(sameDateHead)).includes('dateModified'), false)
+check('datePublished is always claimed', articleSchema(sameDateHead)?.datePublished, '2025-12-01T10:00:00Z')
 
 // The gate is Supabase stamping updated_at on every save, so the boundary is the
 // whole feature: a minute-old edit must read as "never edited".
@@ -437,9 +473,36 @@ check('a missing update date is ignored', isMeaningfullyUpdated('2026-01-05T10:0
 check('a missing publish date is ignored', isMeaningfullyUpdated(null, '2026-02-02T10:00:00Z'), false)
 check('an unparseable update date is ignored', isMeaningfullyUpdated('2026-01-05T10:00:00Z', 'soon'), false)
 
-// Exactly one BlogPosting per post: hydration removes the pre-rendered node
+// Exactly one Article per post: hydration removes the pre-rendered node
 // before appending its own, and the tag it looks for is what keeps that true.
-check('post head tags its single BlogPosting script', (postHead.match(/data-seo="blog-post"/g) || []).length, 1)
+check('post head tags its single Article script', (postHead.match(/data-seo="blog-post"/g) || []).length, 1)
+
+// The Article schema mirrors the Person identity and drops the image when the
+// post has no cover of its own, so the structured data says no more than the
+// post does.
+check(
+  'Article author is the Person @id',
+  articleSchema(postHead)?.author,
+  { '@type': 'Person', '@id': PERSON_ID, name: 'Rachit Sharma' },
+)
+check(
+  'Article publisher is the Person @id',
+  articleSchema(postHead)?.publisher,
+  { '@type': 'Person', '@id': PERSON_ID, name: 'Rachit Sharma' },
+)
+check('Article has no image when the post has no cover', JSON.stringify(articleSchema(postHead)).includes('"image"'), false)
+check('Article keeps a headline', articleSchema(postHead)?.headline, 'One Brief, One Campaign Sprint')
+
+// A post that does have a cover image gets one in the schema — nothing more.
+const covered = headFor('/blog/one-brief-one-campaign-sprint', {
+  ...content,
+  posts: [{ ...content.posts[0], coverImageUrl: 'https://x.supabase.co/covers/b1.webp' }],
+})
+check(
+  'Article carries the image when the post has a cover',
+  articleSchema(covered)?.image,
+  'https://x.supabase.co/covers/b1.webp',
+)
 
 // --- client-side copy of the same rules cannot drift ------------------------
 //

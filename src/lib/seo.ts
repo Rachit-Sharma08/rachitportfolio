@@ -184,10 +184,11 @@ export function applyArticleSchema(post: {
   const doc = document
   // The pre-rendered head already carries this node — tagged by the pre-renderer
   // for exactly this reason. Removing it here is what stops the hydrated DOM from
-  // holding two BlogPosting objects for one post.
+  // holding two Article objects for one post.
   doc.querySelector('script[data-seo="blog-post"]')?.remove()
 
   const origin = doc.location.origin
+  const personId = `${origin}/#person`
   const updated = isMeaningfullyUpdated(post.publishedAt, post.updatedAt)
     ? post.updatedAt
     : null
@@ -196,17 +197,16 @@ export function applyArticleSchema(post: {
   script.dataset.seo = 'blog-post'
   script.textContent = JSON.stringify({
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    '@type': 'Article',
     headline: post.title,
     description: post.description,
     mainEntityOfPage: `${origin}/blog/${post.slug}`,
     datePublished: post.publishedAt ?? undefined,
     ...(updated ? { dateModified: updated } : {}),
-    author: { '@type': 'Person', name: 'Rachit Sharma' },
-    publisher: { '@type': 'Person', name: 'Rachit Sharma' },
-    image: post.image
-      ? new URL(post.image, origin).href
-      : new URL(OG_IMAGE, origin).href,
+    author: { '@type': 'Person', '@id': personId, name: 'Rachit Sharma' },
+    publisher: { '@type': 'Person', '@id': personId, name: 'Rachit Sharma' },
+    // Image only if the post actually has one, mirroring the pre-rendered head.
+    ...(post.image ? { image: new URL(post.image, origin).href } : {}),
   })
   doc.head.appendChild(script)
 }
