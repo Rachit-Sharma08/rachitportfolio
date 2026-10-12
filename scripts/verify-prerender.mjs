@@ -17,6 +17,9 @@ import {
   TITLE_MAX,
   UPDATE_THRESHOLD_MS,
   PERSON_ID,
+  GA_MEASUREMENT_ID,
+  PRODUCTION_HOST,
+  analyticsEnabled,
   RESUME_MODIFIED,
   KNOWS_ABOUT,
   QUICK_FACTS,
@@ -1442,6 +1445,158 @@ for (const file of distText) {
   if (doc.includes('FAQPage')) faqHits.push(path.relative(process.cwd(), file))
 }
 check('no FAQPage block in any dist document', faqHits, [])
+
+/* -------------------------------------------------------------------------- */
+/*  Google Analytics 4: production only, once per page, never on /admin        */
+/* -------------------------------------------------------------------------- */
+
+// The tag is written by `headFor`, so what matters is the head each route would
+// get in a real production build. `analyticsEnabled()` reads the environment
+// when called rather than when the module loads, so both branches can be
+// exercised here — and the verifier itself runs with no VERCEL_ENV, which is
+// exactly the "local build" case.
+const withAnalyticsEnv = (value, run) => {
+  const previous = process.env.VERCEL_ENV
+  if (value === undefined) delete process.env.VERCEL_ENV
+  else process.env.VERCEL_ENV = value
+  try {
+    return run()
+  } finally {
+    if (previous === undefined) delete process.env.VERCEL_ENV
+    else process.env.VERCEL_ENV = previous
+  }
+}
+
+const gaScriptTags = (head) => head.match(/<script async src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=[^"]+"><\/script>/g) ?? []
+const gaConfigCalls = (head) => head.match(/gtag\('config','[^']+'\)/g) ?? []
+
+const routesUnderTest = [
+  ['home', '/'],
+  ['resume', '/resume'],
+  ['blog index', '/blog'],
+  ['a post', '/blog/one-brief-one-campaign-sprint'],
+]
+
+// Off everywhere unless this really is a Vercel production build.
+check('analytics is off outside a production build', analyticsEnabled(), false)
+for (const [label, route] of routesUnderTest) {
+  check(
+    `no analytics tag on the ${label} head outside a production build`,
+    gaScriptTags(headFor(route, content)).length,
+    0,
+  )
+}
+check(
+  'no analytics tag on a Vercel preview build',
+  withAnalyticsEnv('preview', () => gaScriptTags(headFor('/', content)).length),
+  0,
+)
+check('analytics is on for a production build', withAnalyticsEnv('production', () => analyticsEnabled()), true)
+
+// On for a production build: exactly once per page, with one measurement ID.
+const productionHeads = withAnalyticsEnv('production', () =>
+  Object.fromEntries(routesUnderTest.map(([label, route]) => [label, headFor(route, content)])),
+)
+for (const [label] of routesUnderTest) {
+  check(`the ${label} head carries the analytics script exactly once`, gaScriptTags(productionHeads[label]).length, 1)
+  check(`the ${label} head configures analytics exactly once`, gaConfigCalls(productionHeads[label]).length, 1)
+  check(
+    `the ${label} head loads gtag from googletagmanager`,
+    /<script async src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-[A-Z0-9]+"><\/script>/.test(
+      productionHeads[label],
+    ),
+    true,
+  )
+}
+// Both halves have to name the same property, or the page loads one and reports
+// to another.
+const headIds = Object.values(productionHeads).map(
+  (head) => head.match(/gtag\/js\?id=([^"]+)"/)?.[1] + '|' + head.match(/gtag\('config','([^']+)'\)/)?.[1],
+)
+check('every page names the same measurement ID, in both halves', [...new Set(headIds)], [
+  `${GA_MEASUREMENT_ID}|${GA_MEASUREMENT_ID}`,
+])
+check('the measurement ID is a GA4 measurement ID', /^G-[A-Z0-9]{4,}$/.test(GA_MEASUREMENT_ID), true)
+
+// The 404 document is written with a hand-built head (no canonical, no JSON-LD)
+// and the brief for this tag listed the real pages only, so it stays untagged.
+check(
+  'the 404 document carries no analytics tag',
+  /googletagmanager\.com/.test(notFound ?? ''),
+  false,
+)
+
+// The exclusion itself: pull the guard straight out of the shipped head and run
+// it, rather than asserting on a copy of the expression written here.
+const guard = productionHeads.home.match(/if\(([\s\S]*?)\)\{gtag\('config'/)?.[1] ?? ''
+check('the analytics guard is present in the head', guard.length > 0, true)
+const reportsFor = (host, pathname) => {
+  try {
+    return Boolean(new Function('location', `return ${guard}`)({ host, pathname }))
+  } catch {
+    return false
+  }
+}
+check('analytics reports the production home page', reportsFor(PRODUCTION_HOST, '/'), true)
+check('analytics reports a production post page', reportsFor(PRODUCTION_HOST, '/blog/one-brief-one-campaign-sprint'), true)
+check('analytics never reports /admin', reportsFor(PRODUCTION_HOST, '/admin'), false)
+check('analytics never reports an admin sub-route', reportsFor(PRODUCTION_HOST, '/admin/blog'), false)
+check('analytics never reports the admin login', reportsFor(PRODUCTION_HOST, '/admin/login'), false)
+check('analytics never reports from localhost', reportsFor('localhost:4173', '/'), false)
+check('analytics never reports from a preview host', reportsFor('rachitportfolio-abc123.vercel.app', '/'), false)
+// The router has to agree with the guard, or the panel would be excluded by one
+// rule and rendered by another.
+const appTs = await readFile(path.join(process.cwd(), 'src', 'App.tsx'), 'utf8')
+check(
+  'the router treats /admin and /admin/* as the admin panel',
+  /pathname === '\/admin' \|\| pathname\.startsWith\('\/admin\/'\)/.test(appTs),
+  true,
+)
+
+// Nothing personal may be handed to Google. The tag carries no user id, no
+// dimensions and no contact details — only the page URL.
+const analyticsSnippet = productionHeads.home.match(/<script>window\.dataLayer[\s\S]*?<\/script>/)?.[0] ?? ''
+check('the analytics snippet writes no email address', /@/.test(analyticsSnippet), false)
+check('the analytics snippet writes no phone number', analyticsSnippet.includes('83071'), false)
+check('the analytics snippet sets no user id', /user_id|userId/.test(analyticsSnippet), false)
+
+// "Never twice" is structural: the tag is only ever written by headFor, so the
+// client bundle must contain no analytics reference to inject a second copy.
+const clientGaHits = []
+for (const file of await readdir(path.join(process.cwd(), 'dist', 'assets'))) {
+  if (!file.endsWith('.js')) continue
+  const src = await readFile(path.join(process.cwd(), 'dist', 'assets', file), 'utf8')
+  if (/googletagmanager\.com|gtag\(|dataLayer|G-[A-Z0-9]{6,}/.test(src)) clientGaHits.push(file)
+}
+check('no client chunk injects or references analytics', clientGaHits, [])
+check('the client seo module holds no analytics code', /gtag|googletagmanager|GA_MEASUREMENT_ID/.test(seoTs), false)
+check(
+  'the analytics ID is written in one place',
+  (seoTs + dataTs).includes(GA_MEASUREMENT_ID),
+  false,
+)
+
+// And a build that is not a production deploy must not carry the tag at all,
+// which is the case this verifier is running in.
+const gaInDist = []
+for (const file of distText) {
+  const doc = await readFile(file, 'utf8')
+  if (/googletagmanager\.com/.test(doc)) gaInDist.push(path.relative(process.cwd(), file))
+}
+check('no document built outside production carries the analytics tag', gaInDist, [])
+
+// GA4 is the only tracker on this site, and that is a decision rather than an
+// accident: every other analytics vendor's loader would have to be added
+// deliberately. Sweeping the shipped files for the common ones means an
+// accidental paste cannot quietly become a second tracker.
+const OTHER_TRACKERS =
+  /connect\.facebook\.net|facebook\.com\/tr\?|_hsq|hotjar|clarity\.ms|mixpanel|segment\.(io|com)|plausible\.io|umami|matomo|fullstory|posthog/i
+const otherTrackerHits = []
+for (const file of distText) {
+  const doc = await readFile(file, 'utf8')
+  if (OTHER_TRACKERS.test(doc)) otherTrackerHits.push(path.relative(process.cwd(), file))
+}
+check('no other analytics or tracking vendor is present', otherTrackerHits, [])
 
 /* -------------------------------------------------------------------------- */
 /*  Google Search Console verification file                                   */

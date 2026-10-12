@@ -21,6 +21,41 @@ export const OG_IMAGE = `${SITE_URL}/og-image.webp`
 export const CONTACT_EMAIL = 'rachitsharma9990888@gmail.com'
 
 /**
+ * Google Analytics 4 measurement ID.
+ *
+ * Public by design: it is printed in the source of every page and inside the
+ * URL of the analytics script itself. It identifies a web property, it does not
+ * grant access to it, so it is not a credential and does not belong in an env
+ * var — keeping it here means one string to change, and the verifier asserts
+ * the tag is written from this constant.
+ */
+export const GA_MEASUREMENT_ID = 'G-WT9RGFT421'
+
+/**
+ * The host this site is served from in production. Taken from SITE_URL rather
+ * than hardcoded, so it moves if the site is ever served from a custom domain.
+ */
+export const PRODUCTION_HOST = new URL(SITE_URL).host
+
+/**
+ * Whether to ship analytics at all.
+ *
+ * Analytics reports on real visitors, so a local build, a `npm run dev` server
+ * and a Vercel *preview* deployment must not carry the tag — otherwise a
+ * developer's own refreshes land in the reports as real traffic and inflate
+ * every number on the property.
+ *
+ * `VERCEL_ENV` is set by Vercel to `production`, `preview` or `development` on
+ * every build it runs, and is simply absent on a local build. That makes it the
+ * one switch that separates "deployed for real" from everything else without
+ * anyone having to configure anything. Read through a function rather than a
+ * module-level constant so the verifier can exercise both branches.
+ */
+export function analyticsEnabled() {
+  return process.env.VERCEL_ENV === 'production'
+}
+
+/**
  * Identity profiles. These have to match what the visitor can actually click
  * open — a `sameAs` pointing at a stranger's profile is worse than no `sameAs`,
  * because it hands a knowledge panel someone else's history.

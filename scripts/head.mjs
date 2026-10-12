@@ -3,18 +3,22 @@
 //
 // Split out of prerender.mjs so `npm run verify` can assert the head a route
 // *would* get — titles, canonical, OG/Twitter mirroring, the Person, WebSite,
-// ProfilePage, BreadcrumbList and Article schemas, the `dateModified` gate —
+// ProfilePage, BreadcrumbList and Article schemas, the `dateModified` gate, and
+// the production-only analytics tag —
 // against a synthetic snapshot.
 // Those were previously only checkable by grepping a local build that has no
 // database in it, which is how the last few titles on this site drifted apart
 // without anything going red.
 import {
+  GA_MEASUREMENT_ID,
   OG_IMAGE,
   PAGES,
   PERSON_ID,
+  PRODUCTION_HOST,
   RESUME_MODIFIED,
   SITE_NAME,
   SITE_URL,
+  analyticsEnabled,
   isMeaningfullyUpdated,
   personSchema,
   postTitle,
@@ -153,6 +157,49 @@ function postEffectiveDate(post) {
  */
 function pageFor(route) {
   return PAGES[route] ?? null
+}
+
+/**
+ * Google Analytics 4 — the standard gtag.js snippet, written once per page into
+ * the pre-rendered head.
+ *
+ * Three things this deliberately is not:
+ *
+ * - **Not in local or preview builds.** `analyticsEnabled()` is the gate, so a
+ *   developer's own refreshes never reach the reports.
+ * - **Not twice.** It lives only in this string. Nothing in the app injects it,
+ *   and the client never touches it, so a page cannot end up with two — the one
+ *   way a "never twice" requirement usually breaks. `npm run verify` asserts the
+ *   shipped bundle contains no analytics reference at all, which is what keeps
+ *   that true.
+ * - **Not on /admin.** The admin panel has no document of its own: Vercel serves
+ *   it the pre-rendered homepage (see vercel.json), so the snippet is already in
+ *   the HTML it loads and only the browser knows which URL it is on. Hence the
+ *   guard around the config call — see the comment there.
+ *
+ * The inline half has to stay on one line: `composeHtml` splits the head on
+ * newlines and re-indents each line, so a multi-line snippet would be reflowed
+ * into the document.
+ *
+ * A config call sends exactly one page_view per document load. Nothing here
+ * listens for history changes, so a client-side route change reports nothing
+ * rather than reporting twice.
+ */
+function analyticsTags() {
+  if (!analyticsEnabled()) return []
+  return [
+    `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"></script>`,
+    // Standard snippet (dataLayer, gtag, `js`, `config`) with two guards on the
+    // config call, which is the call that reports:
+    //   1. the host must be the one this build targets — a production document
+    //      opened over a preview or localhost URL stays silent;
+    //   2. never under /admin — the same rule `isAdminPath` applies to the router
+    //      in src/App.tsx, and it has to be spelled the same way, because the
+    //      alternative is tracking the login screen.
+    // Nothing personal is passed: no user id, no email, no phone, no custom
+    // dimensions — only the page URL the browser already had.
+    `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());if(location.host==='${PRODUCTION_HOST}'&&location.pathname!=='/admin'&&location.pathname.indexOf('/admin/')!==0){gtag('config','${GA_MEASUREMENT_ID}')}</script>`,
+  ]
 }
 
 export function headFor(route, content) {
@@ -305,5 +352,6 @@ export function headFor(route, content) {
       ({ json, seo }) =>
         `<script type="application/ld+json"${seo ? ` data-seo="${seo}"` : ''}>${safeJson(json)}</script>`,
     ),
+    ...analyticsTags(),
   ].join('\n    ')
 }
