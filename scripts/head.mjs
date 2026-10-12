@@ -12,6 +12,7 @@ import {
   OG_IMAGE,
   PAGES,
   PERSON_ID,
+  RESUME_MODIFIED,
   SITE_NAME,
   SITE_URL,
   isMeaningfullyUpdated,
@@ -50,9 +51,11 @@ export function safeJson(value) {
 }
 
 // The resume's "last updated" value is authored as display text ("October
-// 2026"). JSON-LD needs a real date, so turn the label into a year-month.
-// Nothing is invented: an unrecognised label yields null and no date is emitted
-// for it at all, and no day is ever added to a value that was only ever a month.
+// 2026"). It used to be the source of the schema date, as a year-month — which is
+// not a date a validator accepts, and is exactly what Search Console flagged. It
+// no longer ships: `RESUME_MODIFIED` carries the real day and `isoDate` is what
+// writes it. This stays as the reader for that label, used by the verifier to
+// check the two still agree about which month the resume claims.
 const ISO_MONTHS = {
   January: '01',
   February: '02',
@@ -78,14 +81,43 @@ export function isoYearMonth(label) {
 
 /**
  * A calendar value expressed as a comparable point in time, or null when it is
- * not a real date. A year-month ("2026-10") has no day, so for the comparison
- * it counts as the first of that month — while the value that ships stays the
- * original below, never the expanded form.
+ * not a real date. Used to pick the newest date on the site and to test "is this
+ * in the future"; a year-month counts as the first of that month, so a value
+ * that only ever had a month still compares correctly.
  */
 export function comparisonTime(value) {
   if (typeof value !== 'string' || !value) return null
   const time = Date.parse(/^\d{4}-\d{2}$/.test(value) ? `${value}-01T00:00:00Z` : value)
   return Number.isNaN(time) ? null : time
+}
+
+/**
+ * A stored date as a full ISO calendar date (`YYYY-MM-DD`), or null when there is
+ * no real day to give.
+ *
+ * Structured data dates have to be a complete ISO 8601 date: a bare `2026-10`
+ * made Search Console report the ProfilePage's `dateModified` as an invalid
+ * datetime. Everything that reaches JSON-LD goes through here — the resume's
+ * commit date, a post's publication and update — so the three shapes a stored
+ * value can have are handled in one place.
+ *
+ *   - a full ISO datetime → its calendar date, no time invented
+ *   - a full date already  → itself
+ *   - a year-month         → null. The day is not known, and picking one
+ *                            (e.g. the 1st) would be a fabricated date
+ *   - anything else, or a date in the future → null
+ *
+ * A null means the field is left out of the schema entirely rather than filled
+ * with a guess, which is what the date validators want to see.
+ */
+export function isoDate(value) {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  const match = /^(\d{4}-\d{2}-\d{2})(?:[T ].*)?$/.exec(trimmed)
+  if (!match) return null
+  const time = Date.parse(`${match[1]}T00:00:00Z`)
+  if (Number.isNaN(time)) return null
+  return time <= Date.now() ? match[1] : null
 }
 
 /** The newest of the given real dates, returned as its original value unchanged. */
@@ -105,9 +137,13 @@ export function newestRealDate(values) {
 /**
  * The date a post stands for on the home page: the update when the edit was a
  * real one, the publication otherwise — the same rule the Article schema uses.
+ * Both go through {@link isoDate}, so the home page compares real calendar days.
  */
 function postEffectiveDate(post) {
-  return isMeaningfullyUpdated(post.publishedAt, post.updatedAt) ? post.updatedAt : post.publishedAt
+  const value = isMeaningfullyUpdated(post.publishedAt, post.updatedAt)
+    ? post.updatedAt
+    : post.publishedAt
+  return isoDate(value)
 }
 
 /**
@@ -126,13 +162,14 @@ export function headFor(route, content) {
   // of the site, and search engines use it to tie the two together.
   const schemas = [{ json: personSchema() }]
 
-  // T8 — a real date only. The resume entry is a display label ("October 2026")
-  // with no day, so it becomes a year-month and nothing is invented. The home
-  // page claims the newest date on the whole site: the resume's own, or the
-  // newest post edit/publication, whichever is later. Comparisons treat a
-  // year-month as the first of that month, while the value that ships stays the
-  // original (the resume stays "2026-10", a post stays its full datetime).
-  const resumeModified = isoYearMonth(content?.resume?.lastUpdated)
+  // Every date that reaches JSON-LD is a full ISO calendar date (`isoDate`).
+  // The resume's own last-updated field is display text with no day in it, so
+  // the day comes from RESUME_MODIFIED — the commit that last wrote the resume —
+  // and the label is only what says a resume exists to be dated at all. The home
+  // page claims the newest date on the whole site: the resume's, or the newest
+  // post edit/publication, whichever is later. Nothing is invented and nothing in
+  // the future is emitted; a value with no real day is left out.
+  const resumeModified = content?.resume?.lastUpdated ? RESUME_MODIFIED : null
   const homeModified = newestRealDate([
     resumeModified,
     ...(content?.posts ?? []).map(postEffectiveDate),
@@ -165,7 +202,7 @@ export function headFor(route, content) {
       // `updated_at` on every save, so an unconditional one makes every post
       // look routinely revised — see UPDATE_THRESHOLD_MS.
       const updated = isMeaningfullyUpdated(post.publishedAt, post.updatedAt)
-        ? post.updatedAt
+        ? isoDate(post.updatedAt)
         : null
       schemas.push({
         json: {
@@ -174,7 +211,7 @@ export function headFor(route, content) {
           headline: post.title,
           description,
           mainEntityOfPage: url,
-          datePublished: post.publishedAt ?? undefined,
+          datePublished: isoDate(post.publishedAt) ?? undefined,
           ...(updated ? { dateModified: updated } : {}),
           author: { '@type': 'Person', '@id': PERSON_ID, name: 'Rachit Sharma' },
           publisher: { '@type': 'Person', '@id': PERSON_ID, name: 'Rachit Sharma' },
@@ -227,8 +264,9 @@ export function headFor(route, content) {
   }
   if (route === '/resume') {
     // The resume page is the person's profile too: same Person @id as home, a
-    // url that says which page this profile describes, and the dateModified
-    // straight from the resume data source as a year-month — no day invented.
+    // url that says which page this profile describes, and the day the resume
+    // was last really written — a full ISO date, never the display label's
+    // month.
     schemas.push({
       json: {
         '@context': 'https://schema.org',

@@ -85,6 +85,31 @@ export function isMeaningfullyUpdated(
   return updated - published >= UPDATE_THRESHOLD_MS
 }
 
+/**
+ * A stored date as a full ISO calendar date (`YYYY-MM-DD`), or null when there is
+ * no real day to give.
+ *
+ * Structured data dates have to be a complete ISO 8601 date — a bare `2026-10`
+ * was reported by Search Console as an invalid datetime — so the hydrated page
+ * has to write the same shape the pre-rendered head does, or the crawler sees two
+ * different dates for one post.
+ *
+ *   - a full ISO datetime → its calendar date, no time invented
+ *   - a full date already  → itself
+ *   - a year-month         → null; the day is not known
+ *   - anything else, or a date in the future → null
+ *
+ * Mirrors `isoDate` in scripts/head.mjs — the verifier asserts both agree.
+ */
+export function isoDate(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null
+  const match = /^(\d{4}-\d{2}-\d{2})(?:[T ].*)?$/.exec(value.trim())
+  if (!match) return null
+  const time = Date.parse(`${match[1]}T00:00:00Z`)
+  if (Number.isNaN(time)) return null
+  return time <= Date.now() ? match[1] : null
+}
+
 export function titleForPath(pathname: string): string {
   const key = normalise(pathname)
   if (key === '/blog' || key.startsWith('/blog/')) return PAGE_TITLES['/blog']
@@ -190,7 +215,7 @@ export function applyArticleSchema(post: {
   const origin = doc.location.origin
   const personId = `${origin}/#person`
   const updated = isMeaningfullyUpdated(post.publishedAt, post.updatedAt)
-    ? post.updatedAt
+    ? isoDate(post.updatedAt)
     : null
   const script = doc.createElement('script')
   script.type = 'application/ld+json'
@@ -201,7 +226,7 @@ export function applyArticleSchema(post: {
     headline: post.title,
     description: post.description,
     mainEntityOfPage: `${origin}/blog/${post.slug}`,
-    datePublished: post.publishedAt ?? undefined,
+    datePublished: isoDate(post.publishedAt) ?? undefined,
     ...(updated ? { dateModified: updated } : {}),
     author: { '@type': 'Person', '@id': personId, name: 'Rachit Sharma' },
     publisher: { '@type': 'Person', '@id': personId, name: 'Rachit Sharma' },

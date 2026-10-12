@@ -17,12 +17,20 @@ import {
   TITLE_MAX,
   UPDATE_THRESHOLD_MS,
   PERSON_ID,
+  RESUME_MODIFIED,
   KNOWS_ABOUT,
   QUICK_FACTS,
   postTitle,
   isMeaningfullyUpdated,
 } from './seo-config.mjs'
-import { headFor, escapeAttr, isoYearMonth, comparisonTime, newestRealDate } from './head.mjs'
+import {
+  headFor,
+  escapeAttr,
+  isoYearMonth,
+  isoDate,
+  comparisonTime,
+  newestRealDate,
+} from './head.mjs'
 
 const ssr = await import(
   pathToFileURL(path.join(process.cwd(), 'dist-ssr', 'prerender.js')).href
@@ -337,19 +345,22 @@ check(
   `${SITE_URL}/`,
 )
 
-// --- dateModified comes from real dates only, never invented (T8) -------------
+// --- every JSON-LD date is a full ISO calendar date, never invented (T8) ------
 //
-// The resume entry ships a display label ("October 2026") with no day, so the
-// profile dates are year-months and no day is ever fabricated. Home owns the
-// newest date on the site — resume label or latest post edit/publication — and
-// the resume page claims its own. A value with no real date stays absent.
+// The profile dates used to ship as year-months ("2026-10") taken from the
+// resume's display label, and Search Console reported the ProfilePage's
+// dateModified as an invalid datetime. Now the day comes from a real source —
+// RESUME_MODIFIED, the commit that last wrote the resume — the home page takes
+// the newest date on the site, and a post claims its own publication and, when
+// the edit was real, its update. Nothing with no real day is emitted at all.
 
 const homeProfile = jsonLd(homeHead).find((s) => s['@type'] === 'ProfilePage')
 const resumeProfiles = jsonLd(resumeHead).filter((s) => s['@type'] === 'ProfilePage')
 
-// The resume label is the newest date among the fixture content: the resume
-// "October 2026" beats one-brief's edit (2026-02-02) and the same-instant post.
-check('home dateModified is the newest real site date', homeProfile?.dateModified, '2026-10')
+// The resume date is the newest among the fixture content: the commit that last
+// wrote the resume (2026-10-10) beats one-brief's edit (2026-02-02) and the
+// same-instant post.
+check('home dateModified is the newest real site date', homeProfile?.dateModified, '2026-10-10')
 check('home dateModified is not in the future', comparisonTime(homeProfile?.dateModified) <= Date.now(), true)
 
 // The home page never invents a date when nothing real exists.
@@ -357,32 +368,58 @@ const emptyHome = jsonLd(headFor('/', { resume: null, posts: [] })).find((s) => 
 check('home emits no dateModified when nothing is dated', emptyHome?.dateModified, undefined)
 
 // The resume page has exactly one ProfilePage, tied to the same Person, on the
-// resume URL, carrying the resume's own last-updated label as a year-month.
+// resume URL, carrying the real day the resume was last written.
 check('resume emits exactly one ProfilePage', resumeProfiles.length, 1)
 check('resume ProfilePage points at the Person @id', resumeProfiles[0]?.mainEntity, { '@id': PERSON_ID })
 check('resume ProfilePage url is the resume page', resumeProfiles[0]?.url, `${SITE_URL}/resume`)
-check('resume dateModified is the resume last-updated month', resumeProfiles[0]?.dateModified, '2026-10')
+check('resume dateModified is the day the resume data last changed', resumeProfiles[0]?.dateModified, '2026-10-10')
 check('resume dateModified is not in the future', comparisonTime(resumeProfiles[0]?.dateModified) <= Date.now(), true)
 check('resume emits no ProfilePage dateModified when unlabelled', jsonLd(headFor('/resume', { resume: null })).find((s) => s['@type'] === 'ProfilePage')?.dateModified, undefined)
 
-// The exact-same helpers the build uses: a label becomes a year-month, a
-// year-month counts as the first of that month when compared, and the newest
-// real value wins while staying in its original form.
+// The date itself, and the one thing it has to agree with: the visible "October
+// 2026" label. The label is what a visitor reads, the schema date is what a
+// validator reads — if the resume is refreshed the label moves and this fails,
+// which is the point: updating the resume has to update both.
+check('the resume schema date is a full ISO date', /^\d{4}-\d{2}-\d{2}$/.test(RESUME_MODIFIED), true)
+check('the resume schema date is not in the future', comparisonTime(RESUME_MODIFIED) <= Date.now(), true)
+check(
+  'the resume schema date is in the month the visible label claims',
+  isoYearMonth(content.resume?.lastUpdated),
+  RESUME_MODIFIED.slice(0, 7),
+)
+check('the visible resume label is unchanged display text', content.resume?.lastUpdated, 'October 2026')
+
+// The exact-same helpers the build uses, including the one that decides what a
+// stored date is allowed to become.
 check('isoYearMonth parses "October 2026"', isoYearMonth('October 2026'), '2026-10')
 check('isoYearMonth parses "March 2026"', isoYearMonth('March 2026'), '2026-03')
 check('isoYearMonth rejects an unparseable label', isoYearMonth('sometime in 2026'), null)
 check('isoYearMonth rejects a missing label', isoYearMonth(undefined), null)
 check('comparisonTime treats a year-month as the first of that month', comparisonTime('2026-10'), Date.parse('2026-10-01T00:00:00Z'))
+
+// isoDate is the gate that keeps an invalid datetime out of the schemas: a
+// year-month has no day to give and is rejected rather than padded with a
+// fabricated one, an unparseable value is rejected, and nothing after today is
+// ever emitted.
+check('isoDate keeps only the calendar date of a datetime', isoDate('2026-02-02T10:00:00Z'), '2026-02-02')
+check('isoDate accepts a date that is already a date', isoDate('2026-02-02'), '2026-02-02')
+check('isoDate refuses to invent a day for a year-month', isoDate('2026-02'), null)
+check('isoDate rejects an unparseable value', isoDate('soon'), null)
+check('isoDate rejects a missing value', isoDate(undefined), null)
+check('isoDate rejects a future date', isoDate('2999-01-01'), null)
+check('isoDate rejects today plus a day', isoDate(new Date(Date.now() + 86400000).toISOString()), null)
+
 check(
-  'newestRealDate picks the resume month over an older post edit',
-  newestRealDate(['2026-02-02T10:00:00Z', '2026-10']),
-  '2026-10',
+  'newestRealDate picks the resume date over an older post edit',
+  newestRealDate(['2026-02-02', '2026-10-10']),
+  '2026-10-10',
 )
 check(
   'newestRealDate leaves the winning value in its original form',
-  newestRealDate(['2026-10-15T10:00:00Z', '2026-10']),
-  '2026-10-15T10:00:00Z',
+  newestRealDate(['2026-10-15', '2026-10-10']),
+  '2026-10-15',
 )
+check('newestRealDate has nothing to pick from when no value is a real date', newestRealDate(['soon', '', null]), null)
 
 // --- Breadcrumbs say plainly which pages are ours -----------------------------
 
@@ -505,10 +542,28 @@ check('blog og:title matches the blog <title>', metaContent(blogHead, 'property'
 // --- dateModified only when the edit is real --------------------------------
 
 const articleSchema = (head) => jsonLd(head).find((s) => s['@type'] === 'Article')
-check('a month-later edit is claimed', articleSchema(postHead)?.dateModified, '2026-02-02T10:00:00Z')
+check('a month-later edit is claimed as a full date', articleSchema(postHead)?.dateModified, '2026-02-02')
 check('a same-instant save is not claimed', articleSchema(sameDateHead)?.dateModified, undefined)
 check('dateModified still absent for a same-instant save', JSON.stringify(articleSchema(sameDateHead)).includes('dateModified'), false)
-check('datePublished is always claimed', articleSchema(sameDateHead)?.datePublished, '2025-12-01T10:00:00Z')
+check('datePublished is always claimed as a full date', articleSchema(sameDateHead)?.datePublished, '2025-12-01')
+check('datePublished keeps the calendar date of the stored datetime', articleSchema(postHead)?.datePublished, '2026-01-05')
+
+// A post is no exception to the rule: a stored value with no day never gets one
+// invented for it, and a date that has not happened yet is left out of the
+// schema rather than published.
+const bareMonthPost = headFor('/blog/dated', {
+  posts: [{ ...content.posts[0], slug: 'dated', publishedAt: '2026-02', updatedAt: '2026-02' }],
+})
+check('a post page with no day to give still emits its schemas', types(bareMonthPost), ['Person', 'Article'])
+check('a post stored as a year-month claims no publication date', articleSchema(bareMonthPost)?.datePublished, undefined)
+check('a post stored as a year-month claims no modified date', articleSchema(bareMonthPost)?.dateModified, undefined)
+const futurePost = headFor('/blog/future', {
+  posts: [
+    { ...content.posts[0], slug: 'future', publishedAt: '2999-01-01T00:00:00Z', updatedAt: '2999-01-02T00:00:00Z' },
+  ],
+})
+check('a post dated in the future claims no publication date', articleSchema(futurePost)?.datePublished, undefined)
+check('a post dated in the future claims no modified date', articleSchema(futurePost)?.dateModified, undefined)
 
 // The gate is Supabase stamping updated_at on every save, so the boundary is the
 // whole feature: a minute-old edit must read as "never edited".
@@ -603,6 +658,18 @@ const clientThreshold = Number(
     .reduce((total, factor) => total * Number(factor), 1),
 )
 check('client update threshold matches the build', clientThreshold, UPDATE_THRESHOLD_MS)
+
+// The date the hydrated page writes into an Article has to be the same shape the
+// pre-rendered head writes, or a crawler reads one date from the shipped HTML and
+// a different one from the DOM it hydrates into. The client is TypeScript and
+// cannot be imported here, so the call sites are read out of the source.
+check('the client carries the same isoDate helper', /export function isoDate\(/.test(seoTs), true)
+check(
+  'the client writes datePublished through isoDate',
+  /datePublished: isoDate\(post\.publishedAt\) \?\? undefined/.test(seoTs),
+  true,
+)
+check('the client writes dateModified through isoDate', /\? isoDate\(post\.updatedAt\)/.test(seoTs), true)
 
 const dataTs = await readFile(path.join(process.cwd(), 'src', 'data.ts'), 'utf8')
 const indexHtml = await readFile(path.join(process.cwd(), 'index.html'), 'utf8')
@@ -1322,6 +1389,40 @@ check('every dist HTML page has exactly one h1', pagesWithWrongH1, [])
 check('every dist HTML title stays under 60 chars', longTitles, [])
 check('every dist HTML description stays under 160 chars', longDescriptions, [])
 check('every dist JSON-LD block parses with @context + @type', badSchema, [])
+
+// A structured data date has to be a complete ISO 8601 date. The ProfilePage
+// shipped `"dateModified":"2026-10"` — a month with no day — and Search Console
+// reported it as "Invalid datetime value for dateModified", so the invariant is
+// asserted on the bytes rather than on the renderer: every date key in every
+// built head and every served text file must match ^\d{4}-\d{2}-\d{2} and must
+// not be in the future.
+//
+// The heads come first because a build without a database bakes no posts and no
+// dates at all, which would leave the dist half of this sweep vacuous. The count
+// is asserted so neither half can pass by finding nothing.
+const badDates = []
+const dateValues = []
+const sweepDates = (where, text) => {
+  for (const match of text.matchAll(/"(dateModified|datePublished)":\s*"([^"]*)"/g)) {
+    dateValues.push(match[2])
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(match[2]) || comparisonTime(match[2]) > Date.now()) {
+      badDates.push(`${where} ${match[1]}=${match[2]}`)
+    }
+  }
+}
+for (const [label, head] of [
+  ['home head', homeHead],
+  ['resume head', resumeHead],
+  ['blog head', blogHead],
+  ['post head', postHead],
+]) {
+  sweepDates(label, head)
+}
+for (const file of distText) {
+  sweepDates(path.relative(process.cwd(), file), await readFile(file, 'utf8'))
+}
+check('every JSON-LD date is a full ISO date and is not in the future', badDates, [])
+check('the built heads carry JSON-LD dates to check', dateValues.length >= 4, true)
 
 // The phone number lives only inside the resume PDF, so no served text file
 // (HTML, JSON-LD, llms.txt, sitemap, manifest) may carry it.

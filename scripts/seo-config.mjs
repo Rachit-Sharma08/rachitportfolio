@@ -149,6 +149,23 @@ export function isMeaningfullyUpdated(publishedAt, updatedAt) {
 }
 
 /**
+ * The day the resume was last really changed — the commit date of the most recent
+ * commit that touched the resume data (`git log -1 --format=%cs -- src/data.ts
+ * supabase/seed.sql` → `2026-10-10`).
+ *
+ * The resume's own `lastUpdated` is display text ("October 2026") and a month
+ * without a day is not a date a validator accepts: the ProfilePage shipped
+ * `dateModified: "2026-10"` and Search Console reported it as an invalid
+ * datetime. A day has to come from somewhere real, and this is the only real one
+ * there is — the commit that last wrote the resume. Nothing here is invented and
+ * nothing here is generated at build time, so it is the same value in every build.
+ *
+ * Update it together with the resume itself; `npm run verify` asserts its month
+ * still matches the visible label so the two cannot drift apart unnoticed.
+ */
+export const RESUME_MODIFIED = '2026-10-10'
+
+/**
  * The fixed routes. Each title is the same brand-last shape as `postTitle`,
  * each is asserted to fit `TITLE_MAX`, and `/blog` lives here rather than
  * being special-cased at the call site so the pre-renderer cannot serve a
