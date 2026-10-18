@@ -17,7 +17,7 @@ export const DEFINITION =
 
 export const SOCIALS = {
   github: 'https://github.com/Rachit-Sharma08',
-  linkedin: 'https://www.linkedin.com/in/rachit-sharma-ab199443a/',
+  linkedin: 'https://www.linkedin.com/in/rachit-sharma08/',
   instagram: 'https://www.instagram.com/rachit.08_',
 }
 
@@ -192,7 +192,7 @@ export const STORY = {
     "I'm Rachit Sharma, a digital marketer from Kaithal, Haryana. I'm studying digital marketing at Zedking Group of Institution and I learn by building with AI tools hands-on. I started exploring AI seriously in 2025, and today I work with 25+ AI tools and build my own AI products on the side.",
   body: `I started exploring AI seriously in 2025. I knew early on that I wanted to study Digital Marketing with AI, and after finishing my 12th (CBSE) I made it my path, even though it wasn't the most conventional choice. Since then I've been learning it at Zedking Group of Institution and applying it by building real projects.
 
-Today I'm working on real projects, and you can see them on my [GitHub](https://github.com/Rachit-Sharma08) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma-ab199443a/). I use 25+ AI tools. The ones I use most are OpenCode (a coding agent), OpenAI's GPT, ElevenLabs, Cartesia AI and Claude.
+Today I'm working on real projects, and you can see them on my [GitHub](https://github.com/Rachit-Sharma08) and [LinkedIn](https://www.linkedin.com/in/rachit-sharma08/). I use 25+ AI tools. The ones I use most are OpenCode (a coding agent), OpenAI's GPT, ElevenLabs, Cartesia AI and Claude.
 
 I'm also building my own AI products. One of them is VoiceMemories AI. With a real voice sample, a person could have a warm, supportive conversation with a loved one's cloned voice, even on live calls and not just in text. It is meant for people who have lost someone and want to feel close to them again. The project is paused for now because of funding, but I care about it and plan to return to it.`,
 }

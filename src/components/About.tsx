@@ -22,7 +22,7 @@ const JOURNEY = [
   },
   {
     year: '2025',
-    text: 'Wanted to start Digital Marketing with AI, but 12th CBSE boards and some family circumstances meant it had to wait.',
+    text: 'Decided to study Digital Marketing with AI.',
   },
   {
     year: '2026',
@@ -120,7 +120,7 @@ export default function About() {
                      92 KiB per visit into that box. */
                   srcSet="/rachit-240.webp 240w, /rachit-320.webp 320w, /rachit-420.webp 420w, /rachit-480.webp 480w, /rachit-720.webp 720w"
                   sizes="236px"
-                  alt="Rachit Sharma, AI Powered Marketer"
+                  alt="Rachit Sharma, digital marketer and AI builder from Kaithal"
                   className="h-full w-full rounded-full object-cover"
                   width={240}
                   height={240}

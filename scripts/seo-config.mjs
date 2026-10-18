@@ -67,7 +67,7 @@ export function analyticsEnabled() {
  */
 export const SOCIALS = {
   github: 'https://github.com/Rachit-Sharma08',
-  linkedin: 'https://www.linkedin.com/in/rachit-sharma-ab199443a/',
+  linkedin: 'https://www.linkedin.com/in/rachit-sharma08/',
   instagram: 'https://www.instagram.com/rachit.08_',
 }
 

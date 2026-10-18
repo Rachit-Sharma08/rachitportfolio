@@ -219,7 +219,7 @@ export default function Hero({ ready = true }: HeroProps) {
         <div className="hero-photo absolute inset-0">
           <img
             src={baseSrc}
-            alt="Rachit Sharma, AI Powered Marketer"
+            alt="Rachit Sharma, digital marketer and AI builder from Kaithal"
             width={1086}
             height={1448}
             draggable={false}
@@ -230,7 +230,7 @@ export default function Hero({ ready = true }: HeroProps) {
           />
           <img
             src={revealSrc}
-            alt=""
+            alt="Rachit Sharma, portrait with reveal effect"
             aria-hidden="true"
             width={1086}
             height={1448}

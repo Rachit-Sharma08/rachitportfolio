@@ -860,6 +860,41 @@ check(
 )
 check('the Quick facts copy adds no FAQPage schema', builtHomeHtml.includes('FAQPage'), false)
 
+// --- portrait alt text names the person, not a slogan ------------------------
+//
+// The hero portrait and the About portrait both carried the slogan "Rachit
+// Sharma, AI Powered Marketer", and the decorative reveal layer underneath the
+// hero (the same photo, masked by the cursor) had an empty alt. The two visible
+// portraits now describe who is in the picture, and the decorative layer names
+// itself while staying aria-hidden so it is never announced twice.
+const PORTRAIT_ALT = 'Rachit Sharma, digital marketer and AI builder from Kaithal'
+const REVEAL_ALT = 'Rachit Sharma, portrait with reveal effect'
+check(
+  'both portraits carry the descriptive alt',
+  (builtHomeHtml.match(new RegExp(`alt="${PORTRAIT_ALT}"`, 'g')) || []).length,
+  2,
+)
+check('the old portrait alt is gone', builtHomeHtml.includes('AI Powered Marketer'), false)
+const revealImgTag = (builtHomeHtml.match(new RegExp(`<img[^>]*alt="${REVEAL_ALT}"[^>]*>`)) || [''])[0]
+check('the reveal layer names itself', revealImgTag.length > 0, true)
+check('the reveal layer stays decorative', revealImgTag.includes('aria-hidden="true"'), true)
+
+// --- the second 2025 journey item reads as a decision ------------------------
+//
+// "Wanted to start ..., but 12th CBSE boards and some family circumstances meant
+// it had to wait." is replaced by a plain decision line. The journey list lives
+// only in the About component, but the seed is checked too so a copy/paste of the
+// old sentence can never arrive through the database first.
+for (const file of ['src/components/About.tsx', 'supabase/seed.sql']) {
+  const src = await readFile(path.join(process.cwd(), file), 'utf8')
+  check(`${file} keeps no old journey sentence`, src.includes('family circumstances'), false)
+}
+check(
+  'the journey item is the decision line',
+  builtHomeHtml.includes('Decided to study Digital Marketing with AI.'),
+  true,
+)
+
 // --- the resume is one shape, authored once ----------------------------------
 //
 // The resume used to live as a one-off subtitle + flat skill list hand-copied
@@ -954,7 +989,7 @@ const linkSources = Object.fromEntries(
 )
 
 const OLD_OWNER = /digitalguru99908-dev|rachithunyawrr/
-const OLD_LINKEDIN = /linkedin\.com\/in\/rachit-sharma(?!-ab199443a)/
+const OLD_LINKEDIN = /rachit-sharma-ab199443a|linkedin\.com\/in\/rachit-sharma(?!08)/
 const OLD_INSTAGRAM = /instagram\.com\/rachitsharma/
 for (const [file, src] of Object.entries(linkSources)) {
   check(`${file} has no stale GitHub owner`, OLD_OWNER.test(src), false)
@@ -971,6 +1006,11 @@ check('Instagram profile is written down', dataTs.includes(SOCIALS.instagram), t
 check('story fallback links the current GitHub', dataTs.includes(`[GitHub](${SOCIALS.github})`), true)
 check('seed story links the current GitHub', linkSources['supabase/seed.sql'].includes(`[GitHub](${SOCIALS.github})`), true)
 check('seed story links the current LinkedIn', linkSources['supabase/seed.sql'].includes(`[LinkedIn](${SOCIALS.linkedin})`), true)
+check('story fallback links the current LinkedIn', dataTs.includes(`[LinkedIn](${SOCIALS.linkedin})`), true)
+// The handle itself is pinned: `SOCIALS.linkedin` feeds the footer, the About
+// chips and the Person `sameAs`, so a silent edit here would move the identity
+// Google reads without any other file disagreeing.
+check('the LinkedIn profile is the new handle', SOCIALS.linkedin, 'https://www.linkedin.com/in/rachit-sharma08/')
 check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/Rachit-Sharma08\//g) || []).length, 3)
 
 /* -------------------------------------------------------------------------- */
@@ -1337,6 +1377,18 @@ for (const file of await collectDistDocs(distDir)) {
   if (/fawn/i.test(src)) staleHostFiles.push(path.relative(process.cwd(), file))
 }
 check('no retired host baked into any dist document', staleHostFiles, [])
+
+// The LinkedIn handle moved from `rachit-sharma-ab199443a` to
+// `rachit-sharma08`. The footer link, the About chips and the Person `sameAs`
+// are all read from `SOCIALS.linkedin`, but the story body carries its own
+// markdown copy — so the shipped files are swept for the retired slug rather
+// than trusting that every writer went through the constant.
+const staleLinkedinFiles = []
+for (const file of await collectDistDocs(distDir)) {
+  const src = await readFile(file, 'utf8')
+  if (/rachit-sharma-ab199443a/.test(src)) staleLinkedinFiles.push(path.relative(process.cwd(), file))
+}
+check('no retired LinkedIn slug baked into any dist document', staleLinkedinFiles, [])
 
 /* -------------------------------------------------------------------------- */
 /*  dist surface: one h1, budgeted head, valid JSON-LD, no phone              */
