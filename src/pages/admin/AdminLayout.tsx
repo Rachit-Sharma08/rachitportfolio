@@ -2,6 +2,7 @@ import { NavLink, Navigate, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import {
   BookOpen,
+  Bot,
   ExternalLink,
   FileText,
   FolderKanban,
@@ -14,13 +15,14 @@ import {
 } from 'lucide-react'
 import { useAdminAuth } from '../../lib/useAdminAuth'
 
-/** Sidebar order is fixed: Dashboard, Projects, Images, Story, Blog, Resume, Password. */
+/** Sidebar order is fixed: Dashboard, Projects, Images, Story, Blog, Agent, Resume, Password. */
 const LINKS = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/projects', label: 'Projects', icon: FolderKanban },
   { to: '/admin/images', label: 'Images', icon: Images },
   { to: '/admin/story', label: 'Story', icon: PenLine },
   { to: '/admin/blog', label: 'Blog', icon: BookOpen },
+  { to: '/admin/agent', label: 'Agent', icon: Bot },
   { to: '/admin/resume', label: 'Resume', icon: FileText },
   { to: '/admin/password', label: 'Password', icon: KeyRound },
 ] as const
