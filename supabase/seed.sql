@@ -99,13 +99,27 @@ values
   'one-brief-one-campaign-sprint',
   'AI · Prompting',
   'A single sharp brief and the right prompts can move a campaign from idea to draft in an afternoon — here''s what that process actually looks like.',
-  E'For a long time, campaign planning meant hours of staring at a blank doc: audience notes, tone guidelines, channel breakdowns, all written from scratch before a single ad or caption existed. What changed for me wasn''t a new tool — it was a new starting point: one sharp brief.
+  E'For a long time, campaign planning meant hours of staring at a blank doc: audience notes, tone guidelines, channel breakdowns, all written from scratch before a single ad or caption existed. What changed for me wasn''t a new tool — it was a new starting point.
 
-A brief here isn''t a paragraph. It''s four or five lines: who this is for, what they already believe, what we want them to feel after, and the one constraint that matters (budget, platform, deadline). Once that''s tight, I hand it to an AI assistant — usually GPT or Claude — as a starting prompt, and ask it to draft the full sprint: hook variations, a content calendar skeleton, ad copy in three tones, and a short list of what to track.
+## What is the new starting point for a campaign?
 
-The AI doesn''t replace the strategy. It removes the blank-page tax. What used to take a full day of drafting now takes an hour of drafting and the rest of the day refining — cutting weak lines, tightening the hook, matching the brand''s actual voice instead of a generic one. That''s the part no tool does for you, and it''s the part that decides whether a campaign lands or blends in.
+One sharp brief. A brief here isn''t a paragraph; it''s four or five lines, and once it''s tight the rest of the sprint has something to hold on to.
 
-I''ve started treating every campaign the same way now: brief first, AI draft second, human judgment last — and always last. The order matters. Skip the brief and the AI gives you something generic. Skip the human pass and it reads like everyone else''s AI-generated content, because in a way, it is.
+## What goes into the brief?
+
+Four or five lines: who this is for, what they already believe, what we want them to feel after, and the one constraint that matters — budget, platform or deadline.
+
+## What do you ask the AI to draft?
+
+Once the brief is tight, I hand it to an AI assistant — usually GPT or Claude — as a starting prompt, and ask it to draft the full sprint: hook variations, a content calendar skeleton, ad copy in three tones, and a short list of what to track.
+
+## Does the AI replace the strategy?
+
+No. The AI doesn''t replace the strategy; it removes the blank-page tax. What used to take a full day of drafting now takes an hour of drafting and the rest of the day refining — cutting weak lines, tightening the hook, matching the brand''s actual voice instead of a generic one. That''s the part no tool does for you, and it''s the part that decides whether a campaign lands or blends in.
+
+## What order should the work happen in?
+
+Brief first, AI draft second, human judgment last — and always last. The order matters. Skip the brief and the AI gives you something generic; skip the human pass and it reads like everyone else''s AI-generated content, because in a way, it is.
 
 This is one of the small shifts I''m documenting as I go through digital marketing with AI tools — not big frameworks, just the actual workflow that ends up on a client''s calendar.',
   true,
@@ -119,11 +133,25 @@ This is one of the small shifts I''m documenting as I go through digital marketi
   'Search didn''t disappear when AI assistants showed up — it just added a second audience, the AI reading the page before the person does.',
   E'Every few months someone declares SEO dead, and every few months it just changes shape instead. The latest shift isn''t only about ranking higher on a results page — it''s about being the source an AI assistant reaches for when someone asks it a question instead of typing a search.
 
-That means the page still needs the basics: a clear heading structure, one real topic per page, fast loading, a mobile-friendly layout. Nothing about that has gone away. What''s new is who else is reading it. Tools that summarize or answer questions tend to favor pages that are unambiguous — a clear answer near the top, natural language instead of forced phrases, and structured data that spells out who wrote it and what it''s about.
+## Is SEO dead?
 
-Practically, this has changed how I write anything meant to be found: fewer repeated phrases, more direct answers to the actual question a visitor — or an AI reading on their behalf — is asking. A meta description that reads like a sentence, not a keyword dump. Image text that describes the picture, not stuffs a phrase into it.
+SEO is not dead; the work of being found has simply added a second reader. Ranking on a results page still matters, but so does being the page an AI assistant quotes when someone asks a question instead of typing one.
 
-None of this is exotic. It''s closer to writing clearly and being specific than to any trick. The pages that struggle now are the ones optimized for an approach that no longer works the way it used to — and the ones that do fine are, unsurprisingly, the ones that were just clear to begin with.
+## What still matters for normal search?
+
+The basics still matter: a clear heading structure, one real topic per page, fast loading, and a mobile-friendly layout. Nothing about that has gone away — the only change is who else is reading the page.
+
+## What does an AI assistant look for on a page?
+
+An AI assistant favours pages that are unambiguous. Tools that summarize or answer questions tend to reach for a clear answer near the top, natural language instead of forced phrases, and structured data that spells out who wrote the page and what it is about.
+
+## How has this changed the way you write?
+
+It has cut the repetition. Anything meant to be found now gets fewer repeated phrases and more direct answers to the actual question a visitor — or an AI reading on their behalf — is asking. A meta description reads like a sentence, not a keyword dump, and image text describes the picture instead of stuffing a phrase into it.
+
+## Is this some new trick to learn?
+
+No — it is closer to writing clearly and being specific than to any trick. The pages that struggle now are the ones optimized for an approach that no longer works the way it used to, and the ones doing fine are, unsurprisingly, the ones that were just clear to begin with.
 
 SEO didn''t die. It just got another reader.',
   true,
@@ -135,15 +163,27 @@ SEO didn''t die. It just got another reader.',
   'two-rebuilds-before-it-felt-like-a-brand',
   'Branding',
   'The first landing page was fine. The second was better. The third finally felt like it belonged to someone.',
-  E'The first version of a landing page I built was, by most checklists, correct: clear headline, a button above the fold, some proof lower down. It also felt like it could belong to almost anyone. Nothing about it was wrong, and nothing about it was mine.
+  E'The first version of a landing page I built was, by most checklists, correct: clear headline, a button above the fold, some proof lower down. It also felt like it could belong to almost anyone.
 
-The second pass fixed the obvious gaps — better contrast, tighter copy, an actual value line instead of a slogan. Still generic. It read like a template that had been filled in carefully, which is exactly what it was.
+## Why can a landing page be correct and still feel generic?
 
-The third rebuild is the one that stuck, and the difference wasn''t a new layout. It was smaller decisions repeated on purpose: the same handful of words showing up across the headline, the button and the follow-up message, so it stopped feeling like three different people wrote three different parts of the page. One accent color used consistently instead of wherever it looked good. A tone that matched how the person behind the brand actually talks, not how brands are supposed to talk.
+A landing page feels generic when it carries no decisions of its own. Nothing about that first version was wrong, and nothing about it was mine — the structure carried it, not the choices inside it.
 
-Branding, at the scale I''m working at, isn''t a logo or a palette decided in one sitting. It''s what survives being rebuilt twice — the handful of choices that keep showing up because they were the right ones, not because nobody got around to changing them.
+## What changed on the second rebuild?
 
-If the first version of something you''re building feels correct but forgettable, that''s normal. The version that feels like a brand is usually the one you were willing to throw away and rebuild until it stopped feeling borrowed.',
+The second pass fixed the obvious gaps: better contrast, tighter copy, an actual value line instead of a slogan. It still read like a template that had been filled in carefully, which was exactly what it was.
+
+## What made the third version feel like a brand?
+
+Small decisions, repeated on purpose. The same handful of words showed up across the headline, the button and the follow-up message, so the page stopped feeling like three different people wrote three different parts of it. One accent color was used consistently instead of wherever it looked good, and the tone matched how the person behind the brand actually talks.
+
+## What does branding mean at this scale?
+
+At the scale I am working at, branding is not a logo or a palette decided in one sitting. It is what survives being rebuilt twice — the handful of choices that keep showing up because they were the right ones, not because nobody got around to changing them.
+
+## What should you do if your first version feels forgettable?
+
+Treat it as normal. The version that feels like a brand is usually the one you were willing to throw away and rebuild until it stopped feeling borrowed.',
   true,
   now(),
   null
@@ -153,15 +193,27 @@ If the first version of something you''re building feels correct but forgettable
   'the-one-hook-rule',
   'Copywriting',
   'Most content doesn''t fail because it''s badly written. It fails because it asks for attention before it''s earned any.',
-  E'Most content that doesn''t convert isn''t badly written — it''s badly ordered. The offer, the credibility, the details all show up before the reader has decided whether they care in the first place. By the time the actual point arrives, the wall of text has already done its job of losing them.
+  E'Most content that doesn''t convert isn''t badly written — it''s badly ordered. The offer, the credibility, the details all show up before the reader has decided whether they care in the first place.
 
-The fix I keep coming back to is what I think of as the one-hook rule: earn the next sentence before you earn anything else. Not a clever line for its own sake — a specific, honest claim or question that only makes sense to someone who actually has the problem you''re solving. Everything else — the proof, the offer, the call to action — only works after that line has done its job.
+## Why does well-written content still fail to convert?
 
-This shows up the same way across formats. A caption, an ad, an email subject line, even the first sentence of a landing page — each one only gets one shot at the hook, and padding it with a warm-up sentence just delays the moment someone decides to keep reading or scroll past.
+Well-written content fails when it asks for attention before it has earned any. By the time the actual point arrives, the wall of text has already done its job of losing the reader.
 
-Writing tighter hooks isn''t really a writing skill first. It''s a listening skill — knowing exactly what the person on the other end is already frustrated by, bored of, or hoping for, and starting there instead of starting with your brand.
+## What is the one-hook rule?
 
-The wall of text isn''t the problem. It''s usually just a hook that never showed up.',
+The one-hook rule is to earn the next sentence before you earn anything else. Not a clever line for its own sake — a specific, honest claim or question that only makes sense to someone who actually has the problem you''re solving. Everything else, the proof, the offer and the call to action, only works after that line has done its job.
+
+## Where does it apply?
+
+The same rule shows up across formats. A caption, an ad, an email subject line, even the first sentence of a landing page — each one only gets one shot at the hook, and padding it with a warm-up sentence just delays the moment someone decides to keep reading or scroll past.
+
+## Is a good hook a writing skill?
+
+Not first. Writing tighter hooks is closer to a listening skill — knowing exactly what the person on the other end is already frustrated by, bored of, or hoping for, and starting there instead of starting with your brand.
+
+## So is the long page the problem?
+
+No. The wall of text isn''t the problem; it''s usually just a hook that never showed up.',
   true,
   now(),
   null

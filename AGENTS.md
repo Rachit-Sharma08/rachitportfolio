@@ -133,6 +133,38 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v59 — live SEO/AEO/GEO audit, SERP reality check, the 4 thin posts rebuilt, Person disambiguation] — 23 Oct 2026
+
+**Brief:** user asked for actual SEO/AEO/GEO testing on the live site, for the pure-name ranking risk to be "solved", and for the 4 thin posts to follow the site's own answer-first rule. Audit first (report-only), then the content + schema fix in the same session.
+
+**Audit harness:** `%TEMP%\opencode\seo-audit.mjs` against `https://rachitportfolio-rouge.vercel.app`. Result **84 PASS / 8 FAIL / 1 WARN**, and all 8 FAILs are harness artifacts, not site problems:
+- `og:image` FAIL ×4 — the assertion compared the raw URL to the string `'absolute'`. Reality: `https://rachitportfolio-rouge.vercel.app/og-image.webp` is already absolute on all 4 pages.
+- `img without alt` FAIL ×4 — the regex matched the literal `<img>` inside the source HTML **comment** above the hero preload, and one comparison ran against a comment-stripped copy. Reality: home has 6 real `<img>`, **0 without alt**; `/resume`, `/blog`, `/digital-marketer-kaithal` have 0 imgs.
+
+**Verified live (real PASSes):** 4 pages 200 with self-canonical, 1 h1, `index, follow`, lang `en-IN`, `<main>`; titles 54/40/20/43 chars; descriptions 146/120/125/152; JSON-LD parses on every page (Person+WebSite+ProfilePage, Person+BreadcrumbList+ProfilePage, Person+BreadcrumbList, Person+BreadcrumbList+WebPage); **sitemap 10 URLs, all 200 + indexable**, full-date `lastmod`, only the live host; robots.txt has all 10 AI-crawler groups + sitemap line + `/admin` + `/api` blocked; `llms.txt` (3,545 B) and `llms-full.txt` (3,327 B) carry `## About/## Projects/## Tools` and `## Education/## Skills/## Quick facts`, no phone; unknown URL = real 404 + `noindex`; `/api/content` 200, `/api/rebuild` GET 405; HSTS + nosniff + X-Frame-Options + Referrer-Policy + Permissions-Policy; brotli; `http → https` 308; no `www` duplicate host; GPTBot / PerplexityBot / ClaudeBot / OAI-SearchBot each fetch home 200.
+
+**AEO structure:** home definition sentence appears exactly once, 8 h2s, **zero heading-hierarchy skips**, 4/5 Quick-fact questions matched as exact strings; Kaithal page has 2 question-style h2s + the definition; every post has author byline (`href="/#about"`), a real `<time datetime>` (React serialises it as `dateTime`, which HTML reads case-insensitively) and `Article.datePublished` in JSON-LD; `/blog` links all 6 posts; home links `/resume`, `/blog`, `/digital-marketer-kaithal`. The apparent `"Who is Rachit Sharma ?"` space-before-`?` was **my strip() inserting a space** — real markup is `<span>Sharma</span><span>?</span>` and `aria-label` is `Who is Rachit Sharma?`, so no bug.
+
+**Real SERP result (corrects the earlier optimistic claim):** `Rachit Sharma digital marketer Kaithal` → **#1 his own site, #2 his GitHub profile**; `site:rachitportfolio-rouge.vercel.app` → home, `/resume`, `/blog` and posts all indexed. But **pure `Rachit Sharma` → site does not appear** (namesakes: LinkedIn physician, UC Berkeley researcher with 820 citations, INSPIRE physicist, Wind River Principal Technologist, Mercuri Urval director, Instagram/IMDb entries), and **`digital marketer rachit` → site does not appear** (`digitalrachit.com` "Digiking Rachit" owns it). Winnable = name + Kaithal/digital-marketer combos only.
+
+**Real AEO gap (content, not code):** 4 of 6 posts had **0 h2** and only 324–387 words (`seo-isnt-dead-its-learning-to-speak-ai` 344, `two-rebuilds-before-it-felt-like-a-brand` 343, `the-one-hook-rule` 324, `one-brief-one-campaign-sprint` 387) — they broke the site's own v51 T4d rule (question-style h2 + a 1–2 sentence direct answer first). The two healthy ones are `starter-lead-scoring-model-one-day` (558 w, 5 h2) and `cleaning-inactive-email-lists` (767 w, 4 h2, all question-style). Fixed in this session — see below.
+
+**Blocked tooling:** PageSpeed Insights API returned **HTTP 429**, `lighthouse` is not installed, and `playwright` is not in `node_modules` — so no fresh Core Web Vitals run this session (last real production numbers stay v43/v51). Nothing was installed to work around it.
+
+**Applied — the 4 thin posts rebuilt (content only).** Each now has **5 question-style h2s**, each followed by a 1–2 sentence answer that names its subject, then the detail — the v51 T4d shape. No new claim was invented: existing sentences were reorganised, and only connective answer lines were written from what the post already said. Word counts after the rewrite: `seo-isnt-dead` **331**, `two-rebuilds` **293**, `the-one-hook-rule` **272**, `one-brief-one-campaign-sprint` **342**. Titles, slugs and excerpts unchanged, so no URL moved. ⚠️ `one-brief-one-campaign-sprint` keeps its pre-existing line about "a client's calendar" — changing a claim needs the user's word, not mine.
+
+- **Live DB updated** (source of truth) via `supabase db query --linked -f` with dollar-quoted `$md$…$md$` bodies. Verified after: 4 rows, **5 h2 each**, marker heading present in each, `updated_at` bumped by the table trigger (which is a real edit, so `Article.dateModified` and the visible "Updated" line are now accurate).
+- **`supabase/seed.sql` mirrored** by the same script (escaped `E'…'` literals), so a fresh setup gets identical copy. Verified: 20 `## ` lines in the file.
+- **Rollback**: old row bodies in `%TEMP%\opencode\posts-backup.json`, pre-patch seed in `%TEMP%\opencode\seed.sql.bak`.
+
+**Applied — Person disambiguation.** `personSchema()` in `scripts/seo-config.mjs` now emits `disambiguatingDescription`: `Digital marketer in Kaithal, Haryana, India — Google Ads, Meta Ads and SEO/AEO/GEO, plus web projects built with React and Supabase.` Build-time only — the client mirror never writes the site-wide Person node, and verify enumerates no Person keys, so nothing had to be mirrored. Verified in all 4 built heads: 1 Person node each, field present, 0 JSON-LD parse failures.
+
+**Honest answer on the bare-name risk (written into `docs/keyword-opportunity.md`, which previously claimed `rachit sharma` was "easy"):** there is **no short-term fix**. Six namesakes hold that SERP with third-party corroboration; a bare-name slot is an authority contest. What was actually done is the on-site half (one definition sentence, `@id`, `PostalAddress`, `sameAs`, `disambiguatingDescription`, Quick facts, `llms*.txt`) — the remaining levers are off-site profiles and time.
+
+**GSC answer:** both verification files are live **200** (`/google8296cc44e5c4188b.html` 53 B, `/google86f73e3f9f31af5a.html` 54 B). Adding the property is a one-time dashboard step — if it already shows **Verified**, do not repeat it, and the sitemap stays submitted after the first submit.
+
+**Gates:** `npm run lint` 0 errors (7 pre-existing warnings) · `npm run build` pass (`/` 121,250 B, `/resume` 84,652, `/blog` 80,033, Kaithal 83,848, `404.html` 73,596) · `npm run verify` **All checks passed** · `npm run secrets:check` clean (117 files).
+
 ### [v58 — GitHub profile README + banner redesign, repo README, image SEO alt text] — 23 Oct 2026
 
 **Brief:** GitHub profile update — bio + website field, redesign profile README (remove "training" from banner, follow professional style), add alt text to photo + project card thumbnails for image SEO, and report which keywords the site can rank for / Google AI might cite.

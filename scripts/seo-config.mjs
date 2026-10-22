@@ -298,6 +298,11 @@ export function personSchema() {
     // The same sentence About shows and llms.txt repeats. An answer engine
     // quoting this has to be able to find the claim on the page itself.
     description: DEFINITION,
+    // Several people are named Rachit Sharma. This is the field schema.org has
+    // for exactly that, and every detail in it is already stated elsewhere on
+    // the site (resume skills, Selected Work, the Kaithal page).
+    disambiguatingDescription:
+      'Digital marketer in Kaithal, Haryana, India — Google Ads, Meta Ads and SEO/AEO/GEO, plus web projects built with React and Supabase.',
     sameAs: [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram],
     alumniOf: {
       '@type': 'CollegeOrUniversity',
