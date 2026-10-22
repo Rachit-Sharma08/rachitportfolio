@@ -133,6 +133,26 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v58 — GitHub profile README + banner redesign, repo README, image SEO alt text] — 23 Oct 2026
+
+**Brief:** GitHub profile update — bio + website field, redesign profile README (remove "training" from banner, follow professional style), add alt text to photo + project card thumbnails for image SEO, and report which keywords the site can rank for / Google AI might cite.
+
+**GitHub profile:**
+- **Banner regenerated** — new 1600×400 PNG, same dark-crimson design language (grid + grain + vignette), text now `Digital marketer in Kaithal, Haryana` + `Google Ads · Meta Ads · SEO / AEO / GEO`. Old banner said `Digital Marketing Specialist (in training)` — removed. Generated via Chrome headless screenshot of styled HTML + self-hosted Inter/Instrument Serif.
+- **README rewritten** — `<div align="center">` header, `What I do` (3 bullets: Paid growth / Search & answer visibility / AI-assisted building), `Selected work` (4 cards, kept), `Stack`, `Find me online`. LinkedIn link fixed from old handle `rachit-sharma-ab199443a` → `rachit-sharma08` (v56 canonical). Pushed to `Rachit-Sharma08/Rachit-Sharma08` (`589edef`).
+- ⚠️ **Bio update PENDING** — `gh` token lacks the `user` scope; `gh auth refresh` device-flow code `6FD1-0970` was shown, but authorization not completed. Target bio: `Digital marketer in Kaithal, Haryana — Google & Meta ads, SEO/AEO/GEO, AI-built web projects`, website `https://rachitportfolio-rouge.vercel.app/` (already correct on profile).
+
+**Site — image SEO (`644c10c`):**
+- `Hero.tsx` + `About.tsx` portrait alt → `Rachit Sharma, AI-powered digital marketer in Kaithal, Haryana` (was `... digital marketer and AI builder from Kaithal`). Matches the local target keyword (`digital marketer in Kaithal`) in the alt itself.
+- `SelectedWork.tsx` project thumbnail alt → `${project.title} — ${project.tagline} by Rachit Sharma` (was `... project preview by ...`). Alt now describes the actual content instead of a generic label.
+- `scripts/verify-prerender.mjs` `PORTRAIT_ALT` updated to match.
+- **Repo README** replaced the Vite template with a real project README (`fe8d8ed`).
+- Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 121,061 B) · verify **All checks passed** · secrets:check clean (116 files).
+
+**Keyword analysis (report-only, no code):** see `docs/keyword-opportunity.md` for the full page→keyword map, difficulty bands and the AI-citation query list. Headline: strongest realistic wins are the local long-tail (`digital marketer in Kaithal`, `digital marketing services Kaithal`) — SERP checked, dominated by directories + 3-4 weak local agencies; branded queries (`rachit sharma digital marketer`) should take top-1; head terms (`digital marketer`, `digital marketing agency`) are not winnable yet.
+
+
+
 ### [v57 — local SEO page `/digital-marketer-kaithal`, Render-era dead code deleted, contact form + API hardening, security headers] — 22 Oct 2026
 
 **Brief:** ek full SEO/AEO/GEO audit + fix pass. Rank-intent targets: "digital marketer kaithal", "marketer rachit", "digital marketer rachit", "rachit sharma"; plus GitHub/LinkedIn/Instagram/photo search visibility. Constraints: visible copy aur schema jo dikhta hai wahi kehta ho, keyword stuffing nahi, fake clients/rankings/claims nahi, fawn domain (purana, access nahi) untouched.
