@@ -88,12 +88,20 @@ export default function About() {
               </div>
             ))}
           </dl>
-          <Link
-            to="/resume"
-            className="mt-5 inline-flex items-center gap-1 text-sm text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
-          >
-            View the full resume <span className="inline-block">↗</span>
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link
+              to="/resume"
+              className="inline-flex items-center gap-1 text-sm text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
+            >
+              View the full resume <span className="inline-block">↗</span>
+            </Link>
+            <Link
+              to="/digital-marketer-kaithal"
+              className="inline-flex items-center gap-1 text-sm text-accent-ink underline decoration-accent/40 underline-offset-4 transition-colors duration-300 hover:decoration-accent"
+            >
+              Digital marketer in Kaithal <span className="inline-block">↗</span>
+            </Link>
+          </div>
         </Reveal>
 
         <div className="grid gap-10 md:grid-cols-[320px_1fr] md:gap-14 lg:gap-20">
