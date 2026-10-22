@@ -26,6 +26,12 @@ export default function Footer() {
           >
             Resume ↗
           </Link>
+          <Link
+            to="/digital-marketer-kaithal"
+            className="chip nav-hit px-4 py-2 text-sm text-accent-ink transition-colors duration-300 hover:border-accent/60"
+          >
+            Digital marketer in Kaithal ↗
+          </Link>
           {socialLinks}
         </div>
 
