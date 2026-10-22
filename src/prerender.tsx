@@ -74,6 +74,7 @@ export function routesFor(content: SiteContent): string[] {
   return [
     '/',
     '/resume',
+    '/digital-marketer-kaithal',
     '/blog',
     // The bundled sample posts have no slug, so they are deliberately not
     // routable. Without this filter each one would emit a duplicate /blog/ file
