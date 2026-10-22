@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Lenis from 'lenis'
 import Landing from './pages/Landing'
 import Resume from './pages/Resume'
+import DigitalMarketerKaithal from './pages/DigitalMarketerKaithal'
 import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
 import NotFound from './pages/NotFound'
@@ -12,7 +13,6 @@ import CursorGlow from './components/CursorGlow'
 import Navbar from './components/Navbar'
 import ScrollProgress from './components/ScrollProgress'
 import { initAnchorLinks, setLenis } from './lib/lenis'
-import { startKeepAlive } from './lib/keepalive'
 import { setIndexable, setNoIndex, titleForPath } from './lib/seo'
 import { easeExpo } from './lib/motion'
 import { SiteContentProvider } from './lib/content'
@@ -119,6 +119,7 @@ function PublicRoutes() {
         <Routes location={location}>
           <Route path="/" element={<Landing />} />
           <Route path="/resume" element={<Resume />} />
+          <Route path="/digital-marketer-kaithal" element={<DigitalMarketerKaithal />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="*" element={<NotFound />} />
@@ -137,10 +138,10 @@ function Shell() {
   const wasAdmin = useRef(false)
 
   useEffect(() => {
-    // The admin panel is an ordinary scrolling page — no smooth-scroll hijack,
-    // no anchor interception and no keep-alive pings for a contact form it never
-    // renders. Scoping the effect to the public site also means switching between
-    // the two tears the runtime down and rebuilds it, rather than leaking it.
+    // The admin panel is an ordinary scrolling page — no smooth-scroll hijack and
+    // no anchor interception. Scoping the effect to the public site also means
+    // switching between the two tears the runtime down and rebuilds it, rather
+    // than leaking it.
     if (admin) return
     // lerp 0.1 keeps the glide long enough to feel smooth without the
     // rubber-band lag that a lower value produces on a trackpad.
@@ -154,11 +155,9 @@ function Shell() {
     setLenis(lenis)
 
     const stopAnchors = initAnchorLinks()
-    const stopKeepAlive = startKeepAlive()
 
     return () => {
       stopAnchors()
-      stopKeepAlive?.()
       setLenis(null)
       lenis.destroy()
     }
