@@ -2,10 +2,8 @@ import { useState } from 'react'
 import RevealHeading from './RevealHeading'
 import { Reveal } from './Reveal'
 import Magnetic from './Magnetic'
-import { wakeBackend } from '../lib/keepalive'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
-const API_URL = API_BASE ? `${API_BASE.replace(/\/$/, '')}/api/send-email` : '/api/send-email'
+const API_URL = '/api/send-email'
 
 const REASONS = ['Hire me', 'Collaborate', 'Just say hi', 'Other'] as const
 type Reason = (typeof REASONS)[number]
@@ -42,6 +40,9 @@ export default function EnquiryForm() {
     reason: 'Hire me',
     message: '',
   })
+  // Bots fill every field they can see, including this one. A human never does.
+  // The name carries no "company" label so browser autofill leaves it alone.
+  const [hp, setHp] = useState('')
   const [errors, setErrors] = useState<FormErrors>({})
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -61,34 +62,25 @@ export default function EnquiryForm() {
     if (Object.keys(errs).length > 0) return
 
     setSending(true)
-    // The keep-alive ping normally fires when the contact section approaches the
-    // viewport. Someone who submits before that (or on a route where it never
-    // fires) gets an explicit nudge, so the first attempt is less likely to eat
-    // a cold start. The retry loop below is still what guarantees delivery.
-    wakeBackend()
-    const MAX_ATTEMPTS = 3
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        })
-        if (!res.ok) throw new Error('send failed')
-        setSent(true)
-        setSending(false)
-        setTimeout(() => {
-          setSent(false)
-          setForm({ name: '', email: '', reason: 'Hire me', message: '' })
-        }, 3000)
-        return
-      } catch {
-        if (attempt < MAX_ATTEMPTS - 1) await new Promise((r) => setTimeout(r, 6000))
-        else {
-          setFailed(true)
-          setSending(false)
-        }
-      }
+    try {
+      // One attempt: the endpoint is a Vercel function, not a sleeping Render
+      // instance, so there is no cold start to retry around. A failure is shown
+      // and the visitor can press Send again.
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, hp }),
+      })
+      if (!res.ok) throw new Error('send failed')
+      setSent(true)
+      setSending(false)
+      setTimeout(() => {
+        setSent(false)
+        setForm({ name: '', email: '', reason: 'Hire me', message: '' })
+      }, 3000)
+    } catch {
+      setFailed(true)
+      setSending(false)
     }
   }
 
@@ -113,6 +105,22 @@ export default function EnquiryForm() {
 
           <Reveal>
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Honeypot: off-screen, out of the tab order and hidden from screen
+                readers, so only an automated form filler ever puts anything in
+                it. The server silently accepts and drops those submissions. */}
+            <div
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}
+            >
+              <input
+                id="enquiry-hp"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={hp}
+                onChange={(e) => setHp(e.target.value)}
+              />
+            </div>
             <div>
               <label htmlFor="enquiry-name" className="sr-only">
                 Name
