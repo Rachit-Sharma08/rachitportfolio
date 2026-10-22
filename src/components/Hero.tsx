@@ -248,7 +248,7 @@ export default function Hero({ ready = true }: HeroProps) {
           {/* One h1 for the whole hero statement. The three lines stay separate
               mask/rise targets so the GSAP stagger and typography are unchanged.
               Keeping a single h1 gives crawlers and screen readers the full
-              "I'm Rachit — Digital Marketer" headline instead of just the name.
+              "I'm Rachit Sharma, Digital Marketer" headline instead of just the name.
 
               The spans are block-level, so JSX drops the whitespace between them
               and the h1's text content came out as the run-on
@@ -261,7 +261,7 @@ export default function Hero({ ready = true }: HeroProps) {
               regardless of how the spans are reordered or split, since the
               spaces above only help when they survive in the markup. Keep it in
               sync with the spans. */}
-          <h1 id="home-heading" aria-label="I'm Rachit Digital Marketer">
+          <h1 id="home-heading" aria-label="I'm Rachit Sharma, Digital Marketer">
             <span className="hero-rise block font-display text-lg italic text-muted sm:text-xl">
               I&apos;m
             </span>
@@ -271,7 +271,7 @@ export default function Hero({ ready = true }: HeroProps) {
             </span>
             {' '}
             <span className="hero-rise mt-3 block font-display text-2xl italic text-text-primary/90 sm:text-3xl xl:text-4xl">
-              Digital Marketer
+              Sharma, Digital Marketer
             </span>
           </h1>
 

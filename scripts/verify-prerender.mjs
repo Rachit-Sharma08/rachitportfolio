@@ -788,9 +788,10 @@ const h1Text = builtH1
   .replace(/<[^>]+>/g, '')
   .replace(/&#x27;/g, "'")
   .replace(/&amp;/g, '&')
-check('the h1 keeps its aria-label', builtH1.includes('aria-label="I&#x27;m Rachit Digital Marketer"'), true)
+check('the h1 keeps its aria-label', builtH1.includes('aria-label="I&#x27;m Rachit Sharma, Digital Marketer"'), true)
+check('the h1 carries the full name', /Rachit Sharma,/.test(h1Text), true)
 check('the h1 text is not run together', !h1Text.includes("I'mRachit"), true)
-check('the h1 text reads with real spaces', h1Text === "I'm Rachit Digital Marketer", true)
+check('the h1 text reads with real spaces', h1Text === "I'm Rachit Sharma, Digital Marketer", true)
 check(
   'the h1 word breaks are real text nodes, not the label',
   (heroTsx.match(/\{\s*'\s'\s*\}\s*<span/g) || []).length === 2 &&
