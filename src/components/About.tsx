@@ -128,7 +128,7 @@ export default function About() {
                      92 KiB per visit into that box. */
                   srcSet="/rachit-240.webp 240w, /rachit-320.webp 320w, /rachit-420.webp 420w, /rachit-480.webp 480w, /rachit-720.webp 720w"
                   sizes="236px"
-                  alt="Rachit Sharma, digital marketer and AI builder from Kaithal"
+                  alt="Rachit Sharma, AI-powered digital marketer in Kaithal, Haryana"
                   className="h-full w-full rounded-full object-cover"
                   width={240}
                   height={240}

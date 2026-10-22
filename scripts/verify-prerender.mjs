@@ -906,7 +906,7 @@ check('the Quick facts copy adds no FAQPage schema', builtHomeHtml.includes('FAQ
 // hero (the same photo, masked by the cursor) had an empty alt. The two visible
 // portraits now describe who is in the picture, and the decorative layer names
 // itself while staying aria-hidden so it is never announced twice.
-const PORTRAIT_ALT = 'Rachit Sharma, digital marketer and AI builder from Kaithal'
+const PORTRAIT_ALT = 'Rachit Sharma, AI-powered digital marketer in Kaithal, Haryana'
 const REVEAL_ALT = 'Rachit Sharma, portrait with reveal effect'
 check(
   'both portraits carry the descriptive alt',
