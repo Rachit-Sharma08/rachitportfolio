@@ -147,6 +147,13 @@ export default function BlogPost() {
               ) : null}
               <span aria-hidden="true"> · </span>
               {minutes} min read
+              <span aria-hidden="true"> · </span>
+              <Link
+                to="/digital-marketer-kaithal"
+                className="text-text-primary transition-colors duration-300 hover:text-accent-ink"
+              >
+                Digital marketer in Kaithal
+              </Link>
             </p>
           </Reveal>
 
