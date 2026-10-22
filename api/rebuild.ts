@@ -18,6 +18,10 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+// The hook call below is capped at 10s; give the platform room for the token
+// check that happens first.
+export const config = { maxDuration: 30 }
+
 interface Req {
   method?: string
   headers: Record<string, string | string[] | undefined>
@@ -78,7 +82,15 @@ export default async function handler(req: Req, res: Res) {
     return
   }
 
-  const ping = await fetch(hook, { method: 'POST' })
+  let ping: Response
+  try {
+    ping = await fetch(hook, { method: 'POST', signal: AbortSignal.timeout(10000) })
+  } catch {
+    // The hook never answered. The admin can press publish again; the post is
+    // already saved, only the rebuild did not start.
+    res.status(504).json({ error: 'hook_timeout' })
+    return
+  }
   if (!ping.ok) {
     res.status(502).json({ error: 'hook_failed', status: ping.status })
     return
