@@ -287,7 +287,12 @@ export function personSchema() {
     '@type': 'Person',
     '@id': PERSON_ID,
     name: 'Rachit Sharma',
-    alternateName: ['Rachit', 'RachitSharma'],
+    // "Rachit" alone is another marketer's brand in the same district, so it is
+    // not an alias of this person. Splitting the name properly says which half
+    // is the given name without claiming the bare first name.
+    givenName: 'Rachit',
+    familyName: 'Sharma',
+    alternateName: ['RachitSharma'],
     // The identity's home, not the page: this is where the person lives, and it
     // is the same on every route so no page claims to be a different person.
     url: SITE_URL,

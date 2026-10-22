@@ -50,7 +50,7 @@ export default function DigitalMarketerKaithal() {
                 id="kaithal-heading"
                 className="max-w-3xl text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-text-primary md:text-5xl lg:text-6xl"
               >
-                Digital marketer in{' '}
+                Rachit Sharma — digital marketer in{' '}
                 <span className="font-display italic text-accent-ink">Kaithal</span>
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">

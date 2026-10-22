@@ -165,6 +165,15 @@
 
 **Gates:** `npm run lint` 0 errors (7 pre-existing warnings) · `npm run build` pass (`/` 121,250 B, `/resume` 84,652, `/blog` 80,033, Kaithal 83,848, `404.html` 73,596) · `npm run verify` **All checks passed** · `npm run secrets:check` clean (117 files).
 
+**v59a — same-day follow-up: the Kaithal page h1 never named him.** Google's AI Overview for *"Digital Marketer rachit kaithal"* answers with **another** person — "Rachit (known online as Digiking Rachit), Siwan village, Kaithal district" (`digitalrachit.com`). Cause is structural, not a bug: that man's brand *is* the bare word "Rachit", and he is also a digital marketer in the same district, so a query without the surname legitimately resolves to him. Two on-page gaps were fixable and are fixed:
+
+1. `src/pages/DigitalMarketerKaithal.tsx` h1 was `Digital marketer in Kaithal` — **no "Rachit Sharma" in the heading at all** (name only lived in body copy and the `<title>`). Now: `Rachit Sharma — digital marketer in Kaithal` (italic `Kaithal` span kept, same classes/width). `scripts/verify-prerender.mjs` gains a regex check on the rendered h1 so it cannot regress.
+2. `personSchema()` no longer claims the ambiguous token: `alternateName: ['Rachit', 'RachitSharma']` → `['RachitSharma']`, plus `givenName: 'Rachit'` + `familyName: 'Sharma'`. Declaring a bare first name as an alias says "the token *Rachit* means me", which is the exact merge signal behind the confusion. Verify assertion updated, new name-parts assertion added.
+
+**Explicitly refused (with the reason on record):** competing for the bare keyword **"rachit"**. A live check of that query returns Rachit Rojha (20M+ YouTube), a video-editor Rachit Singh, a Spotify artist, and name-meaning/nickname sites — a first name is not a winnable commercial term, and pushing the site onto it strengthens the very entity merge the user is complaining about. The queries that are winnable are the ones already won: `Rachit Sharma digital marketer Kaithal` → **#1 his site, #2 his GitHub**. Remaining levers are off-site profile consistency (LinkedIn headline / GitHub bio / Instagram must say **Rachit Sharma**, never "Rachit") and time.
+
+**Gates (v59a):** lint 0 errors (7 pre-existing warnings) · build pass (`/` 121,284 B, `/resume` 84,686, `/blog` 80,067, Kaithal 83,898, `404.html` 73,596) · verify **All checks passed** · secrets:check clean (117 files).
+
 ### [v58 — GitHub profile README + banner redesign, repo README, image SEO alt text] — 23 Oct 2026
 
 **Brief:** GitHub profile update — bio + website field, redesign profile README (remove "training" from banner, follow professional style), add alt text to photo + project card thumbnails for image SEO, and report which keywords the site can rank for / Google AI might cite.

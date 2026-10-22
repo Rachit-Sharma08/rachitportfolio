@@ -280,7 +280,14 @@ check('home Person schema carries the definition', homePerson?.description, DEFI
 check('home Person schema url is the site root', homePerson?.url, SITE_URL)
 check('home Person schema has a stable @id', homePerson?.['@id'], PERSON_ID)
 check('home Person schema has @context', homePerson?.['@context'], 'https://schema.org')
-check('home Person schema alternateNames', homePerson?.alternateName, ['Rachit', 'RachitSharma'])
+check('home Person schema alternateNames', homePerson?.alternateName, ['RachitSharma'])
+// "Rachit" alone belongs to another marketer in the same district, so the bare
+// first name is never claimed as an alias — only split into name parts.
+check(
+  'home Person schema splits the name rather than aliasing the first name',
+  [homePerson?.givenName, homePerson?.familyName],
+  ['Rachit', 'Sharma'],
+)
 check('home Person schema studied at RKSD College', homePerson?.alumniOf?.name, 'RKSD College, Kaithal')
 check('home Person schema knowsAbout is the site topic list', homePerson?.knowsAbout, KNOWS_ABOUT)
 // The social card is the og card; schema:image is "what does this person look
@@ -352,6 +359,15 @@ check(
 // --- the local page: one Person, one site, one breadcrumb -------------------
 
 const localPage = jsonLd(localHead).find((s) => s['@type'] === 'WebPage')
+// The query this page answers can arrive without the surname, so the h1 says
+// the full name itself; a page whose only "Rachit Sharma" is in body copy lets
+// a same-name marketer in the same district take the answer.
+const kaithalBody = renderRoute('/digital-marketer-kaithal', content)
+check(
+  'the Kaithal page h1 names the person, not just the role',
+  /<h1[^>]*>Rachit Sharma — digital marketer in\s*<span[^>]*>Kaithal<\/span><\/h1>/.test(kaithalBody),
+  true,
+)
 check('the Kaithal WebPage is about the same Person', localPage?.mainEntity, { '@id': PERSON_ID })
 check('the Kaithal WebPage about is the same Person', localPage?.about, { '@id': PERSON_ID })
 check('the Kaithal WebPage is part of this site', localPage?.isPartOf, { '@id': `${SITE_URL}/#website` })
