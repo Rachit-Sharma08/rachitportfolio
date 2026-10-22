@@ -7,7 +7,7 @@
 // rotate karo (purana invalid = history se redact karne jitna hi kaam karta
 // hai, kyunki HEAD se hataane se git history me value safe nahi hoti).
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 const PATTERNS = [
@@ -35,7 +35,9 @@ const MAX_BYTES = 2 * 1024 * 1024
 const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean)
-  .filter((f) => !SKIP.has(f))
+  // A file staged for deletion is still listed by ls-files but no longer on
+  // disk; skip it instead of crashing the gate.
+  .filter((f) => !SKIP.has(f) && existsSync(f))
 
 const hits = []
 for (const file of files) {
