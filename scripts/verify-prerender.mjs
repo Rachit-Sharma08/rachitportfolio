@@ -144,6 +144,7 @@ check('missing project_url becomes comingSoon', content.projects[0].comingSoon, 
 check('routes include every published post', routesFor(content), [
   '/',
   '/resume',
+  '/digital-marketer-kaithal',
   '/blog',
   '/blog/one-brief-one-campaign-sprint',
   '/blog/seo-is-not-dead',
@@ -211,7 +212,7 @@ const failed = mapBuildContent({})
 check('failed query keeps bundled projects', failed.projects.length, 3)
 check('failed query keeps bundled story', failed.storyCard.length > 0, true)
 check('failed query keeps bundled hero', failed.settings.heroBaseUrl, '/assets/hero-base.webp')
-check('failed query still lists the 3 static routes', routesFor(failed), ['/', '/resume', '/blog'])
+check('failed query still lists the 4 static routes', routesFor(failed), ['/', '/resume', '/digital-marketer-kaithal', '/blog'])
 
 // An empty array means "the admin deleted everything" and must be honoured,
 // otherwise deleting the last row would silently resurrect the seeded content.
@@ -229,7 +230,7 @@ const emptied = mapBuildContent({
 check('empty project table is honoured', emptied.projects, [])
 check('empty post table is honoured', emptied.posts, [])
 check('cleared story card is honoured', emptied.storyCard, '')
-check('routes for an emptied site', routesFor(emptied), ['/', '/resume', '/blog'])
+check('routes for an emptied site', routesFor(emptied), ['/', '/resume', '/digital-marketer-kaithal', '/blog'])
 
 const emptiedHome = renderRoute('/', emptied)
 check('emptied home has no seeded project', emptiedHome.includes('Neon Car Racing'), false)
@@ -268,6 +269,7 @@ function types(head) {
 const homeHead = headFor('/', content)
 const resumeHead = headFor('/resume', content)
 const blogHead = headFor('/blog', content)
+const localHead = headFor('/digital-marketer-kaithal', content)
 const postHead = headFor('/blog/one-brief-one-campaign-sprint', content)
 const sameDateHead = headFor('/blog/seo-is-not-dead', content)
 
@@ -308,6 +310,11 @@ check(
 check('home emits Person + WebSite + ProfilePage', types(homeHead), ['Person', 'WebSite', 'ProfilePage'])
 check('resume emits Person + BreadcrumbList + ProfilePage', types(resumeHead), ['Person', 'BreadcrumbList', 'ProfilePage'])
 check('blog index emits Person + BreadcrumbList', types(blogHead), ['Person', 'BreadcrumbList'])
+check(
+  'the Kaithal page emits Person + BreadcrumbList + WebPage',
+  types(localHead),
+  ['Person', 'BreadcrumbList', 'WebPage'],
+)
 check('post emits Person + Article', types(postHead), ['Person', 'Article'])
 check(
   'Person url is the site root on every page',
@@ -315,9 +322,10 @@ check(
     jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.url,
     jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.url,
     jsonLd(blogHead).find((s) => s['@type'] === 'Person')?.url,
+    jsonLd(localHead).find((s) => s['@type'] === 'Person')?.url,
     jsonLd(postHead).find((s) => s['@type'] === 'Person')?.url,
   ],
-  [SITE_URL, SITE_URL, SITE_URL, SITE_URL],
+  [SITE_URL, SITE_URL, SITE_URL, SITE_URL, SITE_URL],
 )
 check(
   'Person @id is identical on every page',
@@ -325,14 +333,44 @@ check(
     jsonLd(homeHead).find((s) => s['@type'] === 'Person')?.['@id'],
     jsonLd(resumeHead).find((s) => s['@type'] === 'Person')?.['@id'],
     jsonLd(blogHead).find((s) => s['@type'] === 'Person')?.['@id'],
+    jsonLd(localHead).find((s) => s['@type'] === 'Person')?.['@id'],
     jsonLd(postHead).find((s) => s['@type'] === 'Person')?.['@id'],
   ],
-  [PERSON_ID, PERSON_ID, PERSON_ID, PERSON_ID],
+  [PERSON_ID, PERSON_ID, PERSON_ID, PERSON_ID, PERSON_ID],
 )
 check(
   'WebSite url is the site root',
   jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.url,
   `${SITE_URL}/`,
+)
+check(
+  'WebSite has a stable @id for other pages to point at',
+  jsonLd(homeHead).find((s) => s['@type'] === 'WebSite')?.['@id'],
+  `${SITE_URL}/#website`,
+)
+
+// --- the local page: one Person, one site, one breadcrumb -------------------
+
+const localPage = jsonLd(localHead).find((s) => s['@type'] === 'WebPage')
+check('the Kaithal WebPage is about the same Person', localPage?.mainEntity, { '@id': PERSON_ID })
+check('the Kaithal WebPage about is the same Person', localPage?.about, { '@id': PERSON_ID })
+check('the Kaithal WebPage is part of this site', localPage?.isPartOf, { '@id': `${SITE_URL}/#website` })
+check(
+  'the Kaithal WebPage names the area it covers',
+  localPage?.spatialCoverage?.name,
+  'Kaithal, Haryana, India',
+)
+check(
+  'the Kaithal WebPage url is its own URL',
+  localPage?.url,
+  `${SITE_URL}/digital-marketer-kaithal`,
+)
+const localCrumbs = jsonLd(localHead).find((s) => s['@type'] === 'BreadcrumbList')?.itemListElement
+check('the Kaithal breadcrumb has two steps', localCrumbs?.map((c) => c.name), ['Home', 'Digital Marketer in Kaithal'])
+check(
+  'the Kaithal breadcrumb ends on its own URL',
+  localCrumbs?.[1]?.item,
+  `${SITE_URL}/digital-marketer-kaithal`,
 )
 
 // --- ProfilePage ties the home page to the Person the home page is about ------
@@ -456,6 +494,7 @@ for (const [label, head] of [
   ['home', homeHead],
   ['/resume', resumeHead],
   ['/blog', blogHead],
+  ['Kaithal page', localHead],
   ['a post', postHead],
 ]) {
   const blocks = [...head.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1])
@@ -528,7 +567,7 @@ check('the home title leads with the name', PAGES['/'].title.startsWith('Rachit 
 check('the not-found title leads with the name', NOT_FOUND.title.startsWith('Rachit Sharma'), true)
 // The home page is the only name-first title, and deliberately so: it is the
 // brand page. The rest are brand-last, which is the shape a result is read in.
-check('the brand-last routes carry the brand', ['/resume', '/blog'].every((route) => PAGES[route].title.includes('Rachit Sharma')), true)
+check('the brand-last routes carry the brand', ['/resume', '/blog', '/digital-marketer-kaithal'].every((route) => PAGES[route].title.includes('Rachit Sharma')), true)
 
 // The site name and the home title are two different things, and each has to
 // reach every consumer unchanged: og:site_name names the site, og:title names
@@ -1072,6 +1111,7 @@ for (const [label, head] of [
   ['home', homeHead],
   ['/resume', resumeHead],
   ['/blog', blogHead],
+  ['Kaithal page', localHead],
   ['a post', postHead],
 ]) {
   check(`the ${label} head makes no self-taught claim`, SELF_TAUGHT.test(head), false)
@@ -1108,6 +1148,7 @@ for (const [label, head] of [
   ['home', homeHead],
   ['/resume', resumeHead],
   ['/blog', blogHead],
+  ['Kaithal page', localHead],
   ['a post', postHead],
 ]) {
   check(`the ${label} head carries no status word`, STATUS_WORDS.test(head), false)
@@ -1352,6 +1393,11 @@ if (llmsFull !== null) {
     QUICK_FACTS.every((f) => llmsFull.includes(`Q: ${f.q}`)),
     true,
   )
+  check(
+    'llms-full.txt lists the Kaithal page',
+    llmsFull.includes(`${SITE_URL}/digital-marketer-kaithal`),
+    true,
+  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1526,6 +1572,7 @@ const routesUnderTest = [
   ['home', '/'],
   ['resume', '/resume'],
   ['blog index', '/blog'],
+  ['the Kaithal page', '/digital-marketer-kaithal'],
   ['a post', '/blog/one-brief-one-campaign-sprint'],
 ]
 
