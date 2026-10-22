@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import SectionHeader from './SectionHeader'
 import { Reveal, RevealGroup, RevealItem } from './Reveal'
 import { useStoryReveal } from '../lib/useStoryReveal'
+import { useJourneyThread } from '../lib/useJourneyThread'
 import { easeExpo } from '../lib/motion'
 import { renderInline, splitParagraphs } from '../lib/markdown'
 import { useSiteContent } from '../lib/content'
@@ -38,6 +39,8 @@ export default function About() {
   const { storyCard, storyBody } = useSiteContent()
   const storyRef = useRef<HTMLDivElement>(null)
   useStoryReveal(storyRef)
+  const journeyRef = useRef<HTMLDivElement>(null)
+  useJourneyThread(journeyRef)
 
   // The body is authored as blank-line separated paragraphs and laid out two per
   // glass card, which is the shape the static version was hand-built in.
@@ -108,14 +111,19 @@ export default function About() {
           <div className="flex flex-col items-center gap-8 md:items-start">
             <Reveal>
               <div
-                className="rounded-full p-[2px]"
+                className="relative overflow-hidden rounded-full p-[2px]"
                 style={{
                   width: 240,
                   height: 240,
                   background:
                     'linear-gradient(135deg, rgba(214,46,74,0.85) 0%, #7a1226 55%, #2a0711 100%)',
+                  boxShadow: '0 0 70px -18px rgba(214, 46, 74, 0.55)',
                 }}
               >
+                {/* Same rotating conic as the navbar logo, so the ring reads as
+                    part of the site's language rather than a new effect. It sits
+                    behind the photo, so only the 2px band is visible. */}
+                <span aria-hidden="true" className="logo-ring absolute inset-0 rounded-full" />
                 <img
                   src="/rachit-480.webp"
                   /* The frame is a fixed 240px ring with 2px of padding, so the
@@ -129,7 +137,7 @@ export default function About() {
                   srcSet="/rachit-240.webp 240w, /rachit-320.webp 320w, /rachit-420.webp 420w, /rachit-480.webp 480w, /rachit-720.webp 720w"
                   sizes="236px"
                   alt="Rachit Sharma, AI-powered digital marketer in Kaithal, Haryana"
-                  className="h-full w-full rounded-full object-cover"
+                  className="relative h-full w-full rounded-full object-cover"
                   width={240}
                   height={240}
                   loading="lazy"
@@ -158,16 +166,25 @@ export default function About() {
             {cards.map((group, index) => (
               <Reveal key={index} delay={0.05 + index * 0.07}>
                 <div className="glass lift p-6 md:p-7">
-                  {group.map((paragraph, i) => (
-                    <p
-                      key={i}
-                      data-story-line
-                      className={`text-base leading-relaxed text-muted ${
-                        i === 0 ? '' : 'mt-4'
-                      }`}
-                      dangerouslySetInnerHTML={{ __html: renderInline(paragraph) }}
-                    />
-                  ))}
+                  {group.map((paragraph, i) => {
+                    // The opening paragraph carries the block: one step up in
+                    // size and brighter than the detail that follows, so the
+                    // column reads as a lead plus detail rather than three
+                    // identical boxes.
+                    const lead = index === 0 && i === 0
+                    return (
+                      <p
+                        key={i}
+                        data-story-line
+                        className={`${
+                          lead
+                            ? 'text-lg leading-[1.7] text-text-primary md:text-xl'
+                            : 'text-base leading-relaxed text-muted'
+                        } ${i === 0 ? '' : 'mt-4'}`}
+                        dangerouslySetInnerHTML={{ __html: renderInline(paragraph) }}
+                      />
+                    )
+                  })}
                 </div>
               </Reveal>
             ))}
@@ -211,31 +228,48 @@ export default function About() {
           <h3 className="mb-8 text-xs uppercase tracking-[0.3em] text-muted">
             My Journey
           </h3>
-          <RevealGroup className="relative flex flex-col gap-9 pl-8" stagger={0.1}>
-            <div className="absolute bottom-2 left-[5px] top-2 w-px bg-stroke" />
-            {JOURNEY.map((item) => (
-              <RevealItem key={item.year + item.text.slice(0, 20)} y={20}>
-                <div className="relative">
-                  {/* Was `type: 'spring'`, which bounces past its target and
-                      rings back — replaced with the shared power3-out curve. */}
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.4 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true, margin: '-12% 0px -12% 0px' }}
-                    transition={{ duration: 0.7, ease: easeExpo() }}
-                    className="absolute -left-8 top-1.5 h-2.5 w-2.5 rounded-full accent-gradient"
-                    style={{ boxShadow: '0 0 12px rgba(214, 46, 74, 0.65)' }}
-                  />
-                  <span className="font-display text-xl italic text-accent-ink">
-                    {item.year}
-                  </span>
-                  <p className="mt-1 max-w-2xl text-base leading-relaxed text-muted">
-                    {item.text}
-                  </p>
-                </div>
-              </RevealItem>
-            ))}
-          </RevealGroup>
+          <div ref={journeyRef}>
+            <RevealGroup className="relative flex flex-col gap-9 pl-8" stagger={0.1}>
+              <div aria-hidden="true" className="absolute bottom-2 left-[5px] top-2 w-px bg-stroke" />
+              {/* Drawn by useJourneyThread as the section scrolls; the CSS
+                  default above stays fully drawn for reduced motion and no-JS. */}
+              <div
+                aria-hidden="true"
+                data-journey-thread
+                className="absolute bottom-2 left-[5px] top-2 w-px"
+                style={{
+                  background:
+                    'linear-gradient(to bottom, #d62e4a 0%, #e85a70 84%, rgba(232, 90, 112, 0) 100%)',
+                  transformOrigin: 'top center',
+                }}
+              />
+              {JOURNEY.map((item) => (
+                <RevealItem key={item.year + item.text.slice(0, 20)} y={20}>
+                  <div className="relative">
+                    {/* Was `type: 'spring'`, which bounces past its target and
+                        rings back — replaced with the shared power3-out curve. */}
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.4 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true, margin: '-12% 0px -12% 0px' }}
+                      transition={{ duration: 0.7, ease: easeExpo() }}
+                      className="absolute -left-8 top-1.5 h-2.5 w-2.5 rounded-full accent-gradient"
+                      style={{
+                        boxShadow:
+                          '0 0 0 4px rgba(214, 46, 74, 0.1), 0 0 14px rgba(214, 46, 74, 0.55)',
+                      }}
+                    />
+                    <span className="font-display text-xl italic text-accent-ink">
+                      {item.year}
+                    </span>
+                    <p className="mt-1 max-w-2xl text-base leading-relaxed text-muted">
+                      {item.text}
+                    </p>
+                  </div>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+          </div>
         </Reveal>
         </div>
       </div>

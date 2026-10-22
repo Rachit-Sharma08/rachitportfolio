@@ -53,11 +53,11 @@ export default function Capabilities() {
             <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5" stagger={0.06}>
               {TOOLS.map((item) => (
                 <RevealItem key={item.label} className="h-full">
-                  <div className="glass lift group flex h-full flex-col items-center gap-3 p-5 text-center">
+                  <div className="glass lift cap-card group flex h-full flex-col items-center gap-3 p-5 text-center">
                     <item.icon
                       size={24}
                       strokeWidth={1.4}
-                      className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
+                      className="text-accent-ink transition duration-500 group-hover:-translate-y-1 group-hover:text-accent"
                     />
                     <div>
                       <span className="block text-sm text-text-primary">
@@ -82,11 +82,11 @@ export default function Capabilities() {
             <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5" stagger={0.06}>
               {SKILLS.map((item) => (
                 <RevealItem key={item.label} className="h-full">
-                  <div className="glass lift group flex h-full flex-col items-center gap-3 p-5 text-center">
+                  <div className="glass lift cap-card group flex h-full flex-col items-center gap-3 p-5 text-center">
                     <item.icon
                       size={24}
                       strokeWidth={1.4}
-                      className="text-accent-ink transition-colors duration-500 group-hover:text-accent"
+                      className="text-accent-ink transition duration-500 group-hover:-translate-y-1 group-hover:text-accent"
                     />
                     <span className="text-sm text-text-primary">{item.label}</span>
                   </div>

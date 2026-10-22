@@ -656,6 +656,28 @@ textarea.field {
   transform: translateX(100%);
 }
 
+/* Capability cards: a crimson wash blooms from the top on hover. Its own layer
+   so the glass border gradient (`.glass::before`) stays untouched. */
+.cap-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    70% 70% at 50% 0%,
+    rgba(214, 46, 74, 0.16),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-cinematic);
+  pointer-events: none;
+}
+
+.cap-card:hover::after,
+.cap-card:focus-within::after {
+  opacity: 1;
+}
+
 .hero-bg {
   background-color: #050103;
   background-image: radial-gradient(

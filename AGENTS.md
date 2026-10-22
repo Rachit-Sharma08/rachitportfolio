@@ -43,6 +43,8 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v60`, 23 Oct 2026) — About area ka visual/motion pass (design change, copy/claims unchanged):** "My Journey" me static line ke upar **crimson scrubbed thread** (`src/lib/useJourneyThread.ts`, GSAP ScrollTrigger `scaleY 0→1`, `ease:'none'`, `start 'top 82%'` / `end 'bottom 68%'`, `mm.add('(prefers-reduced-motion: no-preference)')`, cleanup `mm.revert()`), dots par halo. Portrait: maujooda `.logo-ring` (navbar ka 8s conic) 2px band me reuse + static glow — **koi naya keyframe nahi**. Story: pehla paragraph lead (`text-lg leading-[1.7] text-text-primary md:text-xl`). Capabilities: `.cap-card` → `::after` crimson radial wash hover/focus-within par + icon `group-hover:-translate-y-1` (sirf CSS, koi JS nahi). Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 122,493 B, `/resume` 85,013, `/blog` 80,394, Kaithal 84,225, `404.html` 73,923) · verify All checks passed · secrets:check clean (117 files). Detail: Changelog `v60`.
+
 - **NEW (`v59b`, 23 Oct 2026) — home hero h1 me ab poora naam:** teesri italic line `Sharma, Digital Marketer` → H1 text **`I'm Rachit Sharma, Digital Marketer`** (`aria-label` sync, `RACHIT` ka font untouched). Goal: bare-name (`Rachit Sharma`) entity signal — ye home par last on-page gap tha; baaki (title/meta/schema/alt/About h2/Kaithal h1/resume h1) already naam ke saath the. Off-site (LinkedIn/YouTube/domain) hi asli lever hai, on-page ab maxed. Detail: Changelog `v59b`.
 
 - **Deploy reality (T0, updated 10 Oct 2026):** Git push to main DOES auto-deploy on Vercel (commit f2af4aa deployed automatically). After pushing, wait up to 5 minutes and check the live site. Never run `vercel --prod` yourself; if nothing is live after 5 minutes, report to the user. A separate Vercel project called `fitness-website` was wrongly linked to this repo and caused a red X on GitHub commits; the user disconnected it in the Vercel dashboard. After that only one Vercel check (Vercel – rachitportfolio) should appear. If a second Vercel check ever shows up again, report it to the user; do not try to fix it yourself.
@@ -134,6 +136,22 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v60 — About area visual/motion pass: scrubbed journey thread, portrait ring + glow, story lead, capability card wash] — 23 Oct 2026
+
+**Brief:** user ne 3 screenshots diye (My Journey timeline, My Story cards + portrait, My Capabilities cards) aur kaha — pehle par professional + unique animation, doosre par "animation ya kuch design jisse aur attractive lage", teesre par "thodi si bhi". Visible copy/claims bilkul same rahe.
+
+**Journey — scrubbed thread.** Timeline ek sequence hai, isliye line ko scroll se link kiya (ek aur entrance animation ke bajaye): base line ke upar `data-journey-thread` gradient div, `gsap.fromTo(scaleY 0→1, ease:'none', scrub:true)`, `start 'top 82%'`, `end 'bottom 68%'`, tip par fade. Hook `src/lib/useJourneyThread.ts` wahi pattern jo `useStoryReveal` ka hai — `ScrollTrigger` dynamic import, `gsap.matchMedia()` (`mm` bahar, `add()` andar — v37 proof), cleanup `mm.revert()`. Reduced motion par kuch attach nahi hota → CSS default poori line dikhti hai. Dots ko halo: `0 0 0 4px rgba(214,46,74,0.1), 0 0 14px rgba(214,46,74,0.55)`.
+
+**Portrait — ring + glow, zero new CSS.** Navbar ka maujooda `.logo-ring` (8s conic spin) 2px band me reuse (`<img>` ke peeche, `aria-hidden`), saath static `boxShadow` glow. Naya keyframe nahi banaya; global reduce-motion rule ring ko freeze karta hai.
+
+**Story — typographic hierarchy, boxes same.** Pehla paragraph ab lead (`text-lg leading-[1.7] text-text-primary md:text-xl`), baaki detail paragraphs waise hi. Tinted card / quote glyph jaan-boojh kar nahi lagaye (restraint).
+
+**Capabilities — sirf CSS, koi JS nahi.** Dono grids ke cards par `.cap-card`; `::after` me crimson radial wash (`opacity 0 → 1` on `:hover` / `:focus-within`); icon `transition duration-500 group-hover:-translate-y-1 group-hover:text-accent`.
+
+**Verified (system Chrome CDP, 1440×900, real wheel events):** `[data-journey-thread]` + `.logo-ring` + `.cap-card` present; portrait img **236×236** (ring 240 box; rotated AABB 316.9 = geometry, bug nahi); dot center x **89** = thread x **89**; `cap-card::after` radial-gradient live; icon `transitionProperty` me `transform`. Screenshots `%TEMP%\opencode\v60-{about,journey,caps}.png`. `dist/index.html` me lead class **1×** + thread/ring/card markup.
+
+**Gates:** `npm run lint` 0 errors (7 pre-existing warnings) · `npm run build` pass (`/` 122,493 B, `/resume` 85,013, `/blog` 80,394, Kaithal 84,225, `404.html` 73,923) · `npm run verify` All checks passed · `npm run secrets:check` clean (117 files).
 
 ### [v59 — live SEO/AEO/GEO audit, SERP reality check, the 4 thin posts rebuilt, Person disambiguation] — 23 Oct 2026
 
