@@ -29,7 +29,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const CACHE_CONTROL = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400'
+const CACHE_CONTROL = 'public, max-age=0, s-maxage=300, stale-while-revalidate=60'
 
 interface Req {
   method?: string
@@ -52,7 +52,7 @@ export default async function handler(req: Req, res: Res) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !serviceKey) {
-    res.setHeader('Cache-Control', CACHE_CONTROL)
+    res.setHeader('Cache-Control', 'no-store')
     res.status(503).json({ error: 'not_configured' })
     return
   }
