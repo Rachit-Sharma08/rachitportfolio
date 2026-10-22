@@ -290,9 +290,15 @@ export function headFor(route, content) {
       },
     })
   }
-  if (route === '/resume' || route === '/blog') {
+  if (route === '/resume' || route === '/blog' || route === '/digital-marketer-kaithal') {
     // A breadcrumb ties the page into site structure for both search engines
     // and answer engines, and says plainly that these are our own pages.
+    const crumbName =
+      route === '/resume'
+        ? 'Resume'
+        : route === '/blog'
+          ? 'Blog'
+          : 'Digital Marketer in Kaithal'
     schemas.push({
       json: {
         '@context': 'https://schema.org',
@@ -302,10 +308,28 @@ export function headFor(route, content) {
           {
             '@type': 'ListItem',
             position: 2,
-            name: route === '/resume' ? 'Resume' : 'Blog',
+            name: crumbName,
             item: url,
           },
         ],
+      },
+    })
+  }
+  if (route === '/digital-marketer-kaithal') {
+    // The local page is a WebPage about the same Person the rest of the site
+    // describes — `mainEntity` points at the Person @id rather than restating
+    // the entity, so a crawler reads one person, not a second one for Kaithal.
+    schemas.push({
+      json: {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        url,
+        name: page.title,
+        description: page.description,
+        mainEntity: { '@id': PERSON_ID },
+        about: { '@id': PERSON_ID },
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        spatialCoverage: { '@type': 'Place', name: 'Kaithal, Haryana, India' },
       },
     })
   }
