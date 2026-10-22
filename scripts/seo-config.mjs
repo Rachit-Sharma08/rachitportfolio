@@ -220,6 +220,15 @@ export const PAGES = {
     title: 'Blog | Rachit Sharma',
     description: BLOG_DESCRIPTION,
   },
+  // The local page. It answers one search intent the home page only mentions in
+  // passing, so it carries the town in both the title and the URL. The claim is
+  // the same one the resume and About already make — no invented service, no
+  // ranking promise.
+  '/digital-marketer-kaithal': {
+    title: 'Digital Marketer in Kaithal | Rachit Sharma',
+    description:
+      'Need a digital marketer in Kaithal? Rachit Sharma works with Google and Meta ads, SEO, AEO and GEO, and builds fast websites. Based in Kaithal, Haryana.',
+  },
 }
 
 // The 404 document. Kept out of PAGES on purpose: PAGES doubles as the list of
@@ -308,6 +317,9 @@ export function websiteSchema(url) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    // Stable id so the local page's WebPage can point at this site instead of
+    // restating it as a second, unrelated WebSite.
+    '@id': `${url}#website`,
     name: 'Rachit Sharma',
     alternateName: 'Rachit Sharma Portfolio',
     url,
