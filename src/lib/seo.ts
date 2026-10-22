@@ -24,6 +24,7 @@ export const PAGE_TITLES: Record<string, string> = {
   '/': 'Rachit Sharma — Digital Marketer & AI Builder, Kaithal',
   '/resume': 'Resume | Rachit Sharma, Digital Marketer',
   '/blog': 'Blog | Rachit Sharma',
+  '/digital-marketer-kaithal': 'Digital Marketer in Kaithal | Rachit Sharma',
   '*': 'Rachit Sharma — Page Not Found',
 }
 
@@ -41,6 +42,8 @@ export const PAGE_DESCRIPTIONS: Record<string, string> = {
     "Rachit Sharma's resume — a digital marketer pairing campaign strategy with 25+ AI tools. Education, skills and projects.",
   '/blog':
     'Notes on digital marketing, AI tooling, SEO and building with AI from Rachit Sharma — a digital marketer, learning in public.',
+  '/digital-marketer-kaithal':
+    'Need a digital marketer in Kaithal? Rachit Sharma works with Google and Meta ads, SEO, AEO and GEO, and builds fast websites. Based in Kaithal, Haryana.',
   '*': "That page doesn't exist. It may have been a journal post that is no longer published — everything currently published is on the Journal page.",
 }
 
