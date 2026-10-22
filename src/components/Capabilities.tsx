@@ -46,24 +46,23 @@ export default function Capabilities() {
         <div className="space-y-12">
           <div>
             <Reveal>
-              <p className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
-                Tools I use
+              <p className="mb-6 flex items-center gap-4 text-xs uppercase tracking-[0.3em] text-muted">
+                <span>Tools I use</span>
+                <span aria-hidden="true" className="h-px flex-1 bg-stroke/70" />
               </p>
             </Reveal>
             <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5" stagger={0.06}>
               {TOOLS.map((item) => (
                 <RevealItem key={item.label} className="h-full">
-                  <div className="glass lift cap-card group flex h-full flex-col items-center gap-3 p-5 text-center">
-                    <item.icon
-                      size={24}
-                      strokeWidth={1.4}
-                      className="text-accent-ink transition duration-500 group-hover:-translate-y-1 group-hover:text-accent"
-                    />
+                  <div className="glass lift cap-card group flex h-full flex-col gap-4 p-5">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent-ink ring-1 ring-inset ring-accent/25 transition duration-500 group-hover:bg-accent/20 group-hover:text-accent">
+                      <item.icon size={20} strokeWidth={1.5} />
+                    </span>
                     <div>
-                      <span className="block text-sm text-text-primary">
+                      <span className="block text-sm font-medium text-text-primary">
                         {item.label}
                       </span>
-                      <span className="mt-0.5 block text-xs text-muted">
+                      <span className="mt-1 block text-xs text-muted">
                         {item.sub}
                       </span>
                     </div>
@@ -75,20 +74,21 @@ export default function Capabilities() {
 
           <div>
             <Reveal>
-              <p className="mb-6 text-xs uppercase tracking-[0.3em] text-muted">
-                What I bring
+              <p className="mb-6 flex items-center gap-4 text-xs uppercase tracking-[0.3em] text-muted">
+                <span>What I bring</span>
+                <span aria-hidden="true" className="h-px flex-1 bg-stroke/70" />
               </p>
             </Reveal>
             <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5" stagger={0.06}>
               {SKILLS.map((item) => (
                 <RevealItem key={item.label} className="h-full">
-                  <div className="glass lift cap-card group flex h-full flex-col items-center gap-3 p-5 text-center">
-                    <item.icon
-                      size={24}
-                      strokeWidth={1.4}
-                      className="text-accent-ink transition duration-500 group-hover:-translate-y-1 group-hover:text-accent"
-                    />
-                    <span className="text-sm text-text-primary">{item.label}</span>
+                  <div className="glass lift cap-card group flex h-full flex-col gap-4 p-5">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent-ink ring-1 ring-inset ring-accent/25 transition duration-500 group-hover:bg-accent/20 group-hover:text-accent">
+                      <item.icon size={20} strokeWidth={1.5} />
+                    </span>
+                    <span className="block text-sm font-medium text-text-primary">
+                      {item.label}
+                    </span>
                   </div>
                 </RevealItem>
               ))}

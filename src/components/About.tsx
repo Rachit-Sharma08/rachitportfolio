@@ -1,11 +1,8 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import SectionHeader from './SectionHeader'
 import { Reveal, RevealGroup, RevealItem } from './Reveal'
 import { useStoryReveal } from '../lib/useStoryReveal'
-import { useJourneyThread } from '../lib/useJourneyThread'
-import { easeExpo } from '../lib/motion'
 import { renderInline, splitParagraphs } from '../lib/markdown'
 import { useSiteContent } from '../lib/content'
 import { SOCIALS, DEFINITION, QUICK_FACTS } from '../data'
@@ -35,21 +32,23 @@ const JOURNEY = [
   },
 ]
 
+// One column per year: two 2025 rows stacked with "2025" repeated read as noise,
+// and a year is the unit a reader actually scans a timeline for.
+const CHAPTERS = JOURNEY.reduce<{ year: string; items: string[] }[]>((chapters, item) => {
+  const last = chapters[chapters.length - 1]
+  if (last && last.year === item.year) last.items.push(item.text)
+  else chapters.push({ year: item.year, items: [item.text] })
+  return chapters
+}, [])
+
 export default function About() {
   const { storyCard, storyBody } = useSiteContent()
   const storyRef = useRef<HTMLDivElement>(null)
   useStoryReveal(storyRef)
-  const journeyRef = useRef<HTMLDivElement>(null)
-  useJourneyThread(journeyRef)
 
-  // The body is authored as blank-line separated paragraphs and laid out two per
-  // glass card, which is the shape the static version was hand-built in.
-  const cards: string[][] = []
-  for (const paragraph of splitParagraphs(storyBody)) {
-    const last = cards[cards.length - 1]
-    if (last && last.length < 2) last.push(paragraph)
-    else cards.push([paragraph])
-  }
+  // The body is authored as blank-line separated paragraphs: the first one is
+  // the statement, the rest are detail that sits two-up underneath it.
+  const [statement, ...detail] = splitParagraphs(storyBody)
 
   return (
     <section id="about" className="section section-glow bg-bg" aria-labelledby="about-heading">
@@ -163,31 +162,43 @@ export default function About() {
           </div>
 
           <div className="flex flex-col gap-5" ref={storyRef}>
-            {cards.map((group, index) => (
-              <Reveal key={index} delay={0.05 + index * 0.07}>
-                <div className="glass lift p-6 md:p-7">
-                  {group.map((paragraph, i) => {
-                    // The opening paragraph carries the block: one step up in
-                    // size and brighter than the detail that follows, so the
-                    // column reads as a lead plus detail rather than three
-                    // identical boxes.
-                    const lead = index === 0 && i === 0
-                    return (
-                      <p
-                        key={i}
-                        data-story-line
-                        className={`${
-                          lead
-                            ? 'text-lg leading-[1.7] text-text-primary md:text-xl'
-                            : 'text-base leading-relaxed text-muted'
-                        } ${i === 0 ? '' : 'mt-4'}`}
-                        dangerouslySetInnerHTML={{ __html: renderInline(paragraph) }}
-                      />
-                    )
-                  })}
+            {statement && (
+              <Reveal>
+                {/* The opening paragraph carries the column on its own, so it
+                    gets a bigger box and a bigger size instead of being one of
+                    three equal cards nobody knows where to start on. */}
+                <div className="glass lift p-7 md:p-9">
+                  <p
+                    data-story-line
+                    className="text-xl leading-[1.55] text-text-primary md:text-2xl md:leading-[1.45]"
+                    dangerouslySetInnerHTML={{ __html: renderInline(statement) }}
+                  />
                 </div>
               </Reveal>
-            ))}
+            )}
+
+            {detail.length > 0 && (
+              <RevealGroup
+                className="grid items-start gap-6 md:grid-cols-2 md:gap-x-10"
+                delay={0.08}
+                stagger={0.08}
+              >
+                {/* Detail is a hairline column, not a card — boxes of unequal
+                    copy expose their own empty space, and the rules match the
+                    journey ledger below. */}
+                {detail.map((paragraph, index) => (
+                  <RevealItem key={index}>
+                    <div className="border-t border-stroke/70 pt-5">
+                      <p
+                        data-story-line
+                        className="text-base leading-relaxed text-muted"
+                        dangerouslySetInnerHTML={{ __html: renderInline(paragraph) }}
+                      />
+                    </div>
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            )}
 
             <RevealGroup
               className="flex flex-wrap items-center gap-3"
@@ -228,48 +239,30 @@ export default function About() {
           <h3 className="mb-8 text-xs uppercase tracking-[0.3em] text-muted">
             My Journey
           </h3>
-          <div ref={journeyRef}>
-            <RevealGroup className="relative flex flex-col gap-9 pl-8" stagger={0.1}>
-              <div aria-hidden="true" className="absolute bottom-2 left-[5px] top-2 w-px bg-stroke" />
-              {/* Drawn by useJourneyThread as the section scrolls; the CSS
-                  default above stays fully drawn for reduced motion and no-JS. */}
-              <div
-                aria-hidden="true"
-                data-journey-thread
-                className="absolute bottom-2 left-[5px] top-2 w-px"
-                style={{
-                  background:
-                    'linear-gradient(to bottom, #d62e4a 0%, #e85a70 84%, rgba(232, 90, 112, 0) 100%)',
-                  transformOrigin: 'top center',
-                }}
-              />
-              {JOURNEY.map((item) => (
-                <RevealItem key={item.year + item.text.slice(0, 20)} y={20}>
-                  <div className="relative">
-                    {/* Was `type: 'spring'`, which bounces past its target and
-                        rings back — replaced with the shared power3-out curve. */}
-                    <motion.span
-                      initial={{ opacity: 0, scale: 0.4 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true, margin: '-12% 0px -12% 0px' }}
-                      transition={{ duration: 0.7, ease: easeExpo() }}
-                      className="absolute -left-8 top-1.5 h-2.5 w-2.5 rounded-full accent-gradient"
-                      style={{
-                        boxShadow:
-                          '0 0 0 4px rgba(214, 46, 74, 0.1), 0 0 14px rgba(214, 46, 74, 0.55)',
-                      }}
-                    />
-                    <span className="font-display text-xl italic text-accent-ink">
-                      {item.year}
-                    </span>
-                    <p className="mt-1 max-w-2xl text-base leading-relaxed text-muted">
-                      {item.text}
-                    </p>
+          {/* A chapter ledger: the year is the anchor and each year is one rule
+              line, rather than four rows hanging off a dotted rail — the rail is
+              the most template-looking thing a timeline can do. */}
+          <RevealGroup className="border-t border-stroke/70" stagger={0.12}>
+            {CHAPTERS.map((chapter) => (
+              <RevealItem key={chapter.year}>
+                <div className="grid gap-5 border-b border-stroke/70 py-8 md:grid-cols-[200px_1fr] md:gap-12">
+                  <div className="font-display text-4xl italic leading-none text-accent-ink md:text-6xl">
+                    {chapter.year}
                   </div>
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </div>
+                  <div className="grid gap-4 md:grid-cols-2 md:gap-x-10">
+                    {chapter.items.map((item) => (
+                      <p
+                        key={item}
+                        className="relative pl-6 text-base leading-relaxed text-muted before:absolute before:left-0 before:top-[0.7em] before:h-px before:w-3.5 before:bg-accent/60"
+                      >
+                        {item}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </RevealItem>
+            ))}
+          </RevealGroup>
         </Reveal>
         </div>
       </div>
