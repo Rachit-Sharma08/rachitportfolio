@@ -325,9 +325,31 @@ await writeFile(path.join(distDir, 'robots.txt'), robots)
 console.log('Wrote dist/robots.txt')
 
 const today = new Date().toISOString().slice(0, 10)
+
+/**
+ * Image sitemap entries. Only images the page actually shows: a sitemap that
+ * lists a picture the URL does not display is a mismatch, not coverage. The
+ * local build bakes no posts, so post covers appear only in production.
+ */
+const PORTRAIT_CAPTION = 'Rachit Sharma, AI-powered digital marketer in Kaithal, Haryana'
+const HOME_IMAGES = ['/assets/hero-base.webp', '/rachit-720.webp']
+function imageTags(route, post) {
+  const images = route === '/'
+    ? HOME_IMAGES.map((loc) => ({ loc, title: PORTRAIT_CAPTION }))
+    : post?.coverImageUrl
+      ? [{ loc: post.coverImageUrl, title: post.title }]
+      : []
+  return images.flatMap(({ loc, title }) => [
+    '    <image:image>',
+    `      <image:loc>${escapeAttr(/^https?:\/\//i.test(loc) ? loc : `${SITE_URL}${loc.startsWith('/') ? '' : '/'}${loc}`)}</image:loc>`,
+    `      <image:title>${escapeAttr(title)}</image:title>`,
+    '    </image:image>',
+  ])
+}
+
 const urlset = [
   '<?xml version="1.0" encoding="UTF-8"?>',
-  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
   ...routes.map((route) => {
     const loc = `${SITE_URL}${route}`
     const isPost = route.startsWith('/blog/')
@@ -343,6 +365,7 @@ const urlset = [
       `    <lastmod>${lastmod || today}</lastmod>`,
       `    <changefreq>${freq}</changefreq>`,
       `    <priority>${priority}</priority>`,
+      ...imageTags(route, post),
       '  </url>',
     ].join('\n')
   }),
@@ -350,7 +373,7 @@ const urlset = [
   '',
 ].join('\n')
 await writeFile(path.join(distDir, 'sitemap.xml'), urlset)
-console.log(`Wrote dist/sitemap.xml (${routes.length} urls)`)
+console.log(`Wrote dist/sitemap.xml (${routes.length} urls, ${(urlset.match(/<image:image>/g) || []).length} images)`)
 
 /* -------------------------------------------------------------------------- */
 /*  llms.txt                                                                  */

@@ -1561,6 +1561,22 @@ for (const file of distText) {
 }
 check('no FAQPage block in any dist document', faqHits, [])
 
+// Image sitemap: Google only reads <image:loc> from a urlset that declares the
+// image namespace, and a relative loc is not a URL. The home images are the two
+// the page actually renders; post covers are production-only because a
+// database-less build bakes no posts, so they are not asserted here.
+const sitemapXml = await readFile(path.join(distDir, 'sitemap.xml'), 'utf8')
+const imageLocs = [...sitemapXml.matchAll(/<image:loc>([^<]*)<\/image:loc>/g)].map((m) => m[1])
+check('sitemap declares the image namespace', sitemapXml.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'), true)
+check('sitemap carries image entries', imageLocs.length >= 2, true)
+check(
+  'sitemap lists the home hero and portrait',
+  [`${SITE_URL}/assets/hero-base.webp`, `${SITE_URL}/rachit-720.webp`].every((loc) => imageLocs.includes(loc)),
+  true,
+)
+check('every sitemap image loc is absolute', imageLocs.filter((loc) => !loc.startsWith(`${SITE_URL}/`)), [])
+check('sitemap image entries are not empty or unrendered', imageLocs.filter((loc) => !loc || loc.includes('undefined')), [])
+
 /* -------------------------------------------------------------------------- */
 /*  Google Analytics 4: production only, once per page, never on /admin        */
 /* -------------------------------------------------------------------------- */
