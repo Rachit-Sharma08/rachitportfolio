@@ -291,8 +291,11 @@ check(
 check('home Person schema studied at RKSD College', homePerson?.alumniOf?.name, 'RKSD College, Kaithal')
 check('home Person schema knowsAbout is the site topic list', homePerson?.knowsAbout, KNOWS_ABOUT)
 // The social card is the og card; schema:image is "what does this person look
-// like", so it points at the cut-out rather than the 1200x630 banner.
-check('home Person schema image is the portrait, not the og card', homePerson?.image, `${SITE_URL}/assets/hero-base.webp`)
+// like", so it points at the cut-out rather than the 1200x630 banner. Size and
+// caption are stated so an image index does not have to fetch the file first.
+check('home Person schema image is the portrait, not the og card', homePerson?.image?.contentUrl, `${SITE_URL}/assets/hero-base.webp`)
+check('home Person schema image is an ImageObject with its size', [homePerson?.image?.['@type'], homePerson?.image?.width, homePerson?.image?.height], ['ImageObject', 1086, 1448])
+check('home Person schema image caption names him', homePerson?.image?.caption?.startsWith('Rachit Sharma'), true)
 check('home Person schema keeps the postal address', homePerson?.address?.addressCountry, 'IN')
 check(
   'home Person schema sameAs is the current profiles',

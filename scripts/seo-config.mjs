@@ -298,7 +298,15 @@ export function personSchema() {
     url: SITE_URL,
     // The cut-out, not the social card: this is the schema's answer to "what
     // does this person look like", and og:image already covers the card.
-    image: `${SITE_URL}/assets/hero-base.webp`,
+    // Explicit dimensions + caption so an image index has the size and the
+    // subject without fetching the file first.
+    image: {
+      '@type': 'ImageObject',
+      contentUrl: `${SITE_URL}/assets/hero-base.webp`,
+      width: 1086,
+      height: 1448,
+      caption: 'Rachit Sharma, AI-powered digital marketer in Kaithal, Haryana',
+    },
     jobTitle: 'Digital Marketer',
     // The same sentence About shows and llms.txt repeats. An answer engine
     // quoting this has to be able to find the claim on the page itself.
