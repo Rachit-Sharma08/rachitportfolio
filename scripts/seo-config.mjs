@@ -69,6 +69,7 @@ export const SOCIALS = {
   github: 'https://github.com/Rachit-Sharma08',
   linkedin: 'https://www.linkedin.com/in/rachit-sharma08/',
   instagram: 'https://www.instagram.com/rachit.08_',
+  devto: 'https://dev.to/rachitsharma08',
 }
 
 /**
@@ -316,7 +317,7 @@ export function personSchema() {
     // the site (resume skills, Selected Work, the Kaithal page).
     disambiguatingDescription:
       'Digital marketer in Kaithal, Haryana, India — Google Ads, Meta Ads and SEO/AEO/GEO, plus web projects built with React and Supabase.',
-    sameAs: [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram],
+    sameAs: [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram, SOCIALS.devto],
     alumniOf: {
       '@type': 'CollegeOrUniversity',
       name: 'RKSD College, Kaithal',

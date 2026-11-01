@@ -300,7 +300,7 @@ check('home Person schema keeps the postal address', homePerson?.address?.addres
 check(
   'home Person schema sameAs is the current profiles',
   homePerson?.sameAs,
-  [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram],
+  [SOCIALS.github, SOCIALS.linkedin, SOCIALS.instagram, SOCIALS.devto],
 )
 check('home meta description leads with the definition', metaContent(homeHead, 'name', 'description')?.startsWith(DEFINITION), true)
 check('llms summary is the definition, not a second wording', HOME_DESCRIPTION.startsWith(DEFINITION), true)
@@ -1058,6 +1058,9 @@ for (const [file, src] of Object.entries(linkSources)) {
 check('GitHub profile is written down', dataTs.includes(SOCIALS.github) && Object.values(linkSources).some((s) => s.includes(SOCIALS.github)), true)
 check('LinkedIn profile is written down', dataTs.includes(SOCIALS.linkedin), true)
 check('Instagram profile is written down', dataTs.includes(SOCIALS.instagram), true)
+// The dev.to profile is the one place he publishes writing under the full name,
+// so it corroborates the identity without adding a link to the page itself.
+check('dev.to profile is written down in both mirrors', [dataTs.includes(SOCIALS.devto), Object.values(linkSources).some((s) => s.includes(SOCIALS.devto))], [true, true])
 
 // The story body is authored once in the admin panel and mirrored in two files
 // for builds that run without the database. All three have to agree, or the
@@ -1320,6 +1323,7 @@ if (llms !== null) {
   check('llms.txt leads with the definition', llms.includes(`> ${DEFINITION}\n`), true)
   check('llms.txt lists GitHub', llms.includes(SOCIALS.github), true)
   check('llms.txt lists LinkedIn', llms.includes(SOCIALS.linkedin), true)
+  check('llms.txt lists dev.to', llms.includes(SOCIALS.devto), true)
   check('llms.txt lists the contact address', llms.includes('rachitsharma9990888@gmail.com'), true)
   check(
     'llms.txt points at the sitemap',
@@ -1330,7 +1334,7 @@ if (llms !== null) {
   check('llms.txt has no unrendered placeholder', llms.includes('undefined'), false)
   // Same-origin only: an llms.txt that hands over a localhost or preview host is
   // worse than none.
-  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-rouge\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com)/.test(llms), false)
+  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-rouge\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com|dev\.to)/.test(llms), false)
 
   // The three sections an answer engine looks for: who he is, what he has built,
   // and what he builds with. Plain text, so it can be lifted and quoted as-is.

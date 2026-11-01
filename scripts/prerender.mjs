@@ -449,6 +449,7 @@ llms.push(
   `- [GitHub](${SOCIALS.github})`,
   `- [LinkedIn](${SOCIALS.linkedin})`,
   `- [Instagram](${SOCIALS.instagram})`,
+  `- [dev.to](${SOCIALS.devto})`,
   '',
   '## Contact',
   '',
