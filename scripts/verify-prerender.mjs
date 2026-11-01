@@ -1049,7 +1049,7 @@ const linkSources = Object.fromEntries(
 
 const OLD_OWNER = /digitalguru99908-dev|rachithunyawrr/
 const OLD_LINKEDIN = /rachit-sharma-ab199443a|linkedin\.com\/in\/rachit-sharma(?!08)/
-const OLD_INSTAGRAM = /instagram\.com\/rachitsharma/
+const OLD_INSTAGRAM = /instagram\.com\/(rachitsharma|rachit\.08_)/
 for (const [file, src] of Object.entries(linkSources)) {
   check(`${file} has no stale GitHub owner`, OLD_OWNER.test(src), false)
   check(`${file} has no stale LinkedIn handle`, OLD_LINKEDIN.test(src), false)

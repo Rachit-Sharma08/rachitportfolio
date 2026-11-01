@@ -18,7 +18,7 @@ export const DEFINITION =
 export const SOCIALS = {
   github: 'https://github.com/Rachit-Sharma08',
   linkedin: 'https://www.linkedin.com/in/rachit-sharma08/',
-  instagram: 'https://www.instagram.com/rachit.08_',
+  instagram: 'https://www.instagram.com/rachit.sharma08',
   devto: 'https://dev.to/rachitsharma08',
 }
 

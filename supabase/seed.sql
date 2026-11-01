@@ -89,7 +89,7 @@ values
 
 
 -- ---------------------------------------------------------------------------
---  4.  BLOG POSTS — 4 published, 0 drafts
+--  5.  BLOG POSTS — 5 published, 0 drafts
 -- ---------------------------------------------------------------------------
 insert into public.blog_posts
   (title, slug, category, excerpt, content, published, published_at, cover_image_url)
@@ -214,6 +214,34 @@ Not first. Writing tighter hooks is closer to a listening skill — knowing exac
 ## So is the long page the problem?
 
 No. The wall of text isn''t the problem; it''s usually just a hook that never showed up.',
+  true,
+  now(),
+  null
+),
+(
+  'How I Run Marketing Campaigns With AI',
+  'how-i-run-marketing-campaigns-with-ai',
+  'AI · Campaign',
+  'How one tight brief plus AI tools turned into a full campaign I actually ran.',
+  E'## Why did I treat AI like a campaign team before I had a brief?
+
+I did not. I reached for AI before I had a brief, and the first drafts came out generic. AI without a brief gives generic output because it has nothing specific to work from.
+
+## How do I start a campaign when AI is in the room?
+
+I start with one brief. Who the campaign is for, what they already believe, what I want them to feel, and the one constraint that matters — budget, platform or deadline.
+
+## What do I ask the AI to draft first?
+
+I ask for a sprint: hooks, a content calendar skeleton, ad copy in a few tones, and a list of what to track.
+
+## How do I keep the copy from sounding like AI wrote it?
+
+I bring my own lines — the ones I actually believe — and let the AI generate variants around them. The thinking stays mine even when the volume does not.
+
+## What did I learn from running it?
+
+That the AI does not replace strategy. It removes the blank-page tax; the strategy still comes from me.',
   true,
   now(),
   null
