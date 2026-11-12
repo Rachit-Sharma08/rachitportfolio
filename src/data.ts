@@ -183,6 +183,17 @@ export const PROJECTS: Project[] = [
       'An AI assistant chatbot designed to be added to any business website. It greets visitors, answers common questions about the business, and helps them find what they need without waiting for a human reply. I built it with OpenCode and Replit, handling the idea, prompts and testing myself.',
     tech: ['OpenCode', 'replit'],
   },
+  {
+    title: 'Libas Ladies Tailors',
+    tag: 'Web · Local Business',
+    href: 'https://libas-ladies-tailors.netlify.app/',
+    image: '/assets/projects/libas-ladies-tailors.webp',
+    accent: '#d62e4a',
+    tagline: 'A booking-first site for a ladies-only tailoring boutique in Siwan, Kaithal.',
+    description:
+      'A website for a local ladies-only tailoring boutique: services, measuring process, gallery and contact in one place. Built with Next.js, with an English/Hindi toggle and WhatsApp booking so every visitor can reach the shop directly.',
+    tech: ['Next.js', 'WhatsApp Booking', 'i18n'],
+  },
 ]
 
 // Static copy of the About section's story, used until Supabase answers and

@@ -209,7 +209,7 @@ check('javascript: link neutralised', !evilHtml.includes('href="javascript:'), t
 // "undefined" means the query failed — the pre-render script bails out before
 // calling the mapper in that case, so a missing key must fall back to the copy.
 const failed = mapBuildContent({})
-check('failed query keeps bundled projects', failed.projects.length, 3)
+check('failed query keeps bundled projects', failed.projects.length, 4)
 check('failed query keeps bundled story', failed.storyCard.length > 0, true)
 check('failed query keeps bundled hero', failed.settings.heroBaseUrl, '/assets/hero-base.webp')
 check('failed query still lists the 4 static routes', routesFor(failed), ['/', '/resume', '/digital-marketer-kaithal', '/blog'])
@@ -1334,7 +1334,7 @@ if (llms !== null) {
   check('llms.txt has no unrendered placeholder', llms.includes('undefined'), false)
   // Same-origin only: an llms.txt that hands over a localhost or preview host is
   // worse than none.
-  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-rouge\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com|dev\.to)/.test(llms), false)
+  check('llms.txt contains only SITE_URL links', /https?:\/\/(?!rachitportfolio-rouge\.vercel\.app|github\.com|www\.linkedin\.com|www\.instagram\.com|dev\.to|libas-ladies-tailors\.netlify\.app)/.test(llms), false)
 
   // The three sections an answer engine looks for: who he is, what he has built,
   // and what he builds with. Plain text, so it can be lifted and quoted as-is.

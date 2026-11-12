@@ -43,6 +43,14 @@
 
 ## 🧱 Current State (as of last update)
 
+- **NEW (`v65`, 24 Oct 2026) — My Story rebuilt to the pre-v61 card stack:** user asked to match the starting Story shown in the latest File Explorer screenshot, or recreate it with smooth effects. Latest synced phone screenshot (`21 Oct`) was identified but its cloud provider would not supply the image bytes. Git history recovered the pre-v61/v60 Story layout: portrait + short `My Story` card left, full narrative in glass-card stack right. Restored that structure with **current** CMS copy: first two paragraphs share card one, VoiceMemories paragraph is card two; phone uses a simple vertical stack. User's compact 17px opening text and `p-6` phone padding remain. Existing scrubbed text fade is retained (reduced-motion safe), with normal `Reveal` sequencing for each card. `ui-ux-pro-max` applied: mobile-first stack, 16px+ body text, no hover dependency, subtle motion only. Lint 0 errors (7 existing warnings), build pass. No push/deploy.
+
+- **NEW (`v64`, 24 Oct 2026) — My Story card restored:** user clarified that the previous edit should restore the earlier layout. Reinstated the portrait + `My Story` sidebar card and reverted the 192px portrait change to its prior 240px size. Kept the user's compact phone typography (17px lead) in the main story. Reverted the temporary verifier changes. No copy or CMS data changed.
+
+- **NEW (`v63`, 23 Oct 2026) — My Story mobile-first cleanup:** user clarified Search Console verification/sitemap submission and GA4 are already done; remove these from follow-up. About story now appears once under a clear “My Story” heading; removed the duplicated sidebar summary card. Portrait is 192px on phones and remains 240px from `md` upward; responsive image `sizes` updated. Preserved user's existing 17px mobile lead typography. `scripts/verify-prerender.mjs` updated to reflect the removed rendered card while keeping CMS fallback/seed compatibility checks. Lint: 0 errors, 7 existing warnings. Build passed. Verify: All checks passed. Chrome screenshot captured the hero rather than the requested Story section; a second capture attempt did not produce an artifact, so Story was checked from source and built-output verification.
+
+- **`v62` SEO/AEO/GEO audit:** existing foundations validated (pre-rendered pages, canonical metadata/schema, sitemap, named AI crawler access, visible answer-first content, llms files, and built-output checks). Google confirms ordinary SEO fundamentals apply to AI search and no special markup is required. User has since confirmed Search Console verification, sitemap submission and GA4 are complete. Use their data for future content decisions. Audit and official source links are in Changelog `v62`.
+
 - **NEW (`v61`, 23 Oct 2026) — About area ka structural redesign (layout change, copy/claims unchanged, v60 ke subtle devices supersede):** user ne v60 ko "kuch khas improvement nahi" kaha, isliye micro-effects ki jagah **layout** badla. **Journey** ab chapter ledger hai — `CHAPTERS` (year-wise `reduce`), har year ek rule-line row (`border-t` + `md:grid-cols-[200px_1fr]`), year `font-display italic text-4xl md:text-6xl` (measured **60px**, `text-accent-ink`), items 2-up (`md:grid-cols-2`) crimson dash ke saath, **koi dot/vertical rail nahi**. **Story** — pehla paragraph bada statement card (`text-xl md:text-2xl`, `p-7 md:p-9`), baaki paragraphs do **hairline columns** me (`border-t border-stroke/70 pt-5`, koi glass box nahi): glass boxes unequal copy par apna khaali space dikha rahe the, aur `columns-2` sentence beech me tod deta tha ("with a warm, / supportive conversation"). **Capabilities** — centered mini-cards ki jagah left-aligned cards + crimson icon chip (`h-11 w-11 rounded-2xl bg-accent/10 text-accent-ink ring-1 ring-inset ring-accent/25`), eyebrow labels me `h-px flex-1 bg-stroke/70` rule. Portrait ring/glow + `.cap-card::after` wash rakhe. `src/lib/useJourneyThread.ts` **delete** (thread gaya = dead code). Screenshots (system Chrome CDP, 1440×900 aur 390 wide): years 60px, statement 24px, chip 44×44, journey grid 1200×299, `overflowX 0`, mobile clean. Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 125,422 B, `/resume` 86,945, `/blog` 82,305, Kaithal 86,139, `404.html` 75,827) · verify All checks passed · secrets:check clean (117 files). Detail: Changelog `v61`.
 
 - **NEW (`v60`, 23 Oct 2026) — About area ka visual/motion pass (design change, copy/claims unchanged):** "My Journey" me static line ke upar **crimson scrubbed thread** (`src/lib/useJourneyThread.ts`, GSAP ScrollTrigger `scaleY 0→1`, `ease:'none'`, `start 'top 82%'` / `end 'bottom 68%'`, `mm.add('(prefers-reduced-motion: no-preference)')`, cleanup `mm.revert()`), dots par halo. Portrait: maujooda `.logo-ring` (navbar ka 8s conic) 2px band me reuse + static glow — **koi naya keyframe nahi**. Story: pehla paragraph lead (`text-lg leading-[1.7] text-text-primary md:text-xl`). Capabilities: `.cap-card` → `::after` crimson radial wash hover/focus-within par + icon `group-hover:-translate-y-1` (sirf CSS, koi JS nahi). Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 122,493 B, `/resume` 85,013, `/blog` 80,394, Kaithal 84,225, `404.html` 73,923) · verify All checks passed · secrets:check clean (117 files). Detail: Changelog `v60`. ⚠️ Iske do device **v61 me supersede** ho gaye — journey thread + dots ledger ban gaye, aur story ka lead paragraph bada statement card.
@@ -138,6 +146,45 @@
 ---
 
 ## 📝 Changelog (History of Work)
+
+### [v66 — 4th project added: Libas Ladies Tailors] — 12 Nov 2026
+
+- User asked to add the Libas Ladies Tailors site (https://libas-ladies-tailors.netlify.app/) to Selected Work with a thumbnail, then push live.
+- Thumbnail created: Chrome headless 1280×640 screenshot of the live site → WebP q85 → `public/assets/projects/libas-ladies-tailors.webp` (77,460 B; matches the `width={1280} height={640}` card img). Local `public/` path, not Supabase storage.
+- 3 mirrors kept in sync: `src/data.ts` PROJECTS (4th entry, tag `Web · Local Business`, tech `Next.js / WhatsApp Booking / i18n`), `supabase/seed.sql` (4th row, display_order 4, comment 1-3 → 1-4), `scripts/verify-prerender.mjs` (bundled-projects count 3 → 4 + netlify host allowed in the llms.txt link allowlist).
+- Live DB INSERT done via `supabase db query --linked` (idempotent `where not exists`) — verified 4 rows, display_order 1-4.
+- Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 128,399 B, Libas baked 4×) · verify All checks passed · secrets:check clean (117 files).
+
+### [v65 — My Story restored as mobile-first glass-card stack with subtle existing motion] — 24 Oct 2026
+
+- User asked to use the latest File Explorer screenshot as the Story reference, then either recreate it or add smooth effects. The latest candidate was found in the synced phone Pictures folder (21 Oct) but could not be opened because Windows reported its cloud provider was unavailable.
+- Used git history to recover the known pre-v61/v60 Story composition instead: portrait + short CMS-driven Story card in the left column, full narrative grouped into glass cards in the right column.
+- Restored that card rhythm using the current CMS content. On phones it is a linear, readable card stack; on desktop it remains the original two-column composition. Preserved the user's 17px mobile opening paragraph and compact padding. No claims, copy, links, or CMS shape changed.
+- `ui-ux-pro-max` used for mobile-first layout and animation review. Its search recommended a small 8–16px scroll reveal with reduced-motion fallback; existing scrubbed paragraph fade and `Reveal` sequence already meet this, so no distracting new animation was introduced.
+- Gates: `npm run lint` passed with 0 errors and 7 pre-existing warnings; `npm run build` passed. No push or deploy.
+
+### [v64 — My Story previous card layout restored; preserve compact mobile lead text] — 24 Oct 2026
+
+- User said the last My Story change did not look like the previous version. Reverted only my changes that removed the sidebar Story card and resized the portrait; restored the `storyCard` renderer, 240px portrait and original responsive image size declaration.
+- Kept the user's pre-existing mobile-first typography change for the long story body (17px lead, compact padding). Reverted my temporary `scripts/verify-prerender.mjs` expectation/comment edits.
+- No copy, CMS data, or other user edits changed.
+
+### [v63 — My Story mobile-first cleanup: remove duplicate intro, reduce phone portrait size] — 23 Oct 2026
+
+- User clarified Search Console verification, sitemap submission and GA4 setup are already complete; corrected v62's follow-up note so these are not assigned as pending work.
+- User disliked the latest My Story treatment and emphasized phone visitors. Chrome captured the hero instead of the Story after the deep-link; a second capture attempt did not produce an artifact. Used the current About component and current fallback/seed copy as source; did not invent or change story facts.
+- Removed the duplicate short Story summary card from the public layout; the full narrative now has one clear “My Story” heading. Kept the user's current ~17px phone lead styling and detail paragraphs. Portrait frame is 192px on phones and 240px at `md` and above; responsive `sizes` follows the rendered dimensions. CMS story-card data remains available for compatibility.
+- Updated verifier expectations for the public layout while preserving the fallback/seed mirror checks.
+- Gates: `npm run lint` 0 errors (7 pre-existing warnings); `npm run build` passed; `npm run verify` passed (All checks passed). No deploy or push.
+
+### [v62 — SEO/AEO/GEO audit: existing technical foundation validated; priorities documented] — 23 Oct 2026
+
+- User requested an SEO/AEO/GEO audit and improvements using `seo-aeo-geo-specialist`. Read the project instructions, then the specialist plus SEO audit, GEO crawler, and GEO technical skills under `C:\Users\fvcvv\.agents\skills`. The requested `C:\Users\fvcvv\.agents\AGENTS.md` file was not present.
+- Git repository confirmed. `src/components/About.tsx` already had uncommitted user edits; preserved them. No backup or commit was made that could overwrite or capture the user's in-progress change.
+- Audit found a strong baseline: pre-rendered public routes, canonical/head metadata, Person and page schemas, sitemap, permissive robots groups for named AI crawlers (admin/API excluded), visible Quick facts, question-first blog structure, `llms.txt` files, and automated built-output checks. No URL migration or unsupported factual copy was justified.
+- Current Google guidance says regular SEO fundamentals apply to AI features; no special AI markup is required, and structured data should match visible content. Bing recommends crawl/indexing hygiene and supports IndexNow. References: [Google AI features](https://developers.google.com/search/docs/appearance/ai-features), [Google generative-AI search guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), [Bing Webmaster guidelines](https://www.bing.com/webmasters/help/webmaster-guidelines-30fba23a?region=france).
+- Priorities: (1) confirm Search Console property verification and sitemap submission; (2) review GSC query/indexing and GA4 landing-page data after 2–4 weeks; (3) publish useful, experience-backed posts for non-branded discovery; (4) keep off-site name/role/city profiles consistent. Rankings and AI citations are unverified and cannot be guaranteed.
+- No code, live database, account, deployment, or published content changed: no verified high-impact safe implementation gap surfaced, and the user's existing `About.tsx` edit was preserved.
 
 ### [v61 — About area structural redesign: journey chapter ledger, story statement + hairline columns, left-aligned capability cards] — 23 Oct 2026
 

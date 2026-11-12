@@ -48,7 +48,7 @@ I''m also building my own AI products. One of them is VoiceMemories AI. With a r
 -- ---------------------------------------------------------------------------
 --  3.  PROJECTS
 --  Mirrored from src/data.ts, which is itself the fallback for the CMS.
---  display_order 1-3 = the order they stack in. No project_url = Coming soon.
+--  display_order 1-4 = the order they stack in. No project_url = Coming soon.
 -- ---------------------------------------------------------------------------
 insert into public.projects
   (title, category, tagline, description, tech, image_url, project_url, accent, display_order)
@@ -85,6 +85,17 @@ values
   'https://github.com/Rachit-Sharma08/ai-assistant',
   '#d62e4a',
   3
+),
+(
+  'Libas Ladies Tailors',
+  'Web · Local Business',
+  'A booking-first site for a ladies-only tailoring boutique in Siwan, Kaithal.',
+  'A website for a local ladies-only tailoring boutique: services, measuring process, gallery and contact in one place. Built with Next.js, with an English/Hindi toggle and WhatsApp booking so every visitor can reach the shop directly.',
+  array['Next.js', 'WhatsApp Booking', 'i18n'],
+  '/assets/projects/libas-ladies-tailors.webp',
+  'https://libas-ladies-tailors.netlify.app/',
+  '#d62e4a',
+  4
 );
 
 
