@@ -152,7 +152,8 @@
 - User: "dusre project dekh kitne acche thumbnail h, ese he karo" — plain screenshot thumbnail nahi pasand.
 - Naya thumbnail = HTML/CSS mockup scene (`%TEMP%\opencode\libas-mockup.html`) rendered via Chrome headless 1280×640 → WebP q85 (`python` PIL 13): crimson glow bg + browser frame me **real** Libas site screenshot (`libas-hero.png`, live site se) + left brand block (Libas / Ladies Tailors + tagline + tech chips) + floating accents + grain — same vibe as AI Assistant/Neon cinematic laptop showcases.
 - Same path overwrite: `public/assets/projects/libas-ladies-tailors.webp` (77,460 → **48,326 B**) — `src/data.ts` / seed / live DB ka `/assets/projects/...` path unchanged, koi data change nahi.
-- Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 128,399 B) · verify All checks passed · secrets:check clean (118 files).
+- **v67b fix (same day):** user report "abhi bhi proper nahi dikh rha h, cut rha h". Root cause measured: card `.work-media` `object-cover` ~square container me 1280×640 source ka sirf centered horizontal band (worst-case ~581px @ 1024×768, R 0.908) dikhta tha — laptop base 840px wide tha, har desktop viewport par dono taraf crop. Fix = mockup me laptop chhota + centered (screen 500px, base 540px, x ≈ 370..910 → worst band 350..930 ke andar, ~20px margin), needles safe zone me; `SelectedWork.tsx` nahi chhua. Brand block (v67a wala) bhi hataya — card ka apna text overlay usse collide karta tha; thumbnail ab pure centered laptop scene. Same path overwrite: **22,724 B**. Path/data/DB unchanged.
+- Gates (v67b): lint 0 errors (7 pre-existing warnings) · build pass (`/` 128,399 B) · verify All checks passed · secrets:check clean (118 files).
 
 ### [v66 — 4th project added: Libas Ladies Tailors] — 12 Nov 2026
 
