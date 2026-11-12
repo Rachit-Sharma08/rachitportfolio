@@ -147,6 +147,13 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v67 — Libas thumbnail redesigned to cinematic showcase style] — 12 Nov 2026
+
+- User: "dusre project dekh kitne acche thumbnail h, ese he karo" — plain screenshot thumbnail nahi pasand.
+- Naya thumbnail = HTML/CSS mockup scene (`%TEMP%\opencode\libas-mockup.html`) rendered via Chrome headless 1280×640 → WebP q85 (`python` PIL 13): crimson glow bg + browser frame me **real** Libas site screenshot (`libas-hero.png`, live site se) + left brand block (Libas / Ladies Tailors + tagline + tech chips) + floating accents + grain — same vibe as AI Assistant/Neon cinematic laptop showcases.
+- Same path overwrite: `public/assets/projects/libas-ladies-tailors.webp` (77,460 → **48,326 B**) — `src/data.ts` / seed / live DB ka `/assets/projects/...` path unchanged, koi data change nahi.
+- Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 128,399 B) · verify All checks passed · secrets:check clean (118 files).
+
 ### [v66 — 4th project added: Libas Ladies Tailors] — 12 Nov 2026
 
 - User asked to add the Libas Ladies Tailors site (https://libas-ladies-tailors.netlify.app/) to Selected Work with a thumbnail, then push live.
