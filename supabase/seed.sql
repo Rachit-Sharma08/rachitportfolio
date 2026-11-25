@@ -48,7 +48,7 @@ I''m also building my own AI products. One of them is VoiceMemories AI. With a r
 -- ---------------------------------------------------------------------------
 --  3.  PROJECTS
 --  Mirrored from src/data.ts, which is itself the fallback for the CMS.
---  display_order 1-4 = the order they stack in. No project_url = Coming soon.
+--  display_order 1-5 = the order they stack in. No project_url = Coming soon.
 -- ---------------------------------------------------------------------------
 insert into public.projects
   (title, category, tagline, description, tech, image_url, project_url, accent, display_order)
@@ -96,6 +96,17 @@ values
   'https://libas-ladies-tailors.netlify.app/',
   '#d62e4a',
   4
+),
+(
+  'YT Comment Bot',
+  'AI · Automation',
+  'A bot for my own YouTube channel — it reads, filters and drafts comment replies before anything gets posted.',
+  'A Python bot that runs on my PC: it pulls new comments from my channel with the YouTube Data API, filters out spam and abuse, sorts each comment by intent, and drafts a reply through an LLM (Groq, with Gemini as fallback) in English, Hinglish or Devanagari. Replies are saved to a local database first and only go live when I switch modes, with a kill switch and daily API quota caps.',
+  array['Python', 'YouTube Data API', 'Groq / Gemini', 'SQLite'],
+  '/projects/yt-comment-bot.png',
+  'https://github.com/Rachit-Sharma08/yt-comment-bot',
+  '#d62e4a',
+  5
 );
 
 

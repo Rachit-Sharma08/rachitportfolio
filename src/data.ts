@@ -194,6 +194,18 @@ export const PROJECTS: Project[] = [
       'A website for a local ladies-only tailoring boutique: services, measuring process, gallery and contact in one place. Built with Next.js, with an English/Hindi toggle and WhatsApp booking so every visitor can reach the shop directly.',
     tech: ['Next.js', 'WhatsApp Booking', 'i18n'],
   },
+  {
+    title: 'YT Comment Bot',
+    tag: 'AI · Automation',
+    href: 'https://github.com/Rachit-Sharma08/yt-comment-bot',
+    image: '/projects/yt-comment-bot.png',
+    accent: '#d62e4a',
+    tagline:
+      'A bot for my own YouTube channel — it reads, filters and drafts comment replies before anything gets posted.',
+    description:
+      'A Python bot that runs on my PC: it pulls new comments from my channel with the YouTube Data API, filters out spam and abuse, sorts each comment by intent, and drafts a reply through an LLM (Groq, with Gemini as fallback) in English, Hinglish or Devanagari. Replies are saved to a local database first and only go live when I switch modes, with a kill switch and daily API quota caps.',
+    tech: ['Python', 'YouTube Data API', 'Groq / Gemini', 'SQLite'],
+  },
 ]
 
 // Static copy of the About section's story, used until Supabase answers and
