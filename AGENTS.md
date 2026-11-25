@@ -147,6 +147,17 @@
 
 ## 📝 Changelog (History of Work)
 
+### [v68 — 5th project added: YT Comment Bot] — 25 Nov 2026
+
+- User asked to add the YT Comment Bot (https://github.com/Rachit-Sharma08/yt-comment-bot) as Work card #05, copy based on the repo README, then commit/push + live DB insert + live verify.
+- Card copy (from README): tag `AI · Automation`, subtitle "A bot for my own YouTube channel — it reads, filters and drafts comment replies before anything gets posted.", description = YouTube Data API fetch → spam/abuse filter → intent sort → Groq (Gemini fallback) LLM draft in English/Hinglish/Devanagari → draft-first SQLite + kill switch + daily quota; tech `Python, YouTube Data API, Groq / Gemini, SQLite`; href GitHub repo.
+- Placeholder thumbnail `public/projects/yt-comment-bot.png` (1280×640, 17,655 B, "Thumbnail coming soon" — user's Downloads had no real image; he will swap it later). Numbering stays automatic (`pad()` derives 01…N).
+- 3 mirrors synced: `src/data.ts` PROJECTS (5th entry), `supabase/seed.sql` (display_order 5 + comment `1-5`), `scripts/verify-prerender.mjs` (bundled count 4→5, GitHub-owner href count 3→4). Components untouched (SelectedWork renders from list).
+- ⚠️ `src/components/About.tsx` had a pre-existing uncommitted user edit (story-card grouping) — excluded from this commit.
+- Gates: lint 0 errors (7 pre-existing warnings) · build pass (`/` 131,628 B, 5 baked cards) · verify All checks passed · secrets:check clean (119 files).
+- **Ship:** commit `a5d05f3` push (auto-deploy). Live DB row inserted via `supabase db query --linked` (idempotent `where not exists`) — `/api/content` showed 5 projects, but the push build had raced the insert (baked 4). Empty-commit `c94e626` triggered a fresh bake → **live `/` 5 cards, YT Comment Bot present, image `/projects/yt-comment-bot.png` 200 `image/png`, GitHub link present**.
+- ⚠️ **Vercel CLI re-login (25 Nov):** pnpm-installed CLI 63.1.2 had no auth (old `auth.json` gone) → `vercel login` device flow → correct scope `rachitsharma9990888-4448` confirmed via `whoami`. User's screenshot warned the device page briefly showed the OLD email — final login landed on the right account.
+
 ### [v67 — Libas thumbnail redesigned to cinematic showcase style] — 12 Nov 2026
 
 - User: "dusre project dekh kitne acche thumbnail h, ese he karo" — plain screenshot thumbnail nahi pasand.
