@@ -158,6 +158,16 @@
 - **Ship:** commit `a5d05f3` push (auto-deploy). Live DB row inserted via `supabase db query --linked` (idempotent `where not exists`) — `/api/content` showed 5 projects, but the push build had raced the insert (baked 4). Empty-commit `c94e626` triggered a fresh bake → **live `/` 5 cards, YT Comment Bot present, image `/projects/yt-comment-bot.png` 200 `image/png`, GitHub link present**.
 - ⚠️ **Vercel CLI re-login (25 Nov):** pnpm-installed CLI 63.1.2 had no auth (old `auth.json` gone) → `vercel login` device flow → correct scope `rachitsharma9990888-4448` confirmed via `whoami`. User's screenshot warned the device page briefly showed the OLD email — final login landed on the right account.
 
+### [v69 — 6th project added: Jarvis 2.0] — 25 Nov 2026
+
+- User asked to add Jarvis 2.0 (https://github.com/Rachit-Sharma08/jarvis2.0) as Work card #06, copy from the repo README, thumbnail edited from `d:\Downloads\hud.png`, then push + live DB insert + live verify (same flow as v68 YT Comment Bot).
+- Card copy: tag `AI · Personal Assistant`, subtitle "A local Hinglish voice assistant that runs my PC — and a Telegram bot drives it from my phone.", description = browser-based Windows assistant, Hinglish mic, file/folder/app/command tasks, gatekeeper + `logs/actions.log`, free brain (Groq/Gemini/OpenRouter), Telegram phone control; tech `Groq, Gemini, Telegram Bot`; href GitHub repo.
+- Thumbnail: `d:\Downloads\hud.png` (1440×900) top-cropped `y=0..720` (title bar + "Jarvis 2.0" heading + chat kept), LANCZOS → 1280×640, WebP q85 → `public/projects/jarvis-2.webp` (**36,254 B** — Libas card already uses `.webp`, mixed formats OK).
+- 3 mirrors synced: `src/data.ts` PROJECTS (6th entry), `supabase/seed.sql` (display_order 6 + comment `1-5` → `1-6`), `scripts/verify-prerender.mjs` (bundled count 5→6, GitHub-owner href count 4→5). `data.ts` CRLF→LF re-normalized after edit (known gotcha).
+- ⚠️ `src/components/About.tsx` pre-existing user edit excluded from commit again.
+- Gates: lint 0 errors (7 pre-existing warnings) · build pass · verify All checks passed · secrets:check clean (119 files).
+- **Ship:** commit `7d2bbb4` push (auto-deploy READY ~26s) + idempotent DB insert via `supabase db query --linked` (6 rows confirmed, display_order 6). ⚠️ **Race recurred:** push build baked 5 cards (fetched DB pre-insert) → empty-commit `36e5f24` rebuild → **live `/` 6 cards, Jarvis present, `06` ordinal, thumb 200 `image/webp` 36,254 B, sitemap 14 URLs**.
+
 ### [v67 — Libas thumbnail redesigned to cinematic showcase style] — 12 Nov 2026
 
 - User: "dusre project dekh kitne acche thumbnail h, ese he karo" — plain screenshot thumbnail nahi pasand.
