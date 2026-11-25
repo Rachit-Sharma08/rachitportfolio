@@ -206,6 +206,18 @@ export const PROJECTS: Project[] = [
       'A Python bot that runs on my PC: it pulls new comments from my channel with the YouTube Data API, filters out spam and abuse, sorts each comment by intent, and drafts a reply through an LLM (Groq, with Gemini as fallback) in English, Hinglish or Devanagari. Replies are saved to a local database first and only go live when I switch modes, with a kill switch and daily API quota caps.',
     tech: ['Python', 'YouTube Data API', 'Groq / Gemini', 'SQLite'],
   },
+  {
+    title: 'Jarvis 2.0',
+    tag: 'AI · Personal Assistant',
+    href: 'https://github.com/Rachit-Sharma08/jarvis2.0',
+    image: '/projects/jarvis-2.webp',
+    accent: '#d62e4a',
+    tagline:
+      'A local Hinglish voice assistant that runs my PC — and a Telegram bot drives it from my phone.',
+    description:
+      'A personal AI assistant that runs in the browser on Windows with everything free: it talks in Hinglish over the mic, handles file, folder, app and command tasks, and every call passes a gatekeeper first — safe work runs, dangerous work is blocked, and everything lands in an action log. The brain runs on free providers (Groq, Gemini, OpenRouter), and a Telegram bot lets me control it from my phone.',
+    tech: ['Groq', 'Gemini', 'Telegram Bot'],
+  },
 ]
 
 // Static copy of the About section's story, used until Supabase answers and

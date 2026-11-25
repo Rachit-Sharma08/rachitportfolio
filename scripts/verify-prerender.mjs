@@ -209,7 +209,7 @@ check('javascript: link neutralised', !evilHtml.includes('href="javascript:'), t
 // "undefined" means the query failed — the pre-render script bails out before
 // calling the mapper in that case, so a missing key must fall back to the copy.
 const failed = mapBuildContent({})
-check('failed query keeps bundled projects', failed.projects.length, 5)
+check('failed query keeps bundled projects', failed.projects.length, 6)
 check('failed query keeps bundled story', failed.storyCard.length > 0, true)
 check('failed query keeps bundled hero', failed.settings.heroBaseUrl, '/assets/hero-base.webp')
 check('failed query still lists the 4 static routes', routesFor(failed), ['/', '/resume', '/digital-marketer-kaithal', '/blog'])
@@ -1073,7 +1073,7 @@ check('story fallback links the current LinkedIn', dataTs.includes(`[LinkedIn]($
 // chips and the Person `sameAs`, so a silent edit here would move the identity
 // Google reads without any other file disagreeing.
 check('the LinkedIn profile is the new handle', SOCIALS.linkedin, 'https://www.linkedin.com/in/rachit-sharma08/')
-check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/Rachit-Sharma08\//g) || []).length, 4)
+check('every project href uses the current owner', (dataTs.match(/href: 'https:\/\/github\.com\/Rachit-Sharma08\//g) || []).length, 5)
 
 /* -------------------------------------------------------------------------- */
 /*  One "how he learned to" claim, and it is not "self-taught"                 */
